@@ -36,20 +36,20 @@ export default class BBCScraper extends AbstractNewsScraper implements NewsScrap
         waitUntil: 'domcontentloaded',
       });
 
-      const articleUrls = await page.evaluate(() => {
-        // Get all the possible (anchor) elements that have the links to articles
-        const querySelector = [
-          '#news-top-stories-container a.gs-c-promo-heading',
-          '#index-page a.gs-c-promo-heading',
-          '#lx-stream a.qa-heading-link',
-        ].join(', ');
+      const articleUrls = this.getUniqueArray(
+        await page.evaluate(() => {
+          // Get all the possible (anchor) elements that have the links to articles
+          const querySelector = [
+            '#news-top-stories-container a.gs-c-promo-heading',
+            '#index-page a.gs-c-promo-heading',
+            '#lx-stream a.qa-heading-link',
+          ].join(', ');
 
-        // Fetch those with the .querySelectoAll() and convert it to an array
-        const $elements = Array.from(document.querySelectorAll(querySelector));
+          // Fetch those with the .querySelectoAll() and convert it to an array
+          const $elements = Array.from(document.querySelectorAll(querySelector));
 
-        // Loop/map through those elements and get the href artibute
-        return this.getUniqueArray(
-          $elements
+          // Loop/map through those elements and get the href artibute
+          return $elements
             .map(($el) => {
               return $el.getAttribute('href') ?? ''; // Needs to have a '' (empty string) as a fallback, because otherwise it could be null, which we don't want
             })
@@ -58,9 +58,9 @@ export default class BBCScraper extends AbstractNewsScraper implements NewsScrap
             })
             .map((uri) => {
               return `https://www.bbc.com${uri}`;
-            })
-        );
-      });
+            });
+        })
+      );
 
       logger.info(`Found ${articleUrls.length} articles on this page`);
 
