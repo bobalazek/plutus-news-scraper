@@ -13,11 +13,11 @@ export default class BloombergScraper extends AbstractNewsScraper implements New
     const recentArticleListUrls = [
       // Add all the page/category URLs that you want to scrape, so you get the actual article URLS
       'https://www.bloomberg.com/europe',
-      /* 'https://www.bloomberg.com/uk',
+      'https://www.bloomberg.com/uk',
       'https://www.bloomberg.com/',
       'https://www.bloomberg.com/asia',
       'https://www.bloomberg.com/middleeast',
-      'https://www.bloomberg.com/africa', */
+      'https://www.bloomberg.com/africa',
     ];
 
     const browser = await this.getPuppeteerBrowser();
@@ -36,10 +36,11 @@ export default class BloombergScraper extends AbstractNewsScraper implements New
         await page.evaluate(() => {
           // Get all the possible (anchor) elements that have the links to articles
           const querySelector = [
-            //'.single-story-module__info .single-story-module__eyebrow a.single-story-module__headline-link',
-            //'.single-story-module__info .single-story-module__related-stories a.single-story-module__related-story-link',
-            //'.story-list-module__info a.story-list-story__info__headline-link',
+            '.single-story-module__info a.single-story-module__headline-link',
+            '.single-story-module__info .single-story-module__related-stories a.single-story-module__related-story-link',
+            '.story-list-module__info a.story-list-story__info__headline-link',
             '.story-list-story__info a.story-list-story__info__headline-link',
+            '.story-package-module__stories .story-package-module__story a.story-package-module__story__headline-link',
           ].join(', ');
 
           // Fetch those with the .querySelectoAll() and convert it to an array
@@ -69,7 +70,7 @@ export default class BloombergScraper extends AbstractNewsScraper implements New
         basicArticles.push({
           // We are actually pushing a basic article object, instead of just URL,
           // if in the future we for example maybe want to provide some more metadata
-          // on the list (recent and archived articles) scrape
+          // on the list (recent  and archived articles) scrape
           url: url,
         });
       }
