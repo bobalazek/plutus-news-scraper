@@ -16,6 +16,10 @@ export default class BBCScraper extends AbstractNewsScraper implements NewsScrap
       'https://www.bbc.com/news/coronavirus',
       'https://www.bbc.com/news/world',
       'https://www.bbc.com/news/uk',
+      'https://www.bbc.com/news/business',
+      'https://www.bbc.com/news/technology',
+      'https://www.bbc.com/news/health',
+      'https://www.bbc.com/news/science_and_environment',
     ];
 
     const browser = await this.getPuppeteerBrowser({
@@ -36,9 +40,8 @@ export default class BBCScraper extends AbstractNewsScraper implements NewsScrap
         // Get all the possible (anchor) elements that have the links to articles
         const querySelector = [
           '#news-top-stories-container a.gs-c-promo-heading',
-          '.nw-c-seven-slice .gs-c-promo a',
-          '.lx-stream ol li a',
-          'div[role="region"] a',
+          '#index-page a.gs-c-promo-heading',
+          '#lx-stream a.qa-heading-link',
         ].join(', ');
 
         // Fetch those with the .querySelectoAll() and convert it to an array
