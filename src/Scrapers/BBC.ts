@@ -10,7 +10,10 @@ export default class BBCScraper extends AbstractNewsScraper implements NewsScrap
     const basicArticles: NewsBasicArticleInterface[] = []; // Initialise an empty array, where we can save the article data (mainly the URL)
     const recentArticleListUrls = [
       // Add all the page/category URLs that you want to scrape, so you get the actual article URLS
-      'https:/bbc.com',
+      'https://www.bbc.com/news',
+      /* 'https://www.bbc.com/news/coronavirus',
+      'https://www.bbc.com/news/world',
+      'https://www.bbc.com/news/uk', */
     ];
 
     const browser = await this.getPuppeteerBrowser({
@@ -29,7 +32,12 @@ export default class BBCScraper extends AbstractNewsScraper implements NewsScrap
 
       const articleUrls = await page.evaluate(() => {
         // Get all the possible (anchor) elements that have the links to articles
-        const querySelector = ['.nw-c-top-stories--international div[class^="nw-c-top-stories__"] a'].join(', ');
+        const querySelector = [
+          '#news-top-stories-container a.gs-c-promo-heading',
+          /* '.nw-c-seven-slice .gs-c-promo a',
+          'lx-stream ol li a',
+          'div[role="region"] a', */
+        ].join(', ');
 
         // Fetch those with the .querySelectoAll() and convert it to an array
         const $elements = Array.from(document.querySelectorAll(querySelector));
@@ -41,7 +49,11 @@ export default class BBCScraper extends AbstractNewsScraper implements NewsScrap
           })
           .filter((href) => {
             return href !== ''; // Now we want to filter out any links that are '', just in case
-          });
+          })
+          .map((uri) => {
+            return `https://www.bbc.com${uri}`;
+          })
+          .filter((url, index, array) => array.indexOf(url) === index); // Remove duplicates from the array
       });
 
       logger.info(`Found ${articleUrls.length} articles on this page`);
