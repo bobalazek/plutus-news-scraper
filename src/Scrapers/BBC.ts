@@ -65,13 +65,15 @@ export default class BBCScraper extends AbstractNewsScraper implements NewsScrap
       logger.info(`Found ${articleUrls.length} articles on this page`);
 
       for (const articleUrl of articleUrls) {
-        logger.debug(`Article URL: ${articleUrl}`);
+        const url = this.preProcessUrl(articleUrl);
+
+        logger.debug(`Article URL: ${url}`);
 
         basicArticles.push({
           // We are actually pushing a basic article object, instead of just URL,
           // if in the future we for example maybe want to provide some more metadata
           // on the list (recent and archived articles) scrape
-          url: articleUrl,
+          url: url,
         });
       }
     }
@@ -119,7 +121,7 @@ export default class BBCScraper extends AbstractNewsScraper implements NewsScrap
 
     await browser.close();
 
-    const article = {
+    const article: NewsArticleInterface = {
       url: url,
       title: linkedData.headline,
       type: NewsArticleTypeEnum.TEXT,

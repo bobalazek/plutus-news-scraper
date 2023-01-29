@@ -99,13 +99,4 @@ export interface NewsScraperInterface {
   scrapeArchivedArticles?(
     options: NewsScraperGetArchivedArticlesOptionsInterface
   ): Promise<NewsBasicArticleInterface[]>;
-
-  /**
-   * If this method is specified, it will be called on the URL before it's passed into the scrapeArticle() method.
-   * The reason for that is, that sometimes the received URL from getRecentArticles() or getArchivedArticles()
-   * contains things like a random #1234 hash or ?1234 query.
-   *
-   * @param url string
-   */
-  preProcessUrl?(url: string): string;
 }
