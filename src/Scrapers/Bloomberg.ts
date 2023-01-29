@@ -13,6 +13,11 @@ export default class BloombergScraper extends AbstractNewsScraper implements New
     const recentArticleListUrls = [
       // Add all the page/category URLs that you want to scrape, so you get the actual article URLS
       'https://www.bloomberg.com/europe',
+      /* 'https://www.bloomberg.com/uk',
+      'https://www.bloomberg.com/',
+      'https://www.bloomberg.com/asia',
+      'https://www.bloomberg.com/middleeast',
+      'https://www.bloomberg.com/africa', */
     ];
 
     const browser = await this.getPuppeteerBrowser({
@@ -33,9 +38,10 @@ export default class BloombergScraper extends AbstractNewsScraper implements New
         await page.evaluate(() => {
           // Get all the possible (anchor) elements that have the links to articles
           const querySelector = [
-            'a.single-story-module__image-link',
-            'a.single-story-module__related-story-link',
-            'a.story-list-story__info__headline-link',
+            '.single-story-module__info .single-story-module__eyebrow a.single-story-module__headline-link',
+            '.single-story-module__info .single-story-module__related-stories a.single-story-module__related-story-link',
+            '.story-list-module__info a.story-list-story__info__headline-link',
+            '.story-list-story__info a.story-list-story__info__headline-link',
           ].join(', ');
 
           // Fetch those with the .querySelectoAll() and convert it to an array
