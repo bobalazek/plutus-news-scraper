@@ -7,20 +7,23 @@ export default class ABCNewsScraper extends AbstractNewsScraper implements NewsS
   domain: string = 'https://abcnews.go.com/';
 
   async scrapeRecentArticles(): Promise<NewsBasicArticleInterface[]> {
-    const articles: NewsBasicArticleInterface[] = [];
-    const browser = await this.getPuppeteerBrowser();
-    const page = await browser.newPage();
+    const basicArticles: NewsBasicArticleInterface[] = []; // Initialise an empty array, where we can save the article data (mainly the URL)
     const recentArticleListUrls = [
       // Add all the page/category URLs that you want to scrape, so you get the actual article URLS
       'https://abcnews.go.com',
     ];
+
+    const browser = await this.getPuppeteerBrowser();
+    const page = await browser.newPage();
 
     logger.info(`Starting to scrape the recent articles on ABCNews ...`);
 
     for (const recentArticleListUrl of recentArticleListUrls) {
       logger.info(`Going to URL ${recentArticleListUrl} ...`);
 
-      await page.goto(recentArticleListUrl);
+      await page.goto(recentArticleListUrl, {
+        waitUntil: 'domcontentloaded',
+      });
 
       const articleUrls = await page.evaluate(() => {
         // Get all the possible (anchor) elements that have the links to articles
@@ -51,7 +54,10 @@ export default class ABCNewsScraper extends AbstractNewsScraper implements NewsS
       for (const articleUrl of articleUrls) {
         logger.debug(`Article URL: ${articleUrl}`);
 
-        articles.push({
+        basicArticles.push({
+          // We are actually pushing a basic article object, instead of just URL,
+          // if in the future we for example maybe want to provide some more metadata
+          // on the list (recent and archived articles) scrape
           url: articleUrl,
         });
       }
@@ -59,7 +65,7 @@ export default class ABCNewsScraper extends AbstractNewsScraper implements NewsS
 
     browser.close();
 
-    return Promise.resolve(articles);
+    return Promise.resolve(basicArticles);
   }
 
   async scrapeArticle(basicArticle: NewsBasicArticleInterface): Promise<NewsArticleInterface | null> {
