@@ -1,5 +1,8 @@
+import { convert } from 'html-to-text';
+
 import { AbstractNewsScraper } from '../AbstractNewsScraper';
 import { logger } from '../Logger';
+import { NewsArticleTypeEnum } from '../Types/Enums';
 import { NewsArticleInterface, NewsBasicArticleInterface, NewsScraperInterface } from '../Types/Interfaces';
 
 export default class ABCNewsScraper extends AbstractNewsScraper implements NewsScraperInterface {
@@ -78,8 +81,54 @@ export default class ABCNewsScraper extends AbstractNewsScraper implements NewsS
   }
 
   async scrapeArticle(basicArticle: NewsBasicArticleInterface): Promise<NewsArticleInterface | null> {
-    const browser = this.getPuppeteerBrowser();
+    const browser = await this.getPuppeteerBrowser();
+    const page = await browser.newPage();
 
-    return Promise.resolve(null);
+    const urlSplit = basicArticle.url.split('-');
+    const urlId = urlSplit[urlSplit.length - 1];
+    const newsSiteArticleId = urlId.includes('?id=') ? urlId.split('?id=')[1] : urlId;
+
+    logger.info(`Going to URL ${basicArticle.url} ...`);
+
+    await page.goto(basicArticle.url, {
+      waitUntil: 'domcontentloaded',
+    });
+
+    const linkedDataText = await page.evaluate(() => {
+      return document.querySelector('head script[type="application/ld+json"]')?.innerHTML ?? '';
+    });
+    if (!linkedDataText) {
+      throw new Error(`No linked data found for URL ${basicArticle.url}`);
+    }
+
+    const linkedData = JSON.parse(linkedDataText);
+
+    // Content
+    const content = await page.evaluate(() => {
+      return Array.from(document.querySelectorAll('article[data-testid="prism-article-body"]'))
+        .map((element) => {
+          return element.outerHTML;
+        })
+        .join('<br />');
+    });
+
+    await browser.close();
+
+    const article = {
+      url: basicArticle.url,
+      title: linkedData.headline,
+      type: NewsArticleTypeEnum.TEXT,
+      content: convert(content, {
+        wordwrap: false,
+      }),
+      newsSiteArticleId: newsSiteArticleId,
+      publishedAt: new Date(linkedData.datePublished),
+      modifiedAt: new Date(linkedData.dateModified),
+    };
+
+    logger.debug(`Article data:`);
+    logger.debug(article);
+
+    return Promise.resolve(article);
   }
 }
