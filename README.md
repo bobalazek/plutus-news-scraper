@@ -8,5 +8,5 @@ This is the news component of the Plutus platform.
 
 ## Commands
 
-- To scrape the recent articles, run: `yarn cli recent-articles:scrape --news-site <news-site>`
-- To scrape the recent articles, run: `yarn cli article:scrape --url <url>`
+- To scrape the recent articles, run: `yarn cli recent-articles:scrape --news-site <news-site> [-h,--headful][-p,--prevent-close]`
+- To scrape the recent articles, run: `yarn cli article:scrape --url <url> [-h,--headful][-p,--prevent-close]`

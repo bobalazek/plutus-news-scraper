@@ -20,9 +20,7 @@ export default class BloombergScraper extends AbstractNewsScraper implements New
       'https://www.bloomberg.com/africa',
     ];
 
-    const browser = await this.getPuppeteerBrowser({
-      headless: false,
-    });
+    const browser = await this.getPuppeteerBrowser();
     const page = await browser.newPage();
 
     logger.info(`Starting to scrape the recent articles on Bloomberg ...`);
@@ -65,7 +63,7 @@ export default class BloombergScraper extends AbstractNewsScraper implements New
       logger.info(`Found ${articleUrls.length} articles on this page`);
 
       for (const articleUrl of articleUrls) {
-        const url = this.preProcessUrl(articleUrl);
+        const url = this._preProcessUrl(articleUrl);
 
         logger.debug(`Article URL: ${url}`);
 
@@ -78,7 +76,7 @@ export default class BloombergScraper extends AbstractNewsScraper implements New
       }
     }
 
-    await browser.close();
+    await this.closePuppeteerBrowser();
 
     return Promise.resolve(this.getUniqueArray(basicArticles));
   }
@@ -88,7 +86,7 @@ export default class BloombergScraper extends AbstractNewsScraper implements New
     const page = await browser.newPage();
     page.setUserAgent(this.getDefaultUserAgent());
 
-    const url = this.preProcessUrl(basicArticle.url);
+    const url = this._preProcessUrl(basicArticle.url);
     const newsSiteArticleId = url;
 
     logger.info(`Going to URL ${url} ...`);
@@ -115,7 +113,7 @@ export default class BloombergScraper extends AbstractNewsScraper implements New
         .join('');
     });
 
-    await browser.close();
+    await this.closePuppeteerBrowser();
 
     const article: NewsArticleInterface = {
       url: url,
@@ -133,7 +131,7 @@ export default class BloombergScraper extends AbstractNewsScraper implements New
     return Promise.resolve(article);
   }
 
-  preProcessUrl(url: string): string {
+  private _preProcessUrl(url: string): string {
     const urlObject = new URL(url);
 
     return url.replace(urlObject.search, '').replace(urlObject.hash, '');

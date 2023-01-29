@@ -20,9 +20,7 @@ export default class ABCNewsScraper extends AbstractNewsScraper implements NewsS
       'https://abcnews.go.com/Health',
     ];
 
-    const browser = await this.getPuppeteerBrowser({
-      headless: false,
-    });
+    const browser = await this.getPuppeteerBrowser();
     const page = await browser.newPage();
 
     logger.info(`Starting to scrape the recent articles on ABCNews ...`);
@@ -64,7 +62,7 @@ export default class ABCNewsScraper extends AbstractNewsScraper implements NewsS
       logger.info(`Found ${articleUrls.length} articles on this page`);
 
       for (const articleUrl of articleUrls) {
-        const url = this.preProcessUrl(articleUrl);
+        const url = this._preProcessUrl(articleUrl);
 
         logger.debug(`Article URL: ${url}`);
 
@@ -77,7 +75,7 @@ export default class ABCNewsScraper extends AbstractNewsScraper implements NewsS
       }
     }
 
-    await browser.close();
+    await this.closePuppeteerBrowser();
 
     return Promise.resolve(this.getUniqueArray(basicArticles));
   }
@@ -86,7 +84,7 @@ export default class ABCNewsScraper extends AbstractNewsScraper implements NewsS
     const browser = await this.getPuppeteerBrowser();
     const page = await browser.newPage();
 
-    const url = this.preProcessUrl(basicArticle.url);
+    const url = this._preProcessUrl(basicArticle.url);
     const urlSplit = url.split('-');
     const urlId = urlSplit[urlSplit.length - 1];
 
@@ -116,7 +114,7 @@ export default class ABCNewsScraper extends AbstractNewsScraper implements NewsS
         .join('');
     });
 
-    await browser.close();
+    await this.closePuppeteerBrowser();
 
     const article: NewsArticleInterface = {
       url: url,
@@ -134,7 +132,7 @@ export default class ABCNewsScraper extends AbstractNewsScraper implements NewsS
     return Promise.resolve(article);
   }
 
-  preProcessUrl(url: string): string {
+  private _preProcessUrl(url: string): string {
     const urlObject = new URL(url);
 
     return url.replace(urlObject.hash, '');
