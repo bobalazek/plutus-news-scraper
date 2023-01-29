@@ -14,6 +14,8 @@ export class NewsScrapingManager {
   private _scrapersDomainMap: Record<string, string> = {};
   private _initialized: boolean = false;
   private _currentScraper: AbstractNewsScraper | null = null;
+  private _headful: boolean = false;
+  private _preventClose: boolean = false;
 
   async init() {
     if (this._initialized) {
@@ -68,7 +70,7 @@ export class NewsScrapingManager {
   }
 
   async terminateScraper() {
-    await this._currentScraper?.closePuppeteerBrowser();
+    await this._currentScraper?.closePuppeteerBrowser(true);
   }
 
   async get(newsSiteKey: string) {
@@ -78,9 +80,7 @@ export class NewsScrapingManager {
   }
 
   async getForDomain(domain: string) {
-    await this.init();
-
-    return this._scrapers[this._scrapersDomainMap[domain]] ?? undefined;
+    return this.get(this._scrapersDomainMap[domain]);
   }
 
   async scrapeArticle(url: string): Promise<NewsArticleWithSiteKeyInterface> {
@@ -91,6 +91,8 @@ export class NewsScrapingManager {
     }
 
     this._currentScraper = scraper as unknown as AbstractNewsScraper;
+    this._currentScraper.setHeadful(this._headful);
+    this._currentScraper.setPreventClose(this._preventClose);
 
     const newsArticle = await scraper.scrapeArticle({ url });
     if (!newsArticle) {
@@ -107,6 +109,8 @@ export class NewsScrapingManager {
     }
 
     this._currentScraper = scraper as unknown as AbstractNewsScraper;
+    this._currentScraper.setHeadful(this._headful);
+    this._currentScraper.setPreventClose(this._preventClose);
 
     if (typeof scraper.scrapeRecentArticles === 'undefined') {
       throw new Error(`This scraper (${newsSiteKey}) does not have the .getRecentArticles() method implemented`);
@@ -123,5 +127,25 @@ export class NewsScrapingManager {
         newsSiteKey: scraper.key,
       };
     });
+  }
+
+  /**
+   * If this is set to true, then it will open an actual browser window
+   *
+   * @param value boolean
+   */
+  setHeadful(value: boolean) {
+    this._headful = value;
+  }
+
+  /**
+   * Set if we should prevent the closing/termination of the browser at the end or not?
+   *
+   * @param value boolean
+   */
+  setPreventClose(value: boolean) {
+    this._preventClose = value;
+
+    return this;
   }
 }

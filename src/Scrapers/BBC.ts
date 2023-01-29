@@ -22,9 +22,7 @@ export default class BBCScraper extends AbstractNewsScraper implements NewsScrap
       'https://www.bbc.com/news/science_and_environment',
     ];
 
-    const browser = await this.getPuppeteerBrowser({
-      headless: false,
-    });
+    const browser = await this.getPuppeteerBrowser();
     const page = await browser.newPage();
 
     logger.info(`Starting to scrape the recent articles on BBC ...`);
@@ -65,7 +63,7 @@ export default class BBCScraper extends AbstractNewsScraper implements NewsScrap
       logger.info(`Found ${articleUrls.length} articles on this page`);
 
       for (const articleUrl of articleUrls) {
-        const url = this.preProcessUrl(articleUrl);
+        const url = this._preProcessUrl(articleUrl);
 
         logger.debug(`Article URL: ${url}`);
 
@@ -78,7 +76,7 @@ export default class BBCScraper extends AbstractNewsScraper implements NewsScrap
       }
     }
 
-    await browser.close();
+    await this.closePuppeteerBrowser();
 
     return Promise.resolve(this.getUniqueArray(basicArticles));
   }
@@ -87,7 +85,7 @@ export default class BBCScraper extends AbstractNewsScraper implements NewsScrap
     const browser = await this.getPuppeteerBrowser();
     const page = await browser.newPage();
 
-    const url = this.preProcessUrl(basicArticle.url);
+    const url = this._preProcessUrl(basicArticle.url);
     const urlDashSplit = url.split('-');
     const urlDashId = urlDashSplit[urlDashSplit.length - 1];
     const urlSlashSplit = url.split('/');
@@ -119,7 +117,7 @@ export default class BBCScraper extends AbstractNewsScraper implements NewsScrap
         .join('');
     });
 
-    await browser.close();
+    await this.closePuppeteerBrowser();
 
     const article: NewsArticleInterface = {
       url: url,
@@ -137,7 +135,7 @@ export default class BBCScraper extends AbstractNewsScraper implements NewsScrap
     return Promise.resolve(article);
   }
 
-  preProcessUrl(url: string): string {
+  private _preProcessUrl(url: string): string {
     const urlObject = new URL(url);
 
     return url.replace(urlObject.search, '').replace(urlObject.hash, '');
