@@ -1,4 +1,4 @@
-# Plutus News
+# Plutus News Scraper
 
 This is the news component of the Plutus platform.
 
