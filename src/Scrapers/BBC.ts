@@ -47,18 +47,17 @@ export default class BBCScraper extends AbstractNewsScraper implements NewsScrap
           const $elements = Array.from(document.querySelectorAll(querySelector));
 
           // Loop/map through those elements and get the href artibute
-          return $elements
-            .map(($el) => {
-              return $el.getAttribute('href') ?? ''; // Needs to have a '' (empty string) as a fallback, because otherwise it could be null, which we don't want
-            })
-            .filter((href) => {
-              return href !== ''; // Now we want to filter out any links that are '', just in case
-            })
-            .map((uri) => {
-              return `https://www.bbc.com${uri}`;
-            });
+          return $elements.map(($el) => {
+            return $el.getAttribute('href') ?? ''; // Needs to have a '' (empty string) as a fallback, because otherwise it could be null, which we don't want
+          });
         })
-      );
+      )
+        .filter((href) => {
+          return href !== ''; // Now we want to filter out any links that are '', just in case
+        })
+        .map((uri) => {
+          return `https://www.bbc.com${uri}`;
+        });
 
       logger.info(`Found ${articleUrls.length} articles on this page`);
 
