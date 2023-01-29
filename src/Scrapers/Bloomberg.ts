@@ -76,14 +76,10 @@ export default class BloombergScraper extends AbstractNewsScraper implements New
   async scrapeArticle(basicArticle: NewsBasicArticleInterface): Promise<NewsArticleInterface | null> {
     const browser = await this.getPuppeteerBrowser();
     const page = await browser.newPage();
+    page.setUserAgent(this.getDefaultUserAgent());
 
     const url = this.preProcessUrl(basicArticle.url);
-    const urlDashSplit = url.split('-');
-    const urlDashId = urlDashSplit[urlDashSplit.length - 1];
-    const urlSlashSplit = url.split('/');
-    const urlSlashId = urlSlashSplit[urlSlashSplit.length - 1];
-
-    const newsSiteArticleId = urlDashId ?? urlSlashId ?? url;
+    const newsSiteArticleId = url;
 
     logger.info(`Going to URL ${url} ...`);
 
