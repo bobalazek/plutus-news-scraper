@@ -2,21 +2,15 @@ import { AbstractNewsScraper } from '../AbstractNewsScraper';
 import { logger } from '../Logger';
 import { NewsArticleInterface, NewsBasicArticleInterface, NewsScraperInterface } from '../Types/Interfaces';
 
-export default class ABCNewsScraper extends AbstractNewsScraper implements NewsScraperInterface {
-  key: string = 'abc_news';
-  domain: string = 'abcnews.go.com';
+export default class BBCScraper extends AbstractNewsScraper implements NewsScraperInterface {
+  key: string = 'bbc';
+  domain: string = 'bbc.com';
 
   async scrapeRecentArticles(): Promise<NewsBasicArticleInterface[]> {
     const basicArticles: NewsBasicArticleInterface[] = []; // Initialise an empty array, where we can save the article data (mainly the URL)
     const recentArticleListUrls = [
       // Add all the page/category URLs that you want to scrape, so you get the actual article URLS
-      'https://abcnews.go.com',
-      'https://abcnews.go.com/US',
-      'https://abcnews.go.com/International',
-      'https://abcnews.go.com/Business',
-      'https://abcnews.go.com/Politics',
-      'https://abcnews.go.com/Technology',
-      'https://abcnews.go.com/Health',
+      'https:/bbc.com',
     ];
 
     const browser = await this.getPuppeteerBrowser({
@@ -24,26 +18,18 @@ export default class ABCNewsScraper extends AbstractNewsScraper implements NewsS
     });
     const page = await browser.newPage();
 
-    logger.info(`Starting to scrape the recent articles on ABCNews ...`);
+    logger.info(`Starting to scrape the recent articles on BBC ...`);
 
     for (const recentArticleListUrl of recentArticleListUrls) {
       logger.info(`Going to URL ${recentArticleListUrl} ...`);
 
-      await page.waitForTimeout(1000); // Wait a second before we start scraping the next page ...
       await page.goto(recentArticleListUrl, {
         waitUntil: 'domcontentloaded',
       });
 
       const articleUrls = await page.evaluate(() => {
         // Get all the possible (anchor) elements that have the links to articles
-        const querySelector = [
-          '.ContentList a.AnchorLink',
-          '.ContentRoll a.AnchorLink',
-          '.LatestHeadlinesBlock a.AnchorLink',
-          '.HeadlineStackBlock__headlines_triple a.AnchorLink',
-          '.HeadlinesTrio a.AnchorLink',
-          '.VideoCarousel__Container a.AnchorLink',
-        ].join(', ');
+        const querySelector = ['.nw-c-top-stories--international div[class^="nw-c-top-stories__"] a'].join(', ');
 
         // Fetch those with the .querySelectoAll() and convert it to an array
         const $elements = Array.from(document.querySelectorAll(querySelector));
@@ -72,7 +58,7 @@ export default class ABCNewsScraper extends AbstractNewsScraper implements NewsS
       }
     }
 
-    await browser.close();
+    browser.close();
 
     return Promise.resolve(basicArticles);
   }
