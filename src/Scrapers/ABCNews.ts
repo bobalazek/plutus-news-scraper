@@ -84,13 +84,15 @@ export default class ABCNewsScraper extends AbstractNewsScraper implements NewsS
     const browser = await this.getPuppeteerBrowser();
     const page = await browser.newPage();
 
-    const urlSplit = basicArticle.url.split('-');
+    const url = this.preProcessUrl(basicArticle.url);
+    const urlSplit = url.split('-');
     const urlId = urlSplit[urlSplit.length - 1];
+
     const newsSiteArticleId = urlId.includes('?id=') ? urlId.split('?id=')[1] : urlId;
 
-    logger.info(`Going to URL ${basicArticle.url} ...`);
+    logger.info(`Going to URL ${url} ...`);
 
-    await page.goto(basicArticle.url, {
+    await page.goto(url, {
       waitUntil: 'domcontentloaded',
     });
 
@@ -98,7 +100,7 @@ export default class ABCNewsScraper extends AbstractNewsScraper implements NewsS
       return document.querySelector('head script[type="application/ld+json"]')?.innerHTML ?? '';
     });
     if (!linkedDataText) {
-      throw new Error(`No linked data found for URL ${basicArticle.url}`);
+      throw new Error(`No linked data found for URL ${url}`);
     }
 
     const linkedData = JSON.parse(linkedDataText);
@@ -115,7 +117,7 @@ export default class ABCNewsScraper extends AbstractNewsScraper implements NewsS
     await browser.close();
 
     const article = {
-      url: basicArticle.url,
+      url: url,
       title: linkedData.headline,
       type: NewsArticleTypeEnum.TEXT,
       content: convert(content, {
@@ -130,5 +132,11 @@ export default class ABCNewsScraper extends AbstractNewsScraper implements NewsS
     logger.debug(article);
 
     return Promise.resolve(article);
+  }
+
+  preProcessUrl(url: string): string {
+    const urlObject = new URL(url);
+
+    return url.replace(urlObject.hash, '');
   }
 }
