@@ -1,6 +1,7 @@
 import { readdirSync } from 'fs';
 import { join } from 'path';
 
+import type { AbstractNewsScraper } from './AbstractNewsScraper';
 import { ROOT_DIRECTORY } from './Constants';
 import {
   NewsArticleWithSiteKeyInterface,
@@ -12,6 +13,7 @@ export class NewsScrapingManager {
   private _scrapers: Record<string, NewsScraperInterface> = {};
   private _scrapersDomainMap: Record<string, string> = {};
   private _initialized: boolean = false;
+  private _currentScraper: AbstractNewsScraper | null = null;
 
   async init() {
     if (this._initialized) {
@@ -65,6 +67,10 @@ export class NewsScrapingManager {
     this._initialized = true;
   }
 
+  async terminateScraper() {
+    await this._currentScraper?.closePuppeteerBrowser();
+  }
+
   async get(newsSiteKey: string) {
     await this.init();
 
@@ -84,9 +90,9 @@ export class NewsScrapingManager {
       throw new Error(`No scraper for the domain "${urlObject.hostname}" was found`);
     }
 
-    const processedArticleUrl = scraper.preProcessUrl?.(url) ?? url;
+    this._currentScraper = scraper as unknown as AbstractNewsScraper;
 
-    const newsArticle = await scraper.scrapeArticle({ url: processedArticleUrl });
+    const newsArticle = await scraper.scrapeArticle({ url });
     if (!newsArticle) {
       throw new Error(`Article data not found.`);
     }
@@ -99,6 +105,8 @@ export class NewsScrapingManager {
     if (typeof scraper === 'undefined') {
       throw new Error(`Scraper ${newsSiteKey} was not found`);
     }
+
+    this._currentScraper = scraper as unknown as AbstractNewsScraper;
 
     if (typeof scraper.scrapeRecentArticles === 'undefined') {
       throw new Error(`This scraper (${newsSiteKey}) does not have the .getRecentArticles() method implemented`);

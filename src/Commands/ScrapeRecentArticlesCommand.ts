@@ -16,6 +16,8 @@ export const addScrapeRecentArticlesCommand = (program: Command) => {
       try {
         await newsScrapingManager.scrapeRecentArticles(newsSite);
       } catch (err) {
+        await newsScrapingManager.terminateScraper();
+
         logger.error(err.message);
       }
     });

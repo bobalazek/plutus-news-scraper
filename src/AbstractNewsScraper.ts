@@ -1,8 +1,16 @@
-import puppeteer, { PuppeteerLaunchOptions } from 'puppeteer';
+import puppeteer, { Browser, PuppeteerLaunchOptions } from 'puppeteer';
 
 export abstract class AbstractNewsScraper {
-  getPuppeteerBrowser(options?: PuppeteerLaunchOptions) {
-    return puppeteer.launch(options);
+  browser: Browser;
+
+  async getPuppeteerBrowser(options?: PuppeteerLaunchOptions) {
+    this.browser = await puppeteer.launch(options);
+
+    return this.browser;
+  }
+
+  async closePuppeteerBrowser() {
+    await this.browser?.close();
   }
 
   getUniqueArray<T>(array: T[]) {
