@@ -3,36 +3,41 @@ import { logger } from '../Logger';
 import { NewsArticleTypeEnum } from '../Types/Enums';
 import { NewsArticleInterface, NewsBasicArticleInterface, NewsScraperInterface } from '../Types/Interfaces';
 
-export default class BloombergScraper extends AbstractNewsScraper implements NewsScraperInterface {
-  key: string = 'bloomberg';
-  domain: string = 'bloomberg.com';
-  domainAliases: string[] = ['www.bloomberg.com'];
+export default class BarronsScraper extends AbstractNewsScraper implements NewsScraperInterface {
+  key: string = 'barrons';
+  domain: string = 'barrons.com';
+  domainAliases: string[] = ['www.barrons.com'];
 
   async scrapeRecentArticles(): Promise<NewsBasicArticleInterface[]> {
     const basicArticles: NewsBasicArticleInterface[] = []; // Initialise an empty array, where we can save the article data (mainly the URL)
     const recentArticleListUrls = [
       // Add all the page/category URLs that you want to scrape, so you get the actual article URLS
-      'https://www.bloomberg.com/europe',
-      'https://www.bloomberg.com/uk',
-      'https://www.bloomberg.com/',
-      'https://www.bloomberg.com/asia',
-      'https://www.bloomberg.com/middleeast',
-      'https://www.bloomberg.com/africa',
-      'https://www.bloomberg.com/markets',
-      'https://www.bloomberg.com/economics',
-      'https://www.bloomberg.com/industries',
-      'https://www.bloomberg.com/technology',
-      'https://www.bloomberg.com/politics',
-      'https://www.bloomberg.com/wealth',
-      'https://www.bloomberg.com/pursuits',
-      'https://www.bloomberg.com/green',
-      'https://www.bloomberg.com/crypto',
+      'https://www.barrons.com/',
+      'https://www.barrons.com/topics/markets',
+      'https://www.barrons.com/topics/europe',
+      'https://www.barrons.com/topics/asia',
+      'https://www.barrons.com/topics/emerging-markets',
+      'https://www.barrons.com/topics/funds',
+      'https://www.barrons.com/market-data/stocks/stock-picks',
+      'https://www.barrons.com/topics/ceos-and-thought-leaders',
+      'https://www.barrons.com/topics/streetwise',
+      'https://www.barrons.com/topics/technology',
+      'https://www.barrons.com/topics/bonds',
+      'https://www.barrons.com/topics/commodities',
+      'https://www.barrons.com/topics/sustainable-investing',
+      'https://www.barrons.com/topics/financial-planning',
+      'https://www.barrons.com/topics/retirement',
+      'https://www.barrons.com/topics/economy-and-policy',
+      'https://www.barrons.com/topics/up-and-down-wall-street',
+      'https://www.barrons.com/topics/cryptocurrencies',
+      'https://www.barrons.com/topics/the-trader',
+      'https://www.barrons.com/news',
     ];
 
     const browser = await this.getPuppeteerBrowser();
     const page = await browser.newPage();
 
-    logger.info(`Starting to scrape the recent articles on Bloomberg ...`);
+    logger.info(`Starting to scrape the recent articles on Barrons ...`);
 
     for (const recentArticleListUrl of recentArticleListUrls) {
       logger.info(`Going to URL ${recentArticleListUrl} ...`);
@@ -45,11 +50,9 @@ export default class BloombergScraper extends AbstractNewsScraper implements New
         await page.evaluate(() => {
           // Get all the possible (anchor) elements that have the links to articles
           const querySelector = [
-            '.single-story-module__info a.single-story-module__headline-link',
-            '.single-story-module__info .single-story-module__related-stories a.single-story-module__related-story-link',
-            '.story-list-module__info a.story-list-story__info__headline-link',
-            '.story-list-story__info a.story-list-story__info__headline-link',
-            '.story-package-module__stories .story-package-module__story a.story-package-module__story__headline-link',
+            'div[class^="BarronsTheme-module--article"]',
+            'article[class^="BarronsTheme--story--"] a',
+            'div[class^="BarronsTheme__stock-picks-container___"] h4 a',
           ].join(', ');
 
           // Fetch those with the .querySelectoAll() and convert it to an array
@@ -62,9 +65,6 @@ export default class BloombergScraper extends AbstractNewsScraper implements New
             })
             .filter((href) => {
               return href !== ''; // Now we want to filter out any links that are '', just in case
-            })
-            .map((uri) => {
-              return `https://www.bloomberg.com${uri}`;
             });
         })
       );
@@ -79,7 +79,7 @@ export default class BloombergScraper extends AbstractNewsScraper implements New
         basicArticles.push({
           // We are actually pushing a basic article object, instead of just URL,
           // if in the future we for example maybe want to provide some more metadata
-          // on the list (recent  and archived articles) scrape
+          // on the list (recent and archived articles) scrape
           url: url,
         });
       }
@@ -93,10 +93,12 @@ export default class BloombergScraper extends AbstractNewsScraper implements New
   async scrapeArticle(basicArticle: NewsBasicArticleInterface): Promise<NewsArticleInterface | null> {
     const browser = await this.getPuppeteerBrowser();
     const page = await browser.newPage();
-    page.setUserAgent(this.getDefaultUserAgent());
 
     const url = this._preProcessUrl(basicArticle.url);
-    const newsSiteArticleId = url;
+    const urlDashSplit = url.split('-');
+    const urlDashId = urlDashSplit[urlDashSplit.length - 1];
+
+    const newsSiteArticleId = urlDashId ?? url;
 
     logger.info(`Going to URL ${url} ...`);
 
@@ -111,11 +113,17 @@ export default class BloombergScraper extends AbstractNewsScraper implements New
       throw new Error(`No linked data found for URL ${url}`);
     }
 
-    const linkedData = JSON.parse(linkedDataText);
+    const linkedData = JSON.parse(linkedDataText)[0];
 
     // Content
     const content = await page.evaluate(() => {
-      return Array.from(document.querySelectorAll('article .body-content p'))
+      return Array.from(
+        document.querySelector('#js-article__body')
+          ? document.querySelectorAll('#js-article__body p, #js-article__body .paywall')
+          : document.querySelector('#article-contents .article__body')
+          ? document.querySelectorAll('#article-contents .article__body p')
+          : []
+      )
         .map((element) => {
           return element.innerHTML;
         })

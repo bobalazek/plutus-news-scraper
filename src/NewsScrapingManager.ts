@@ -80,6 +80,8 @@ export class NewsScrapingManager {
   }
 
   async getForDomain(domain: string) {
+    await this.init();
+
     return this.get(this._scrapersDomainMap[domain]);
   }
 
