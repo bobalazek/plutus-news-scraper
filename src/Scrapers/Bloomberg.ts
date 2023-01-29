@@ -38,9 +38,9 @@ export default class BloombergScraper extends AbstractNewsScraper implements New
         await page.evaluate(() => {
           // Get all the possible (anchor) elements that have the links to articles
           const querySelector = [
-            '.single-story-module__info .single-story-module__eyebrow a.single-story-module__headline-link',
-            '.single-story-module__info .single-story-module__related-stories a.single-story-module__related-story-link',
-            '.story-list-module__info a.story-list-story__info__headline-link',
+            //'.single-story-module__info .single-story-module__eyebrow a.single-story-module__headline-link',
+            //'.single-story-module__info .single-story-module__related-stories a.single-story-module__related-story-link',
+            //'.story-list-module__info a.story-list-story__info__headline-link',
             '.story-list-story__info a.story-list-story__info__headline-link',
           ].join(', ');
 

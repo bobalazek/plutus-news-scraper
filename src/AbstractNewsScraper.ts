@@ -4,7 +4,7 @@ export abstract class AbstractNewsScraper {
   browser: Browser;
 
   async getPuppeteerBrowser(options?: PuppeteerLaunchOptions) {
-    this.browser = await puppeteer.launch(options);
+    this.browser = await puppeteer.launch({ defaultViewport: null, ...options });
 
     return this.browser;
   }
