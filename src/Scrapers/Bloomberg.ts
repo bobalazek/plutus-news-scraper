@@ -5,21 +5,16 @@ import { logger } from '../Logger';
 import { NewsArticleTypeEnum } from '../Types/Enums';
 import { NewsArticleInterface, NewsBasicArticleInterface, NewsScraperInterface } from '../Types/Interfaces';
 
-export default class BBCScraper extends AbstractNewsScraper implements NewsScraperInterface {
-  key: string = 'bbc';
-  domain: string = 'bbc.com';
-  domainAliases: string[] = ['www.bbc.com'];
+export default class BloombergScraper extends AbstractNewsScraper implements NewsScraperInterface {
+  key: string = 'bloomberg';
+  domain: string = 'bloomberg.com';
+  domainAliases: string[] = ['www.bloomberg.com'];
 
   async scrapeRecentArticles(): Promise<NewsBasicArticleInterface[]> {
     const basicArticles: NewsBasicArticleInterface[] = []; // Initialise an empty array, where we can save the article data (mainly the URL)
     const recentArticleListUrls = [
       // Add all the page/category URLs that you want to scrape, so you get the actual article URLS
-      'https://www.bbc.com/news',
-      /*
-      'https://www.bbc.com/news/coronavirus',
-      'https://www.bbc.com/news/world',
-      'https://www.bbc.com/news/uk',
-      */
+      'https://www.bloomberg.com/europe',
     ];
 
     const browser = await this.getPuppeteerBrowser({
@@ -27,7 +22,7 @@ export default class BBCScraper extends AbstractNewsScraper implements NewsScrap
     });
     const page = await browser.newPage();
 
-    logger.info(`Starting to scrape the recent articles on BBC ...`);
+    logger.info(`Starting to scrape the recent articles on Bloomberg ...`);
 
     for (const recentArticleListUrl of recentArticleListUrls) {
       logger.info(`Going to URL ${recentArticleListUrl} ...`);
@@ -39,10 +34,9 @@ export default class BBCScraper extends AbstractNewsScraper implements NewsScrap
       const articleUrls = await page.evaluate(() => {
         // Get all the possible (anchor) elements that have the links to articles
         const querySelector = [
-          '#news-top-stories-container a.gs-c-promo-heading',
-          /* '.nw-c-seven-slice .gs-c-promo a',
-          'lx-stream ol li a',
-          'div[role="region"] a', */
+          'a.single-story-module__image-link',
+          'a.single-story-module__related-story-link',
+          'a.story-list-story__info__headline-link',
         ].join(', ');
 
         // Fetch those with the .querySelectoAll() and convert it to an array
@@ -57,7 +51,7 @@ export default class BBCScraper extends AbstractNewsScraper implements NewsScrap
             return href !== ''; // Now we want to filter out any links that are '', just in case
           })
           .map((uri) => {
-            return `https://www.bbc.com${uri}`;
+            return `https://www.bloomberg.com${uri}`;
           })
           .filter((url, index, array) => array.indexOf(url) === index); // Remove duplicates from the array
       });
@@ -108,11 +102,9 @@ export default class BBCScraper extends AbstractNewsScraper implements NewsScrap
 
     const linkedData = JSON.parse(linkedDataText);
 
-    console.log(linkedData);
-
     // Content
     const content = await page.evaluate(() => {
-      return Array.from(document.querySelectorAll('#main-content article div[data-component="text-block"]'))
+      return Array.from(document.querySelectorAll('article .body-content p'))
         .map((element) => {
           return element.outerHTML;
         })
