@@ -25,14 +25,11 @@ export interface NewsArticleInterface extends NewsBasicArticleInterface {
   type: NewsArticleTypeEnum;
   content: string;
   newsSiteArticleId: string;
-  assets?: NewsArticleAssetInterface[];
   authorName?: string;
   authorUrl?: string;
   categoryName?: string;
   categoryUrl?: string;
   imageUrl?: string;
-  tags?: string[];
-  localeCode?: string;
   publishedAt: Date;
   modifiedAt: Date;
 }
