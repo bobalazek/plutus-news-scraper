@@ -1,36 +1,32 @@
-import { convert } from 'html-to-text';
-
 import { AbstractNewsScraper } from '../AbstractNewsScraper';
 import { logger } from '../Logger';
 import { NewsArticleTypeEnum } from '../Types/Enums';
 import { NewsArticleInterface, NewsBasicArticleInterface, NewsScraperInterface } from '../Types/Interfaces';
 
-export default class ABCNewsScraper extends AbstractNewsScraper implements NewsScraperInterface {
-  key: string = 'abc_news';
-  domain: string = 'abcnews.go.com';
+export default class CNBCScraper extends AbstractNewsScraper implements NewsScraperInterface {
+  key: string = 'cnbc';
+  domain: string = 'cnbc.com';
+  domainAliases: string[] = ['www.cnbc.com'];
 
   async scrapeRecentArticles(): Promise<NewsBasicArticleInterface[]> {
     const basicArticles: NewsBasicArticleInterface[] = []; // Initialise an empty array, where we can save the article data (mainly the URL)
     const recentArticleListUrls = [
       // Add all the page/category URLs that you want to scrape, so you get the actual article URLS
-      'https://abcnews.go.com',
-      'https://abcnews.go.com/US',
-      'https://abcnews.go.com/International',
-      'https://abcnews.go.com/Business',
-      'https://abcnews.go.com/Politics',
-      'https://abcnews.go.com/Technology',
-      'https://abcnews.go.com/Health',
+      'https://www.cnbc.com/business/',
+      'https://www.cnbc.com/investing/',
+      'https://www.cnbc.com/technology/',
+      'https://www.cnbc.com/politics/',
+      // 'https://www.cnbc.com/tv/',
     ];
 
     const browser = await this.getPuppeteerBrowser();
     const page = await browser.newPage();
 
-    logger.info(`Starting to scrape the recent articles on ABCNews ...`);
+    logger.info(`Starting to scrape the recent articles on CNBC ...`);
 
     for (const recentArticleListUrl of recentArticleListUrls) {
       logger.info(`Going to URL ${recentArticleListUrl} ...`);
 
-      await page.waitForTimeout(1000); // Wait a second before we start scraping the next page ...
       await page.goto(recentArticleListUrl, {
         waitUntil: 'domcontentloaded',
       });
@@ -38,14 +34,7 @@ export default class ABCNewsScraper extends AbstractNewsScraper implements NewsS
       const articleUrls = this.getUniqueArray(
         await page.evaluate(() => {
           // Get all the possible (anchor) elements that have the links to articles
-          const querySelector = [
-            '.ContentList a.AnchorLink',
-            '.ContentRoll a.AnchorLink',
-            '.LatestHeadlinesBlock a.AnchorLink',
-            '.HeadlineStackBlock__headlines_triple a.AnchorLink',
-            '.HeadlinesTrio a.AnchorLink',
-            '.VideoCarousel__Container a.AnchorLink',
-          ].join(', ');
+          const querySelector = ['.Card-textContent a.Card-title'].join(', ');
 
           // Fetch those with the .querySelectoAll() and convert it to an array
           const $elements = Array.from(document.querySelectorAll(querySelector));
@@ -69,7 +58,7 @@ export default class ABCNewsScraper extends AbstractNewsScraper implements NewsS
         basicArticles.push({
           // We are actually pushing a basic article object, instead of just URL,
           // if in the future we for example maybe want to provide some more metadata
-          // on the list (recent and archived articles) scrape
+          // on the list (recent  and archived articles) scrape
           url: url,
         });
       }
@@ -83,12 +72,10 @@ export default class ABCNewsScraper extends AbstractNewsScraper implements NewsS
   async scrapeArticle(basicArticle: NewsBasicArticleInterface): Promise<NewsArticleInterface | null> {
     const browser = await this.getPuppeteerBrowser();
     const page = await browser.newPage();
+    page.setUserAgent(this.getDefaultUserAgent());
 
     const url = this._preProcessUrl(basicArticle.url);
-    const urlSplit = url.split('-');
-    const urlId = urlSplit[urlSplit.length - 1];
-
-    const newsSiteArticleId = urlId.includes('?id=') ? urlId.split('?id=')[1] : urlId;
+    const newsSiteArticleId = url;
 
     logger.info(`Going to URL ${url} ...`);
 
@@ -104,10 +91,11 @@ export default class ABCNewsScraper extends AbstractNewsScraper implements NewsS
     }
 
     const linkedData = JSON.parse(linkedDataText);
+    console.log(linkedData);
 
     // Content
     const content = await page.evaluate(() => {
-      return Array.from(document.querySelectorAll('article[data-testid="prism-article-body"] p'))
+      return Array.from(document.querySelectorAll('article .body-content p'))
         .map((element) => {
           return element.innerHTML;
         })
@@ -120,9 +108,7 @@ export default class ABCNewsScraper extends AbstractNewsScraper implements NewsS
       url: url,
       title: linkedData.headline,
       type: NewsArticleTypeEnum.TEXT,
-      content: convert(content, {
-        wordwrap: false,
-      }),
+      content: content,
       newsSiteArticleId: newsSiteArticleId,
       publishedAt: new Date(linkedData.datePublished),
       modifiedAt: new Date(linkedData.dateModified),
@@ -137,6 +123,6 @@ export default class ABCNewsScraper extends AbstractNewsScraper implements NewsS
   private _preProcessUrl(url: string): string {
     const urlObject = new URL(url);
 
-    return url.replace(urlObject.hash, '');
+    return url.replace(urlObject.search, '').replace(urlObject.hash, '');
   }
 }
