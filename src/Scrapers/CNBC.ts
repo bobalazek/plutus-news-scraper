@@ -87,7 +87,7 @@ export default class CNBCScraper extends AbstractNewsScraper implements NewsScra
     const newsSiteArticleId = await page.evaluate(() => {
       return document.querySelector('head meta[property="pageNodeId"]')?.getAttribute('content') ?? '';
     });
-    const dateCreated = await page.evaluate(() => {
+    const datePublished = await page.evaluate(() => {
       return document.querySelector('head meta[itemprop="dateCreated"]')?.getAttribute('content') ?? '';
     });
     const dateModified = await page.evaluate(() => {
@@ -116,7 +116,7 @@ export default class CNBCScraper extends AbstractNewsScraper implements NewsScra
         wordwrap: false,
       }),
       newsSiteArticleId: newsSiteArticleId,
-      publishedAt: new Date(dateCreated),
+      publishedAt: new Date(datePublished),
       modifiedAt: new Date(dateModified),
     };
 

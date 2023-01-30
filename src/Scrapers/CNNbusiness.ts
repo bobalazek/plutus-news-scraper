@@ -88,8 +88,6 @@ export default class CnnBusinessgScraper extends AbstractNewsScraper implements 
       waitUntil: 'domcontentloaded',
     });
 
-    const newsSiteArticleId = url;
-
     const linkedDataText = await page.evaluate(() => {
       return document.querySelector('head script[type="application/ld+json"]')?.innerHTML ?? '';
     });
@@ -98,6 +96,8 @@ export default class CnnBusinessgScraper extends AbstractNewsScraper implements 
     }
 
     const linkedData = JSON.parse(linkedDataText);
+
+    const newsSiteArticleId = linkedData.identifier[0].value;
 
     // Content
     const content = await page.evaluate(() => {

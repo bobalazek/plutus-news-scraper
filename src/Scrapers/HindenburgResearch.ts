@@ -5,29 +5,22 @@ import { logger } from '../Logger';
 import { NewsArticleTypeEnum } from '../Types/Enums';
 import { NewsArticleInterface, NewsBasicArticleInterface, NewsScraperInterface } from '../Types/Interfaces';
 
-export default class BBCScraper extends AbstractNewsScraper implements NewsScraperInterface {
-  key: string = 'bbc';
-  domain: string = 'bbc.com';
-  domainAliases: string[] = ['www.bbc.com'];
+export default class HindenburgResearchScraper extends AbstractNewsScraper implements NewsScraperInterface {
+  key: string = 'hindenburg_research';
+  domain: string = 'hindenburgresearch.com';
+  domainAliases: string[] = ['www.hindenburgresearch.com'];
 
   async scrapeRecentArticles(): Promise<NewsBasicArticleInterface[]> {
     const basicArticles: NewsBasicArticleInterface[] = []; // Initialise an empty array, where we can save the article data (mainly the URL)
     const recentArticleListUrls = [
       // Add all the page/category URLs that you want to scrape, so you get the actual article URLS
-      'https://www.bbc.com/news',
-      'https://www.bbc.com/news/coronavirus',
-      'https://www.bbc.com/news/world',
-      'https://www.bbc.com/news/uk',
-      'https://www.bbc.com/news/business',
-      'https://www.bbc.com/news/technology',
-      'https://www.bbc.com/news/health',
-      'https://www.bbc.com/news/science_and_environment',
+      'https://hindenburgresearch.com/',
     ];
 
     const browser = await this.getPuppeteerBrowser();
     const page = await browser.newPage();
 
-    logger.info(`Starting to scrape the recent articles on BBC ...`);
+    logger.info(`Starting to scrape the recent articles on Hindenburg Research ...`);
 
     for (const recentArticleListUrl of recentArticleListUrls) {
       logger.info(`Going to URL ${recentArticleListUrl} ...`);
@@ -39,11 +32,7 @@ export default class BBCScraper extends AbstractNewsScraper implements NewsScrap
       const articleUrls = this.getUniqueArray(
         await page.evaluate(() => {
           // Get all the possible (anchor) elements that have the links to articles
-          const querySelector = [
-            '#news-top-stories-container a.gs-c-promo-heading',
-            '#index-page a.gs-c-promo-heading',
-            '#lx-stream a.qa-heading-link',
-          ].join(', ');
+          const querySelector = ['.post-preview'].join(', ');
 
           // Fetch those with the .querySelectoAll() and convert it to an array
           const $elements = Array.from(document.querySelectorAll(querySelector));
@@ -58,7 +47,7 @@ export default class BBCScraper extends AbstractNewsScraper implements NewsScrap
           return href !== ''; // Now we want to filter out any links that are '', just in case
         })
         .map((uri) => {
-          return `https://www.bbc.com${uri}`;
+          return `https://www.hindenburgresearch.com${uri}`;
         });
 
       logger.info(`Found ${articleUrls.length} articles on this page`);
@@ -71,7 +60,7 @@ export default class BBCScraper extends AbstractNewsScraper implements NewsScrap
         basicArticles.push({
           // We are actually pushing a basic article object, instead of just URL,
           // if in the future we for example maybe want to provide some more metadata
-          // on the list (recent and archived articles) scrape
+          // on the list (recent  and archived articles) scrape
           url: url,
         });
       }
@@ -85,6 +74,7 @@ export default class BBCScraper extends AbstractNewsScraper implements NewsScrap
   async scrapeArticle(basicArticle: NewsBasicArticleInterface): Promise<NewsArticleInterface | null> {
     const browser = await this.getPuppeteerBrowser();
     const page = await browser.newPage();
+    page.setUserAgent(this.getDefaultUserAgent());
 
     const url = this._preProcessUrl(basicArticle.url);
 
@@ -94,25 +84,34 @@ export default class BBCScraper extends AbstractNewsScraper implements NewsScrap
       waitUntil: 'domcontentloaded',
     });
 
-    const urlSplit = url.split('-');
-    const urlId = urlSplit[urlSplit.length - 1];
-    const urlSlashSplit = url.split('/');
-    const urlSlashId = urlSlashSplit[urlSlashSplit.length - 1];
-
-    const newsSiteArticleId = urlId ?? urlSlashId ?? url;
-
-    const linkedDataText = await page.evaluate(() => {
-      return document.querySelector('head script[type="application/ld+json"]')?.innerHTML ?? '';
+    const jsonHref = await page.evaluate(() => {
+      return (
+        document
+          .querySelector(
+            'head link[type="application/json"][href^="https://hindenburgresearch.com/wp-json/wp/v2/posts/"]'
+          )
+          ?.getAttribute('href') ?? ''
+      );
     });
-    if (!linkedDataText) {
-      throw new Error(`No linked data found for URL ${url}`);
-    }
 
-    const linkedData = JSON.parse(linkedDataText);
+    const jsonHrefSplit = jsonHref.split('/');
+    const jsonHrefId = jsonHrefSplit[jsonHrefSplit.length - 1];
+
+    const newsSiteArticleId = jsonHrefId;
+
+    const datePublished = await page.evaluate(() => {
+      return document.querySelector('head meta[property="article:published_time"]')?.getAttribute('content') ?? '';
+    });
+    const dateModified = await page.evaluate(() => {
+      return document.querySelector('head meta[property="article:modified_time"]')?.getAttribute('content') ?? '';
+    });
+    const title = await page.evaluate(() => {
+      return document.querySelector('head meta[property="og:title"]')?.getAttribute('content') ?? '';
+    });
 
     // Content
     const content = await page.evaluate(() => {
-      return Array.from(document.querySelectorAll('#main-content article div[data-component="text-block"]'))
+      return Array.from(document.querySelectorAll('.container ul'))
         .map((element) => {
           return element.innerHTML;
         })
@@ -123,14 +122,14 @@ export default class BBCScraper extends AbstractNewsScraper implements NewsScrap
 
     const article: NewsArticleInterface = {
       url: url,
-      title: linkedData.headline,
+      title: title,
       type: NewsArticleTypeEnum.TEXT,
       content: convert(content, {
         wordwrap: false,
       }),
       newsSiteArticleId: newsSiteArticleId,
-      publishedAt: new Date(linkedData.datePublished),
-      modifiedAt: new Date(linkedData.dateModified),
+      publishedAt: new Date(datePublished),
+      modifiedAt: new Date(dateModified),
     };
 
     logger.debug(`Article data:`);

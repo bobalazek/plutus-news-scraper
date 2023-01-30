@@ -102,10 +102,10 @@ export default class BarronsScraper extends AbstractNewsScraper implements NewsS
       waitUntil: 'domcontentloaded',
     });
 
-    const urlDashSplit = url.split('-');
-    const urlDashId = urlDashSplit[urlDashSplit.length - 1];
+    const urlSplit = url.split('-');
+    const urlId = urlSplit[urlSplit.length - 1];
 
-    const newsSiteArticleId = urlDashId ?? url;
+    const newsSiteArticleId = urlId ?? url;
 
     const linkedDataText = await page.evaluate(() => {
       return document.querySelector('head script[type="application/ld+json"]')?.innerHTML ?? '';
