@@ -77,7 +77,6 @@ export default class CNBCScraper extends AbstractNewsScraper implements NewsScra
     page.setUserAgent(this.getDefaultUserAgent());
 
     const url = this._preProcessUrl(basicArticle.url);
-    const newsSiteArticleId = url;
 
     logger.info(`Going to URL ${url} ...`);
 
@@ -85,19 +84,22 @@ export default class CNBCScraper extends AbstractNewsScraper implements NewsScra
       waitUntil: 'domcontentloaded',
     });
 
-    const linkedDataText = await page.evaluate(() => {
-      return document.querySelector('head script[type="application/ld+json"]')?.innerHTML ?? '';
+    const newsSiteArticleId = await page.evaluate(() => {
+      return document.querySelector('head meta[property="pageNodeId"]')?.getAttribute('content') ?? '';
     });
-    if (!linkedDataText) {
-      throw new Error(`No linked data found for URL ${url}`);
-    }
-
-    const linkedData = JSON.parse(linkedDataText);
-    console.log(linkedData);
+    const dateCreated = await page.evaluate(() => {
+      return document.querySelector('head meta[itemprop="dateCreated"]')?.getAttribute('content') ?? '';
+    });
+    const dateModified = await page.evaluate(() => {
+      return document.querySelector('head meta[itemprop="dateModified"]')?.getAttribute('content') ?? '';
+    });
+    const title = await page.evaluate(() => {
+      return document.querySelector('head meta[property="og:title"]')?.getAttribute('content') ?? '';
+    });
 
     // Content
     const content = await page.evaluate(() => {
-      return Array.from(document.querySelectorAll('article .body-content p'))
+      return Array.from(document.querySelectorAll('.PageBuilder-article .ArticleBody-articleBody'))
         .map((element) => {
           return element.innerHTML;
         })
@@ -108,14 +110,14 @@ export default class CNBCScraper extends AbstractNewsScraper implements NewsScra
 
     const article: NewsArticleInterface = {
       url: url,
-      title: linkedData.headline,
+      title: title,
       type: NewsArticleTypeEnum.TEXT,
       content: convert(content, {
         wordwrap: false,
       }),
       newsSiteArticleId: newsSiteArticleId,
-      publishedAt: new Date(linkedData.datePublished),
-      modifiedAt: new Date(linkedData.dateModified),
+      publishedAt: new Date(dateCreated),
+      modifiedAt: new Date(dateModified),
     };
 
     logger.debug(`Article data:`);
