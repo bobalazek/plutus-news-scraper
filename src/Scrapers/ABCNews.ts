@@ -1,3 +1,5 @@
+import { convert } from 'html-to-text';
+
 import { AbstractNewsScraper } from '../AbstractNewsScraper';
 import { logger } from '../Logger';
 import { NewsArticleTypeEnum } from '../Types/Enums';
@@ -118,7 +120,9 @@ export default class ABCNewsScraper extends AbstractNewsScraper implements NewsS
       url: url,
       title: linkedData.headline,
       type: NewsArticleTypeEnum.TEXT,
-      content: content,
+      content: convert(content, {
+        wordwrap: false,
+      }),
       newsSiteArticleId: newsSiteArticleId,
       publishedAt: new Date(linkedData.datePublished),
       modifiedAt: new Date(linkedData.dateModified),
