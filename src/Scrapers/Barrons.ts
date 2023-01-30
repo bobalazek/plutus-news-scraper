@@ -95,16 +95,17 @@ export default class BarronsScraper extends AbstractNewsScraper implements NewsS
     const page = await browser.newPage();
 
     const url = this._preProcessUrl(basicArticle.url);
-    const urlDashSplit = url.split('-');
-    const urlDashId = urlDashSplit[urlDashSplit.length - 1];
-
-    const newsSiteArticleId = urlDashId ?? url;
 
     logger.info(`Going to URL ${url} ...`);
 
     await page.goto(url, {
       waitUntil: 'domcontentloaded',
     });
+
+    const urlDashSplit = url.split('-');
+    const urlDashId = urlDashSplit[urlDashSplit.length - 1];
+
+    const newsSiteArticleId = urlDashId ?? url;
 
     const linkedDataText = await page.evaluate(() => {
       return document.querySelector('head script[type="application/ld+json"]')?.innerHTML ?? '';

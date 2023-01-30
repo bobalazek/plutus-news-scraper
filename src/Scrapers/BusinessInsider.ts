@@ -79,13 +79,14 @@ export default class BusinessInsiderScraper extends AbstractNewsScraper implemen
     page.setUserAgent(this.getDefaultUserAgent());
 
     const url = this._preProcessUrl(basicArticle.url);
-    const newsSiteArticleId = url;
 
     logger.info(`Going to URL ${url} ...`);
 
     await page.goto(url, {
       waitUntil: 'domcontentloaded',
     });
+
+    const newsSiteArticleId = url;
 
     const linkedDataText = await page.evaluate(() => {
       return document.querySelector('head script[type="application/ld+json"]')?.innerHTML ?? '';

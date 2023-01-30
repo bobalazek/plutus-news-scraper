@@ -85,16 +85,16 @@ export default class ABCNewsScraper extends AbstractNewsScraper implements NewsS
     const page = await browser.newPage();
 
     const url = this._preProcessUrl(basicArticle.url);
-    const urlSplit = url.split('-');
-    const urlId = urlSplit[urlSplit.length - 1];
-
-    const newsSiteArticleId = urlId.includes('?id=') ? urlId.split('?id=')[1] : urlId;
 
     logger.info(`Going to URL ${url} ...`);
 
     await page.goto(url, {
       waitUntil: 'domcontentloaded',
     });
+
+    const urlSplit = url.split('-');
+    const urlId = urlSplit[urlSplit.length - 1];
+    const newsSiteArticleId = urlId.includes('?id=') ? urlId.split('?id=')[1] : urlId;
 
     const linkedDataText = await page.evaluate(() => {
       return document.querySelector('head script[type="application/ld+json"]')?.innerHTML ?? '';
