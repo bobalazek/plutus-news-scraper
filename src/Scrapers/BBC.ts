@@ -7,8 +7,7 @@ import { NewsArticleInterface, NewsBasicArticleInterface, NewsScraperInterface }
 
 export default class BBCScraper extends AbstractNewsScraper implements NewsScraperInterface {
   key: string = 'bbc';
-  domain: string = 'bbc.com';
-  domainAliases: string[] = ['www.bbc.com'];
+  domain: string = 'www.bbc.com';
 
   async scrapeRecentArticles(): Promise<NewsBasicArticleInterface[]> {
     const basicArticles: NewsBasicArticleInterface[] = []; // Initialise an empty array, where we can save the article data (mainly the URL)

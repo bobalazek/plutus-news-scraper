@@ -7,8 +7,7 @@ import { NewsArticleInterface, NewsBasicArticleInterface, NewsScraperInterface }
 
 export default class BloombergScraper extends AbstractNewsScraper implements NewsScraperInterface {
   key: string = 'bloomberg';
-  domain: string = 'bloomberg.com';
-  domainAliases: string[] = ['www.bloomberg.com'];
+  domain: string = 'www.bloomberg.com';
 
   async scrapeRecentArticles(): Promise<NewsBasicArticleInterface[]> {
     const basicArticles: NewsBasicArticleInterface[] = []; // Initialise an empty array, where we can save the article data (mainly the URL)

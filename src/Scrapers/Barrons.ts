@@ -7,8 +7,7 @@ import { NewsArticleInterface, NewsBasicArticleInterface, NewsScraperInterface }
 
 export default class BarronsScraper extends AbstractNewsScraper implements NewsScraperInterface {
   key: string = 'barrons';
-  domain: string = 'barrons.com';
-  domainAliases: string[] = ['www.barrons.com'];
+  domain: string = 'www.barrons.com';
 
   async scrapeRecentArticles(): Promise<NewsBasicArticleInterface[]> {
     const basicArticles: NewsBasicArticleInterface[] = []; // Initialise an empty array, where we can save the article data (mainly the URL)

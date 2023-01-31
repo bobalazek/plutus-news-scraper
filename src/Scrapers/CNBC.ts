@@ -7,8 +7,7 @@ import { NewsArticleInterface, NewsBasicArticleInterface, NewsScraperInterface }
 
 export default class CNBCScraper extends AbstractNewsScraper implements NewsScraperInterface {
   key: string = 'cnbc';
-  domain: string = 'cnbc.com';
-  domainAliases: string[] = ['www.cnbc.com'];
+  domain: string = 'www.cnbc.com';
 
   async scrapeRecentArticles(): Promise<NewsBasicArticleInterface[]> {
     const basicArticles: NewsBasicArticleInterface[] = []; // Initialise an empty array, where we can save the article data (mainly the URL)

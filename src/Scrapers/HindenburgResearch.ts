@@ -8,7 +8,6 @@ import { NewsArticleInterface, NewsBasicArticleInterface, NewsScraperInterface }
 export default class HindenburgResearchScraper extends AbstractNewsScraper implements NewsScraperInterface {
   key: string = 'hindenburg_research';
   domain: string = 'hindenburgresearch.com';
-  domainAliases: string[] = ['www.hindenburgresearch.com'];
 
   async scrapeRecentArticles(): Promise<NewsBasicArticleInterface[]> {
     const basicArticles: NewsBasicArticleInterface[] = []; // Initialise an empty array, where we can save the article data (mainly the URL)

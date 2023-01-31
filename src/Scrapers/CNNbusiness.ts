@@ -8,7 +8,6 @@ import { NewsArticleInterface, NewsBasicArticleInterface, NewsScraperInterface }
 export default class CnnBusinessgScraper extends AbstractNewsScraper implements NewsScraperInterface {
   key: string = 'cnn_business';
   domain: string = 'edition.cnn.com';
-  domainAliases: string[] = ['www.edition.cnn.com'];
 
   async scrapeRecentArticles(): Promise<NewsBasicArticleInterface[]> {
     const basicArticles: NewsBasicArticleInterface[] = []; // Initialise an empty array, where we can save the article data (mainly the URL)
