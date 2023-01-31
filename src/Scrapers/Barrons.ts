@@ -1,7 +1,7 @@
 import { convert } from 'html-to-text';
 
 import { AbstractNewsScraper } from '../AbstractNewsScraper';
-import { logger } from '../Logger';
+import { logger } from '../Services/Logger';
 import { NewsArticleTypeEnum } from '../Types/Enums';
 import { NewsArticleInterface, NewsBasicArticleInterface, NewsScraperInterface } from '../Types/Interfaces';
 

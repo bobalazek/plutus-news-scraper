@@ -1,14 +1,16 @@
 import { readdirSync } from 'fs';
+import { injectable } from 'inversify/lib/annotation/injectable';
 import { join } from 'path';
 
-import type { AbstractNewsScraper } from './AbstractNewsScraper';
-import { ROOT_DIRECTORY } from './Constants';
+import type { AbstractNewsScraper } from '../AbstractNewsScraper';
+import { ROOT_DIRECTORY } from '../Constants';
 import {
   NewsArticleWithSiteKeyInterface,
   NewsBasicArticleWithSiteKeyInterface,
   NewsScraperInterface,
-} from './Types/Interfaces';
+} from '../Types/Interfaces';
 
+@injectable()
 export class NewsScrapingManager {
   private _scrapers: Record<string, NewsScraperInterface> = {};
   private _scrapersDomainMap: Record<string, string> = {};
@@ -29,7 +31,7 @@ export class NewsScrapingManager {
       }
 
       try {
-        const importedModule = await import(`./Scrapers/${scraperFileName}`);
+        const importedModule = await import(`../Scrapers/${scraperFileName}`); // Needs to be the relative path from the transpiled .js file
         const scraperModule = new importedModule.default.default() as NewsScraperInterface;
 
         if (!scraperModule.domain) {

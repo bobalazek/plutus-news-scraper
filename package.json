@@ -20,8 +20,11 @@
   "dependencies": {
     "commander": "^10.0.0",
     "html-to-text": "^9.0.3",
+    "inversify": "^6.0.1",
     "pino": "^8.8.0",
     "pino-pretty": "^9.1.1",
-    "puppeteer": "^19.6.2"
+    "puppeteer": "^19.6.2",
+    "reflect-metadata": "^0.1.13",
+    "tslib": "^2.5.0"
   }
 }

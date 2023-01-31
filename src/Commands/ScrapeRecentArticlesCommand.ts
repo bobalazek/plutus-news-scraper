@@ -1,7 +1,9 @@
 import { Command } from 'commander';
 
-import { logger } from '../Logger';
-import { NewsScrapingManager } from '../NewsScrapingManager';
+import { container } from '../Container';
+import { TYPES } from '../ContainerTypes';
+import { logger } from '../Services/Logger';
+import { NewsScrapingManager } from '../Services/NewsScrapingManager';
 
 export const addScrapeRecentArticlesCommand = (program: Command) => {
   const command = program
@@ -15,7 +17,7 @@ export const addScrapeRecentArticlesCommand = (program: Command) => {
       const headful = options.headful;
       const preventClose = options.preventClose;
 
-      const newsScrapingManager = new NewsScrapingManager();
+      const newsScrapingManager = container.get<NewsScrapingManager>(TYPES.NewsScrapingManager);
       newsScrapingManager.setHeadful(headful);
       newsScrapingManager.setPreventClose(preventClose);
 
