@@ -21,8 +21,7 @@ export default class CNBCScraper extends AbstractNewsScraper implements NewsScra
       // 'https://www.cnbc.com/tv/',
     ];
 
-    const browser = await this.getPuppeteerBrowser();
-    const page = await browser.newPage();
+    const page = await this.getPuppeteerPage();
 
     logger.info(`Starting to scrape the recent articles on CNBC ...`);
 
@@ -72,9 +71,7 @@ export default class CNBCScraper extends AbstractNewsScraper implements NewsScra
   }
 
   async scrapeArticle(basicArticle: NewsBasicArticleInterface): Promise<NewsArticleInterface | null> {
-    const browser = await this.getPuppeteerBrowser();
-    const page = await browser.newPage();
-    page.setUserAgent(this.getDefaultUserAgent());
+    const page = await this.getPuppeteerPage();
 
     const url = this._preProcessUrl(basicArticle.url);
 

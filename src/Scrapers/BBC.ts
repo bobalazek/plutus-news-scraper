@@ -24,8 +24,7 @@ export default class BBCScraper extends AbstractNewsScraper implements NewsScrap
       'https://www.bbc.com/news/science_and_environment',
     ];
 
-    const browser = await this.getPuppeteerBrowser();
-    const page = await browser.newPage();
+    const page = await this.getPuppeteerPage();
 
     logger.info(`Starting to scrape the recent articles on BBC ...`);
 
@@ -83,8 +82,7 @@ export default class BBCScraper extends AbstractNewsScraper implements NewsScrap
   }
 
   async scrapeArticle(basicArticle: NewsBasicArticleInterface): Promise<NewsArticleInterface | null> {
-    const browser = await this.getPuppeteerBrowser();
-    const page = await browser.newPage();
+    const page = await this.getPuppeteerPage();
 
     const url = this._preProcessUrl(basicArticle.url);
 

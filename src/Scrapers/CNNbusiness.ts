@@ -21,8 +21,7 @@ export default class CnnBusinessgScraper extends AbstractNewsScraper implements 
       'https://edition.cnn.com/business/investing',
     ];
 
-    const browser = await this.getPuppeteerBrowser();
-    const page = await browser.newPage();
+    const page = await this.getPuppeteerPage();
 
     logger.info(`Starting to scrape the recent articles on CNN Business ...`);
 
@@ -76,9 +75,7 @@ export default class CnnBusinessgScraper extends AbstractNewsScraper implements 
   }
 
   async scrapeArticle(basicArticle: NewsBasicArticleInterface): Promise<NewsArticleInterface | null> {
-    const browser = await this.getPuppeteerBrowser();
-    const page = await browser.newPage();
-    page.setUserAgent(this.getDefaultUserAgent());
+    const page = await this.getPuppeteerPage();
 
     const url = this._preProcessUrl(basicArticle.url);
 

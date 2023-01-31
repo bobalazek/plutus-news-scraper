@@ -31,8 +31,7 @@ export default class BloombergScraper extends AbstractNewsScraper implements New
       'https://www.bloomberg.com/crypto',
     ];
 
-    const browser = await this.getPuppeteerBrowser();
-    const page = await browser.newPage();
+    const page = await this.getPuppeteerPage();
 
     logger.info(`Starting to scrape the recent articles on Bloomberg ...`);
 
@@ -92,9 +91,7 @@ export default class BloombergScraper extends AbstractNewsScraper implements New
   }
 
   async scrapeArticle(basicArticle: NewsBasicArticleInterface): Promise<NewsArticleInterface | null> {
-    const browser = await this.getPuppeteerBrowser();
-    const page = await browser.newPage();
-    page.setUserAgent(this.getDefaultUserAgent());
+    const page = await this.getPuppeteerPage();
 
     const url = this._preProcessUrl(basicArticle.url);
 

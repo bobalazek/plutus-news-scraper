@@ -22,8 +22,7 @@ export default class ABCNewsScraper extends AbstractNewsScraper implements NewsS
       'https://abcnews.go.com/Health',
     ];
 
-    const browser = await this.getPuppeteerBrowser();
-    const page = await browser.newPage();
+    const page = await this.getPuppeteerPage();
 
     logger.info(`Starting to scrape the recent articles on ABCNews ...`);
 
@@ -81,8 +80,7 @@ export default class ABCNewsScraper extends AbstractNewsScraper implements NewsS
   }
 
   async scrapeArticle(basicArticle: NewsBasicArticleInterface): Promise<NewsArticleInterface | null> {
-    const browser = await this.getPuppeteerBrowser();
-    const page = await browser.newPage();
+    const page = await this.getPuppeteerPage();
 
     const url = this._preProcessUrl(basicArticle.url);
 

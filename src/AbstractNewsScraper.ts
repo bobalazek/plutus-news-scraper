@@ -1,14 +1,45 @@
-import puppeteer, { Browser, PuppeteerLaunchOptions } from 'puppeteer';
+import puppeteer, { Browser, Page, PuppeteerLaunchOptions } from 'puppeteer';
 
 export abstract class AbstractNewsScraper {
   private _browser: Browser;
+  private _page: Page;
   private _headful: boolean = false;
   private _preventClose: boolean = false;
 
   async getPuppeteerBrowser(options?: PuppeteerLaunchOptions) {
-    this._browser = await puppeteer.launch({ defaultViewport: null, headless: !this._headful, ...options });
+    if (!this._browser) {
+      this._browser = await puppeteer.launch({ defaultViewport: null, headless: !this._headful, ...options });
+    }
 
     return this._browser;
+  }
+
+  async getPuppeteerPage(options?: PuppeteerLaunchOptions) {
+    if (!this._page) {
+      const browser = await this.getPuppeteerBrowser(options);
+
+      this._page = await browser.newPage();
+
+      await this.setUserAgent();
+    }
+
+    return this._page;
+  }
+
+  /**
+   * @param userAgent if set to null, it will set it to the default string provided
+   */
+  async setUserAgent(userAgent: string = null) {
+    if (userAgent === null) {
+      userAgent =
+        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36';
+    }
+
+    const page = await this.getPuppeteerPage();
+
+    await page.setUserAgent(userAgent);
+
+    return page;
   }
 
   async closePuppeteerBrowser(force: boolean = false) {
@@ -21,10 +52,6 @@ export abstract class AbstractNewsScraper {
 
   getUniqueArray<T>(array: T[]) {
     return [...new Set<T>(array)];
-  }
-
-  getDefaultUserAgent() {
-    return 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36';
   }
 
   /**
