@@ -2,8 +2,10 @@ import { convert } from 'html-to-text';
 
 import { AbstractNewsScraper } from '../AbstractNewsScraper';
 import { logger } from '../Services/Logger';
-import { NewsArticleTypeEnum } from '../Types/Enums';
-import { NewsArticleInterface, NewsBasicArticleInterface, NewsScraperInterface } from '../Types/Interfaces';
+import { NewsArticleInterface } from '../Types/NewsArticleAssetInterface';
+import { NewsArticleTypeEnum } from '../Types/NewsArticleTypeEnum';
+import { NewsBasicArticleInterface } from '../Types/NewsBasicArticleInterface';
+import { NewsScraperInterface } from '../Types/NewsScraperInterface';
 
 export default class BBCScraper extends AbstractNewsScraper implements NewsScraperInterface {
   key: string = 'bbc';
