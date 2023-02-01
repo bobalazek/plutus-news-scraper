@@ -7,8 +7,8 @@ import { NewsArticleTypeEnum } from '../Types/NewsArticleTypeEnum';
 import { NewsBasicArticleInterface } from '../Types/NewsBasicArticleInterface';
 import { NewsScraperInterface } from '../Types/NewsScraperInterface';
 
-export default class CnnBusinessgScraper extends AbstractNewsScraper implements NewsScraperInterface {
-  key: string = 'cnn_business';
+export default class CNNScraper extends AbstractNewsScraper implements NewsScraperInterface {
+  key: string = 'cnn';
   domain: string = 'edition.cnn.com';
 
   async scrapeRecentArticles(): Promise<NewsBasicArticleInterface[]> {
