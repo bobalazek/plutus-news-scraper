@@ -9,7 +9,7 @@
     "preinstall": "npx only-allow npm",
     "postinstall": "npx husky install",
     "lint": "eslint .",
-    "test": "jest",
+    "test": "jest --passWithNoTests",
     "build": "rimraf ./dist && npx tsc",
     "cli": "npm run build && node dist/index.js"
   },
