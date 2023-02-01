@@ -1,6 +1,5 @@
 import { NewsArticleInterface } from './NewsArticleInterface';
 import { NewsBasicArticleInterface } from './NewsBasicArticleInterface';
-import { NewsScraperGetArchivedArticlesOptionsInterface } from './NewsScraperGetArchivedArticlesOptionsInterface';
 
 export interface NewsScraperInterface {
   /**
@@ -47,4 +46,9 @@ export interface NewsScraperInterface {
   scrapeArchivedArticles?(
     options: NewsScraperGetArchivedArticlesOptionsInterface
   ): Promise<NewsBasicArticleInterface[]>;
+}
+
+export interface NewsScraperGetArchivedArticlesOptionsInterface {
+  from?: Date;
+  to?: Date;
 }
