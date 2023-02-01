@@ -11,18 +11,19 @@ export default class ABCNewsScraper extends AbstractNewsScraper implements NewsS
   key: string = 'abc_news';
   domain: string = 'abcnews.go.com';
 
-  async scrapeRecentArticles(): Promise<NewsBasicArticleInterface[]> {
-    const basicArticles: NewsBasicArticleInterface[] = []; // Initialise an empty array, where we can save the article data (mainly the URL)
-    const recentArticleListUrls = [
-      // Add all the page/category URLs that you want to scrape, so you get the actual article URLS
-      'https://abcnews.go.com',
-      'https://abcnews.go.com/US',
-      'https://abcnews.go.com/International',
-      'https://abcnews.go.com/Business',
-      'https://abcnews.go.com/Politics',
-      'https://abcnews.go.com/Technology',
-      'https://abcnews.go.com/Health',
-    ];
+  async scrapeRecentArticles(url?: string | string[]): Promise<NewsBasicArticleInterface[]> {
+    const basicArticles: NewsBasicArticleInterface[] = [];
+    const recentArticleListUrls = url
+      ? [...url]
+      : [
+          'https://abcnews.go.com',
+          'https://abcnews.go.com/US',
+          'https://abcnews.go.com/International',
+          'https://abcnews.go.com/Business',
+          'https://abcnews.go.com/Politics',
+          'https://abcnews.go.com/Technology',
+          'https://abcnews.go.com/Health',
+        ];
 
     const page = await this.getPuppeteerPage();
 

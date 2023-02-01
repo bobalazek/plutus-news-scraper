@@ -11,26 +11,27 @@ export default class BloombergScraper extends AbstractNewsScraper implements New
   key: string = 'bloomberg';
   domain: string = 'www.bloomberg.com';
 
-  async scrapeRecentArticles(): Promise<NewsBasicArticleInterface[]> {
-    const basicArticles: NewsBasicArticleInterface[] = []; // Initialise an empty array, where we can save the article data (mainly the URL)
-    const recentArticleListUrls = [
-      // Add all the page/category URLs that you want to scrape, so you get the actual article URLS
-      'https://www.bloomberg.com/europe',
-      'https://www.bloomberg.com/uk',
-      'https://www.bloomberg.com/',
-      'https://www.bloomberg.com/asia',
-      'https://www.bloomberg.com/middleeast',
-      'https://www.bloomberg.com/africa',
-      'https://www.bloomberg.com/markets',
-      'https://www.bloomberg.com/economics',
-      'https://www.bloomberg.com/industries',
-      'https://www.bloomberg.com/technology',
-      'https://www.bloomberg.com/politics',
-      'https://www.bloomberg.com/wealth',
-      'https://www.bloomberg.com/pursuits',
-      'https://www.bloomberg.com/green',
-      'https://www.bloomberg.com/crypto',
-    ];
+  async scrapeRecentArticles(url?: string | string[]): Promise<NewsBasicArticleInterface[]> {
+    const basicArticles: NewsBasicArticleInterface[] = [];
+    const recentArticleListUrls = url
+      ? [...url]
+      : [
+          'https://www.bloomberg.com/europe',
+          'https://www.bloomberg.com/uk',
+          'https://www.bloomberg.com/',
+          'https://www.bloomberg.com/asia',
+          'https://www.bloomberg.com/middleeast',
+          'https://www.bloomberg.com/africa',
+          'https://www.bloomberg.com/markets',
+          'https://www.bloomberg.com/economics',
+          'https://www.bloomberg.com/industries',
+          'https://www.bloomberg.com/technology',
+          'https://www.bloomberg.com/politics',
+          'https://www.bloomberg.com/wealth',
+          'https://www.bloomberg.com/pursuits',
+          'https://www.bloomberg.com/green',
+          'https://www.bloomberg.com/crypto',
+        ];
 
     const page = await this.getPuppeteerPage();
 

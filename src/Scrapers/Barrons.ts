@@ -11,31 +11,32 @@ export default class BarronsScraper extends AbstractNewsScraper implements NewsS
   key: string = 'barrons';
   domain: string = 'www.barrons.com';
 
-  async scrapeRecentArticles(): Promise<NewsBasicArticleInterface[]> {
-    const basicArticles: NewsBasicArticleInterface[] = []; // Initialise an empty array, where we can save the article data (mainly the URL)
-    const recentArticleListUrls = [
-      // Add all the page/category URLs that you want to scrape, so you get the actual article URLS
-      'https://www.barrons.com/',
-      'https://www.barrons.com/topics/markets',
-      'https://www.barrons.com/topics/europe',
-      'https://www.barrons.com/topics/asia',
-      'https://www.barrons.com/topics/emerging-markets',
-      'https://www.barrons.com/topics/funds',
-      'https://www.barrons.com/market-data/stocks/stock-picks',
-      'https://www.barrons.com/topics/ceos-and-thought-leaders',
-      'https://www.barrons.com/topics/streetwise',
-      'https://www.barrons.com/topics/technology',
-      'https://www.barrons.com/topics/bonds',
-      'https://www.barrons.com/topics/commodities',
-      'https://www.barrons.com/topics/sustainable-investing',
-      'https://www.barrons.com/topics/financial-planning',
-      'https://www.barrons.com/topics/retirement',
-      'https://www.barrons.com/topics/economy-and-policy',
-      'https://www.barrons.com/topics/up-and-down-wall-street',
-      'https://www.barrons.com/topics/cryptocurrencies',
-      'https://www.barrons.com/topics/the-trader',
-      'https://www.barrons.com/news',
-    ];
+  async scrapeRecentArticles(url?: string | string[]): Promise<NewsBasicArticleInterface[]> {
+    const basicArticles: NewsBasicArticleInterface[] = [];
+    const recentArticleListUrls = url
+      ? [...url]
+      : [
+          'https://www.barrons.com/',
+          'https://www.barrons.com/topics/markets',
+          'https://www.barrons.com/topics/europe',
+          'https://www.barrons.com/topics/asia',
+          'https://www.barrons.com/topics/emerging-markets',
+          'https://www.barrons.com/topics/funds',
+          'https://www.barrons.com/market-data/stocks/stock-picks',
+          'https://www.barrons.com/topics/ceos-and-thought-leaders',
+          'https://www.barrons.com/topics/streetwise',
+          'https://www.barrons.com/topics/technology',
+          'https://www.barrons.com/topics/bonds',
+          'https://www.barrons.com/topics/commodities',
+          'https://www.barrons.com/topics/sustainable-investing',
+          'https://www.barrons.com/topics/financial-planning',
+          'https://www.barrons.com/topics/retirement',
+          'https://www.barrons.com/topics/economy-and-policy',
+          'https://www.barrons.com/topics/up-and-down-wall-street',
+          'https://www.barrons.com/topics/cryptocurrencies',
+          'https://www.barrons.com/topics/the-trader',
+          'https://www.barrons.com/news',
+        ];
 
     const page = await this.getPuppeteerPage();
 

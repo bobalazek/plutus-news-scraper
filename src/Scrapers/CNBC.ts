@@ -11,16 +11,17 @@ export default class CNBCScraper extends AbstractNewsScraper implements NewsScra
   key: string = 'cnbc';
   domain: string = 'www.cnbc.com';
 
-  async scrapeRecentArticles(): Promise<NewsBasicArticleInterface[]> {
-    const basicArticles: NewsBasicArticleInterface[] = []; // Initialise an empty array, where we can save the article data (mainly the URL)
-    const recentArticleListUrls = [
-      // Add all the page/category URLs that you want to scrape, so you get the actual article URLS
-      'https://www.cnbc.com/business/',
-      'https://www.cnbc.com/investing/',
-      'https://www.cnbc.com/technology/',
-      'https://www.cnbc.com/politics/',
-      // 'https://www.cnbc.com/tv/',
-    ];
+  async scrapeRecentArticles(url?: string | string[]): Promise<NewsBasicArticleInterface[]> {
+    const basicArticles: NewsBasicArticleInterface[] = [];
+    const recentArticleListUrls = url
+      ? [...url]
+      : [
+          'https://www.cnbc.com/business/',
+          'https://www.cnbc.com/investing/',
+          'https://www.cnbc.com/technology/',
+          'https://www.cnbc.com/politics/',
+          // 'https://www.cnbc.com/tv/',
+        ];
 
     const page = await this.getPuppeteerPage();
 

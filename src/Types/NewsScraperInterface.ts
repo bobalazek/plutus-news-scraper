@@ -25,8 +25,10 @@ export interface NewsScraperInterface {
    * so we can at least get the url for that article (but can also optionally provide the title and content),
    * which is then later used in the scrapeArticle method, where we scrape the actual page url
    * and get all the data we really need.
+   *
+   * @param url this can be one or more URLs that you can provide, if you want to scrape those, instead of the default ones specified in the method
    */
-  scrapeRecentArticles(): Promise<NewsBasicArticleInterface[]>;
+  scrapeRecentArticles(url?: string | string[]): Promise<NewsBasicArticleInterface[]>;
 
   /**
    * Scrape the article by providing the partial article object (can only be a URL)

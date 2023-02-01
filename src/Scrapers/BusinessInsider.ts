@@ -9,16 +9,17 @@ export default class BusinessInsiderScraper extends AbstractNewsScraper implemen
   key: string = 'business_insider';
   domain: string = 'www.businessinsider.com';
 
-  async scrapeRecentArticles(): Promise<NewsBasicArticleInterface[]> {
-    const basicArticles: NewsBasicArticleInterface[] = []; // Initialise an empty array, where we can save the article data (mainly the URL)
-    const recentArticleListUrls = [
-      // Add all the page/category URLs that you want to scrape, so you get the actual article URLS
-      'https://www.businessinsider.com/sai',
-      'https://www.businessinsider.com/clusterstock',
-      'https://www.businessinsider.com/warroom',
-      'https://www.businessinsider.com/retail',
-      'https://www.businessinsider.com/healthcare',
-    ];
+  async scrapeRecentArticles(url?: string | string[]): Promise<NewsBasicArticleInterface[]> {
+    const basicArticles: NewsBasicArticleInterface[] = [];
+    const recentArticleListUrls = url
+      ? [...url]
+      : [
+          'https://www.businessinsider.com/sai',
+          'https://www.businessinsider.com/clusterstock',
+          'https://www.businessinsider.com/warroom',
+          'https://www.businessinsider.com/retail',
+          'https://www.businessinsider.com/healthcare',
+        ];
 
     const page = await this.getPuppeteerPage();
 

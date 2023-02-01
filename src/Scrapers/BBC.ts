@@ -11,19 +11,20 @@ export default class BBCScraper extends AbstractNewsScraper implements NewsScrap
   key: string = 'bbc';
   domain: string = 'www.bbc.com';
 
-  async scrapeRecentArticles(): Promise<NewsBasicArticleInterface[]> {
-    const basicArticles: NewsBasicArticleInterface[] = []; // Initialise an empty array, where we can save the article data (mainly the URL)
-    const recentArticleListUrls = [
-      // Add all the page/category URLs that you want to scrape, so you get the actual article URLS
-      'https://www.bbc.com/news',
-      'https://www.bbc.com/news/coronavirus',
-      'https://www.bbc.com/news/world',
-      'https://www.bbc.com/news/uk',
-      'https://www.bbc.com/news/business',
-      'https://www.bbc.com/news/technology',
-      'https://www.bbc.com/news/health',
-      'https://www.bbc.com/news/science_and_environment',
-    ];
+  async scrapeRecentArticles(url?: string | string[]): Promise<NewsBasicArticleInterface[]> {
+    const basicArticles: NewsBasicArticleInterface[] = [];
+    const recentArticleListUrls = url
+      ? [...url]
+      : [
+          'https://www.bbc.com/news',
+          'https://www.bbc.com/news/coronavirus',
+          'https://www.bbc.com/news/world',
+          'https://www.bbc.com/news/uk',
+          'https://www.bbc.com/news/business',
+          'https://www.bbc.com/news/technology',
+          'https://www.bbc.com/news/health',
+          'https://www.bbc.com/news/science_and_environment',
+        ];
 
     const page = await this.getPuppeteerPage();
 
