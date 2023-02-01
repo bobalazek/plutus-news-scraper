@@ -2,7 +2,7 @@ import { convert } from 'html-to-text';
 
 import { AbstractNewsScraper } from '../AbstractNewsScraper';
 import { logger } from '../Services/Logger';
-import { NewsArticleInterface } from '../Types/NewsArticleAssetInterface';
+import { NewsArticleInterface } from '../Types/NewsArticleInterface';
 import { NewsArticleTypeEnum } from '../Types/NewsArticleTypeEnum';
 import { NewsBasicArticleInterface } from '../Types/NewsBasicArticleInterface';
 import { NewsScraperInterface } from '../Types/NewsScraperInterface';
@@ -19,7 +19,6 @@ export default class ForbesScraper extends AbstractNewsScraper implements NewsSc
       'https://www.forbes.com/money',
       'https://www.forbes.com/business',
       'https://www.forbes.com/real-estate',
-      ,
     ];
 
     const page = await this.getPuppeteerPage();

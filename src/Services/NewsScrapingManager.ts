@@ -4,7 +4,7 @@ import { join } from 'path';
 
 import type { AbstractNewsScraper } from '../AbstractNewsScraper';
 import { ROOT_DIRECTORY } from '../Constants';
-import { NewsArticleWithSiteKeyInterface } from '../Types/NewsArticleAssetInterface';
+import { NewsArticleWithSiteKeyInterface } from '../Types/NewsArticleInterface';
 import { NewsBasicArticleWithSiteKeyInterface } from '../Types/NewsBasicArticleInterface';
 import { NewsScraperInterface } from '../Types/NewsScraperInterface';
 

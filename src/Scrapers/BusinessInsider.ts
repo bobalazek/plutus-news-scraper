@@ -1,6 +1,6 @@
 import { AbstractNewsScraper } from '../AbstractNewsScraper';
 import { logger } from '../Services/Logger';
-import { NewsArticleInterface } from '../Types/NewsArticleAssetInterface';
+import { NewsArticleInterface } from '../Types/NewsArticleInterface';
 import { NewsArticleTypeEnum } from '../Types/NewsArticleTypeEnum';
 import { NewsBasicArticleInterface } from '../Types/NewsBasicArticleInterface';
 import { NewsScraperInterface } from '../Types/NewsScraperInterface';

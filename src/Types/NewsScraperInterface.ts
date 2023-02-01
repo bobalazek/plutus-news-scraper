@@ -1,4 +1,4 @@
-import { NewsArticleInterface } from './NewsArticleAssetInterface';
+import { NewsArticleInterface } from './NewsArticleInterface';
 import { NewsBasicArticleInterface } from './NewsBasicArticleInterface';
 import { NewsScraperGetArchivedArticlesOptionsInterface } from './NewsScraperGetArchivedArticlesOptionsInterface';
 
