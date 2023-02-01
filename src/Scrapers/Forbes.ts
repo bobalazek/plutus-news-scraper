@@ -36,7 +36,10 @@ export default class ForbesScraper extends AbstractNewsScraper implements NewsSc
       const articleUrls = this.getUniqueArray(
         await page.evaluate(() => {
           // Get all the possible (anchor) elements that have the links to articles
-          const querySelector = ['.channel__content .card a', '.chansec-stream__list a.stream-item__title'].join(', ');
+          const querySelector = [
+            '.channel__content .card a.headlink',
+            '.chansec-stream__list a.stream-item__title',
+          ].join(', ');
 
           // Fetch those with the .querySelectoAll() and convert it to an array
           const $elements = Array.from(document.querySelectorAll(querySelector));
@@ -46,13 +49,9 @@ export default class ForbesScraper extends AbstractNewsScraper implements NewsSc
             return $el.getAttribute('href') ?? ''; // Needs to have a '' (empty string) as a fallback, because otherwise it could be null, which we don't want
           });
         })
-      )
-        .filter((href) => {
-          return href !== ''; // Now we want to filter out any links that are '', just in case
-        })
-        .map((uri) => {
-          return `https://www.forbes.com${uri}`;
-        });
+      ).filter((href) => {
+        return href !== ''; // Now we want to filter out any links that are '', just in case
+      });
 
       logger.info(`Found ${articleUrls.length} articles on this page`);
 
@@ -79,14 +78,18 @@ export default class ForbesScraper extends AbstractNewsScraper implements NewsSc
     const page = await this.getPuppeteerPage();
 
     const url = this._preProcessUrl(basicArticle.url);
-
     logger.info(`Going to URL ${url} ...`);
 
     await page.goto(url, {
       waitUntil: 'domcontentloaded',
     });
 
-    const newsSiteArticleId = url;
+    const newsSiteArticleId = await page.evaluate(() => {
+      const content = document.querySelector('head meta[property="article:id"]')?.getAttribute('content') ?? '';
+      const lastSlashIndex = content.lastIndexOf('/');
+      const numbersAfterLastSlash = content.substring(lastSlashIndex + 1);
+      return numbersAfterLastSlash;
+    });
 
     const linkedDataText = await page.evaluate(() => {
       return document.querySelector('head script[type="application/ld+json"]')?.innerHTML ?? '';
@@ -99,7 +102,7 @@ export default class ForbesScraper extends AbstractNewsScraper implements NewsSc
 
     // Content
     const content = await page.evaluate(() => {
-      return Array.from(document.querySelectorAll('article .body-content p'))
+      return Array.from(document.querySelectorAll('.article-body p'))
         .map((element) => {
           return element.innerHTML;
         })
