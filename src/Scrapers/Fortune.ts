@@ -7,26 +7,29 @@ import { NewsArticleTypeEnum } from '../Types/NewsArticleTypeEnum';
 import { NewsBasicArticleInterface } from '../Types/NewsBasicArticleInterface';
 import { NewsScraperInterface } from '../Types/NewsScraperInterface';
 
-export default class FinancialTimesScraper extends AbstractNewsScraper implements NewsScraperInterface {
-  key: string = 'ft';
-  domain: string = 'www.ft.com';
+export default class FortuneScraper extends AbstractNewsScraper implements NewsScraperInterface {
+  key: string = 'fortune';
+  domain: string = 'www.fortune.com';
 
   async scrapeRecentArticles(url?: string | string[]): Promise<NewsBasicArticleInterface[]> {
     const basicArticles: NewsBasicArticleInterface[] = [];
     const recentArticleListUrls = url
       ? [...url]
       : [
-          'https://www.ft.com/world',
-          'https://www.ft.com/us',
-          'https://www.ft.com/companies',
-          'https://www.ft.com/technology',
-          'https://www.ft.com/markets',
-          'https://www.ft.com/climate-capital',
+          'https://fortune.com',
+          'https://fortune.com/section/tech/',
+          'https://fortune.com/section/finance/',
+          'https://fortune.com/section/politics/',
+          'https://fortune.com/section/success/',
+          'https://fortune.com/section/environment/',
+          'https://fortune.com/section/leadership/',
+          'https://fortune.com/section/health/',
+          'https://fortune.com/crypto/',
         ];
 
     const page = await this.getPuppeteerPage();
 
-    logger.info(`Starting to scrape the recent articles on Financial Times ...`);
+    logger.info(`Starting to scrape the recent articles on Fortune ...`);
 
     for (const recentArticleListUrl of recentArticleListUrls) {
       logger.info(`Going to URL ${recentArticleListUrl} ...`);
@@ -38,7 +41,7 @@ export default class FinancialTimesScraper extends AbstractNewsScraper implement
       const articleUrls = this.getUniqueArray(
         await page.evaluate(() => {
           // Get all the possible (anchor) elements that have the links to articles
-          const querySelector = ['.o-teaser-collection a.js-teaser-heading-link'].join(', ');
+          const querySelector = ['a[aria-label^="Go to full article"]'].join(', ');
 
           // Fetch those with the .querySelectoAll() and convert it to an array
           const $elements = Array.from(document.querySelectorAll(querySelector));
@@ -48,13 +51,9 @@ export default class FinancialTimesScraper extends AbstractNewsScraper implement
             return $el.getAttribute('href') ?? ''; // Needs to have a '' (empty string) as a fallback, because otherwise it could be null, which we don't want
           });
         })
-      )
-        .filter((href) => {
-          return href !== ''; // Now we want to filter out any links that are '', just in case
-        })
-        .map((uri) => {
-          return `https://www.ft.com${uri}`;
-        });
+      ).filter((href) => {
+        return href !== ''; // Now we want to filter out any links that are '', just in case
+      });
 
       logger.info(`Found ${articleUrls.length} articles on this page`);
 
@@ -88,10 +87,7 @@ export default class FinancialTimesScraper extends AbstractNewsScraper implement
       waitUntil: 'domcontentloaded',
     });
 
-    const urlSplit = url.split('/');
-    const urlId = urlSplit[urlSplit.length - 1];
-
-    const newsSiteArticleId = urlId ?? url;
+    const newsSiteArticleId = url;
 
     const linkedDataText = await page.evaluate(() => {
       return document.querySelector('head script[type="application/ld+json"]')?.innerHTML ?? '';
@@ -101,9 +97,15 @@ export default class FinancialTimesScraper extends AbstractNewsScraper implement
     }
 
     const linkedData = JSON.parse(linkedDataText);
-
+    console.log(linkedData);
     // Content
-    const content = '';
+    const content = await page.evaluate(() => {
+      return Array.from(document.querySelectorAll('#content p'))
+        .map((element) => {
+          return element.innerHTML;
+        })
+        .join('');
+    });
 
     await this.closePuppeteerBrowser();
 
