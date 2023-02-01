@@ -4,11 +4,9 @@ import { join } from 'path';
 
 import type { AbstractNewsScraper } from '../AbstractNewsScraper';
 import { ROOT_DIRECTORY } from '../Constants';
-import {
-  NewsArticleWithSiteKeyInterface,
-  NewsBasicArticleWithSiteKeyInterface,
-  NewsScraperInterface,
-} from '../Types/Interfaces';
+import { NewsArticleWithSiteKeyInterface } from '../Types/NewsArticleAssetInterface';
+import { NewsBasicArticleWithSiteKeyInterface } from '../Types/NewsBasicArticleInterface';
+import { NewsScraperInterface } from '../Types/NewsScraperInterface';
 
 @injectable()
 export class NewsScrapingManager {
