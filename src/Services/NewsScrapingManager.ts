@@ -104,7 +104,7 @@ export class NewsScrapingManager {
     return { ...newsArticle, url, newsSiteKey: scraper.key };
   }
 
-  async scrapeRecentArticles(newsSiteKey: string): Promise<NewsBasicArticleWithSiteKeyInterface[]> {
+  async scrapeRecentArticles(newsSiteKey: string, url?: string): Promise<NewsBasicArticleWithSiteKeyInterface[]> {
     const scraper = await this.get(newsSiteKey);
     if (typeof scraper === 'undefined') {
       throw new Error(`Scraper ${newsSiteKey} was not found`);
@@ -115,10 +115,10 @@ export class NewsScrapingManager {
     this._currentScraper.setPreventClose(this._preventClose);
 
     if (typeof scraper.scrapeRecentArticles === 'undefined') {
-      throw new Error(`This scraper (${newsSiteKey}) does not have the .getRecentArticles() method implemented`);
+      throw new Error(`This scraper (${newsSiteKey}) does not have the .scrapeRecentArticles() method implemented`);
     }
 
-    const recentArticles = await scraper.scrapeRecentArticles();
+    const recentArticles = await scraper.scrapeRecentArticles(url);
     if (recentArticles.length === 0) {
       throw new Error(`No recent articles found for this news site`);
     }
@@ -130,6 +130,41 @@ export class NewsScrapingManager {
       };
     });
   }
+
+  async scrapeArchivedArticles(
+    newsSiteKey: string,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    options: Record<string, string>
+  ): Promise<NewsBasicArticleWithSiteKeyInterface[]> {
+    const scraper = await this.get(newsSiteKey);
+    if (typeof scraper === 'undefined') {
+      throw new Error(`Scraper ${newsSiteKey} was not found`);
+    }
+
+    this._currentScraper = scraper as unknown as AbstractNewsScraper;
+    this._currentScraper.setHeadful(this._headful);
+    this._currentScraper.setPreventClose(this._preventClose);
+
+    if (typeof scraper.scrapeArchivedArticles === 'undefined') {
+      throw new Error(`This scraper (${newsSiteKey}) does not have the .scrapeArchivedArticles() method implemented`);
+    }
+
+    const recentArticles = await scraper.scrapeArchivedArticles(options);
+    if (recentArticles.length === 0) {
+      throw new Error(`No archived articles found for this news site`);
+    }
+
+    return recentArticles.map((recentArticle) => {
+      return {
+        ...recentArticle,
+        newsSiteKey: scraper.key,
+      };
+    });
+  }
+
+  /**
+   * ========== Helpers ==========
+   */
 
   /**
    * If this is set to true, then it will open an actual browser window

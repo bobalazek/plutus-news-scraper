@@ -49,6 +49,6 @@ export interface NewsScraperInterface {
 }
 
 export interface NewsScraperGetArchivedArticlesOptionsInterface {
-  from?: Date;
-  to?: Date;
+  from?: string | Date;
+  to?: string | Date;
 }
