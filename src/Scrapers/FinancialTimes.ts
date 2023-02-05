@@ -3,26 +3,25 @@ import { convert } from 'html-to-text';
 import { AbstractNewsScraper } from '../AbstractNewsScraper';
 import { logger } from '../Services/Logger';
 import { NewsArticleInterface } from '../Types/NewsArticleInterface';
-import { NewsArticleTypeEnum } from '../Types/NewsArticleTypeEnum';
+import { NewsArticleMultimediaTypeEnum } from '../Types/NewsArticleMultimediaTypeEnum';
 import { NewsBasicArticleInterface } from '../Types/NewsBasicArticleInterface';
 import { NewsScraperInterface } from '../Types/NewsScraperInterface';
 
 export default class FinancialTimesScraper extends AbstractNewsScraper implements NewsScraperInterface {
   key: string = 'ft';
   domain: string = 'www.ft.com';
+  recentArticleListUrls: string[] = [
+    'https://www.ft.com/world',
+    'https://www.ft.com/us',
+    'https://www.ft.com/companies',
+    'https://www.ft.com/technology',
+    'https://www.ft.com/markets',
+    'https://www.ft.com/climate-capital',
+  ];
 
   async scrapeRecentArticles(url?: string | string[]): Promise<NewsBasicArticleInterface[]> {
     const basicArticles: NewsBasicArticleInterface[] = [];
-    const recentArticleListUrls = url
-      ? [...url]
-      : [
-          'https://www.ft.com/world',
-          'https://www.ft.com/us',
-          'https://www.ft.com/companies',
-          'https://www.ft.com/technology',
-          'https://www.ft.com/markets',
-          'https://www.ft.com/climate-capital',
-        ];
+    const recentArticleListUrls = url ? [...url] : this.recentArticleListUrls;
 
     const page = await this.getPuppeteerPage();
 
@@ -110,7 +109,7 @@ export default class FinancialTimesScraper extends AbstractNewsScraper implement
     const article: NewsArticleInterface = {
       url: url,
       title: linkedData.headline,
-      type: NewsArticleTypeEnum.TEXT,
+      multimediaType: NewsArticleMultimediaTypeEnum.TEXT,
       content: convert(content, {
         wordwrap: false,
       }),

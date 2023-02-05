@@ -1,25 +1,24 @@
 import { AbstractNewsScraper } from '../AbstractNewsScraper';
 import { logger } from '../Services/Logger';
 import { NewsArticleInterface } from '../Types/NewsArticleInterface';
-import { NewsArticleTypeEnum } from '../Types/NewsArticleTypeEnum';
+import { NewsArticleMultimediaTypeEnum } from '../Types/NewsArticleMultimediaTypeEnum';
 import { NewsBasicArticleInterface } from '../Types/NewsBasicArticleInterface';
 import { NewsScraperInterface } from '../Types/NewsScraperInterface';
 
 export default class BusinessInsiderScraper extends AbstractNewsScraper implements NewsScraperInterface {
   key: string = 'business_insider';
   domain: string = 'www.businessinsider.com';
+  recentArticleListUrls: string[] = [
+    'https://www.businessinsider.com/sai',
+    'https://www.businessinsider.com/clusterstock',
+    'https://www.businessinsider.com/warroom',
+    'https://www.businessinsider.com/retail',
+    'https://www.businessinsider.com/healthcare',
+  ];
 
   async scrapeRecentArticles(url?: string | string[]): Promise<NewsBasicArticleInterface[]> {
     const basicArticles: NewsBasicArticleInterface[] = [];
-    const recentArticleListUrls = url
-      ? [...url]
-      : [
-          'https://www.businessinsider.com/sai',
-          'https://www.businessinsider.com/clusterstock',
-          'https://www.businessinsider.com/warroom',
-          'https://www.businessinsider.com/retail',
-          'https://www.businessinsider.com/healthcare',
-        ];
+    const recentArticleListUrls = url ? [...url] : this.recentArticleListUrls;
 
     const page = await this.getPuppeteerPage();
 
@@ -101,7 +100,7 @@ export default class BusinessInsiderScraper extends AbstractNewsScraper implemen
     const article: NewsArticleInterface = {
       url: url,
       title: linkedData.headline,
-      type: NewsArticleTypeEnum.TEXT,
+      multimediaType: NewsArticleMultimediaTypeEnum.TEXT,
       content: linkedData.articleBody,
       newsSiteArticleId: newsSiteArticleId,
       publishedAt: new Date(linkedData.datePublished),

@@ -20,6 +20,11 @@ export interface NewsScraperInterface {
   domainAliases?: string[];
 
   /**
+   * What recent article URLs do we have for this scraper?
+   */
+  recentArticleListUrls?: string[];
+
+  /**
    * With this method we are just scraping the landing and category pages,
    * so we can at least get the url for that article (but can also optionally provide the title and content),
    * which is then later used in the scrapeArticle method, where we scrape the actual page url

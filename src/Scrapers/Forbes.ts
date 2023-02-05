@@ -3,24 +3,23 @@ import { convert } from 'html-to-text';
 import { AbstractNewsScraper } from '../AbstractNewsScraper';
 import { logger } from '../Services/Logger';
 import { NewsArticleInterface } from '../Types/NewsArticleInterface';
-import { NewsArticleTypeEnum } from '../Types/NewsArticleTypeEnum';
+import { NewsArticleMultimediaTypeEnum } from '../Types/NewsArticleMultimediaTypeEnum';
 import { NewsBasicArticleInterface } from '../Types/NewsBasicArticleInterface';
 import { NewsScraperInterface } from '../Types/NewsScraperInterface';
 
 export default class ForbesScraper extends AbstractNewsScraper implements NewsScraperInterface {
   key: string = 'forbes';
   domain: string = 'www.forbes.com';
+  recentArticleListUrls: string[] = [
+    'https://www.forbes.com/innovation',
+    'https://www.forbes.com/money',
+    'https://www.forbes.com/business',
+    'https://www.forbes.com/real-estate',
+  ];
 
   async scrapeRecentArticles(url?: string | string[]): Promise<NewsBasicArticleInterface[]> {
     const basicArticles: NewsBasicArticleInterface[] = [];
-    const recentArticleListUrls = url
-      ? [...url]
-      : [
-          'https://www.forbes.com/innovation',
-          'https://www.forbes.com/money',
-          'https://www.forbes.com/business',
-          'https://www.forbes.com/real-estate',
-        ];
+    const recentArticleListUrls = url ? [...url] : this.recentArticleListUrls;
 
     const page = await this.getPuppeteerPage();
 
@@ -114,7 +113,7 @@ export default class ForbesScraper extends AbstractNewsScraper implements NewsSc
     const article: NewsArticleInterface = {
       url: url,
       title: linkedData.headline,
-      type: NewsArticleTypeEnum.TEXT,
+      multimediaType: NewsArticleMultimediaTypeEnum.TEXT,
       content: convert(content, {
         wordwrap: false,
       }),

@@ -3,35 +3,34 @@ import { convert } from 'html-to-text';
 import { AbstractNewsScraper } from '../AbstractNewsScraper';
 import { logger } from '../Services/Logger';
 import { NewsArticleInterface } from '../Types/NewsArticleInterface';
-import { NewsArticleTypeEnum } from '../Types/NewsArticleTypeEnum';
+import { NewsArticleMultimediaTypeEnum } from '../Types/NewsArticleMultimediaTypeEnum';
 import { NewsBasicArticleInterface } from '../Types/NewsBasicArticleInterface';
 import { NewsScraperInterface } from '../Types/NewsScraperInterface';
 
 export default class BloombergScraper extends AbstractNewsScraper implements NewsScraperInterface {
   key: string = 'bloomberg';
   domain: string = 'www.bloomberg.com';
+  recentArticleListUrls: string[] = [
+    'https://www.bloomberg.com/europe',
+    'https://www.bloomberg.com/uk',
+    'https://www.bloomberg.com/',
+    'https://www.bloomberg.com/asia',
+    'https://www.bloomberg.com/middleeast',
+    'https://www.bloomberg.com/africa',
+    'https://www.bloomberg.com/markets',
+    'https://www.bloomberg.com/economics',
+    'https://www.bloomberg.com/industries',
+    'https://www.bloomberg.com/technology',
+    'https://www.bloomberg.com/politics',
+    'https://www.bloomberg.com/wealth',
+    'https://www.bloomberg.com/pursuits',
+    'https://www.bloomberg.com/green',
+    'https://www.bloomberg.com/crypto',
+  ];
 
   async scrapeRecentArticles(url?: string | string[]): Promise<NewsBasicArticleInterface[]> {
     const basicArticles: NewsBasicArticleInterface[] = [];
-    const recentArticleListUrls = url
-      ? [...url]
-      : [
-          'https://www.bloomberg.com/europe',
-          'https://www.bloomberg.com/uk',
-          'https://www.bloomberg.com/',
-          'https://www.bloomberg.com/asia',
-          'https://www.bloomberg.com/middleeast',
-          'https://www.bloomberg.com/africa',
-          'https://www.bloomberg.com/markets',
-          'https://www.bloomberg.com/economics',
-          'https://www.bloomberg.com/industries',
-          'https://www.bloomberg.com/technology',
-          'https://www.bloomberg.com/politics',
-          'https://www.bloomberg.com/wealth',
-          'https://www.bloomberg.com/pursuits',
-          'https://www.bloomberg.com/green',
-          'https://www.bloomberg.com/crypto',
-        ];
+    const recentArticleListUrls = url ? [...url] : this.recentArticleListUrls;
 
     const page = await this.getPuppeteerPage();
 
@@ -128,7 +127,7 @@ export default class BloombergScraper extends AbstractNewsScraper implements New
     const article: NewsArticleInterface = {
       url: url,
       title: linkedData.headline,
-      type: NewsArticleTypeEnum.TEXT,
+      multimediaType: NewsArticleMultimediaTypeEnum.TEXT,
       content: convert(content, {
         wordwrap: false,
       }),

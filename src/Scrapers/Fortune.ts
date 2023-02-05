@@ -3,29 +3,28 @@ import { convert } from 'html-to-text';
 import { AbstractNewsScraper } from '../AbstractNewsScraper';
 import { logger } from '../Services/Logger';
 import { NewsArticleInterface } from '../Types/NewsArticleInterface';
-import { NewsArticleTypeEnum } from '../Types/NewsArticleTypeEnum';
+import { NewsArticleMultimediaTypeEnum } from '../Types/NewsArticleMultimediaTypeEnum';
 import { NewsBasicArticleInterface } from '../Types/NewsBasicArticleInterface';
 import { NewsScraperInterface } from '../Types/NewsScraperInterface';
 
 export default class FortuneScraper extends AbstractNewsScraper implements NewsScraperInterface {
   key: string = 'fortune';
   domain: string = 'www.fortune.com';
+  recentArticleListUrls: string[] = [
+    'https://fortune.com',
+    'https://fortune.com/section/tech/',
+    'https://fortune.com/section/finance/',
+    'https://fortune.com/section/politics/',
+    'https://fortune.com/section/success/',
+    'https://fortune.com/section/environment/',
+    'https://fortune.com/section/leadership/',
+    'https://fortune.com/section/health/',
+    'https://fortune.com/crypto/',
+  ];
 
   async scrapeRecentArticles(url?: string | string[]): Promise<NewsBasicArticleInterface[]> {
     const basicArticles: NewsBasicArticleInterface[] = [];
-    const recentArticleListUrls = url
-      ? [...url]
-      : [
-          'https://fortune.com',
-          'https://fortune.com/section/tech/',
-          'https://fortune.com/section/finance/',
-          'https://fortune.com/section/politics/',
-          'https://fortune.com/section/success/',
-          'https://fortune.com/section/environment/',
-          'https://fortune.com/section/leadership/',
-          'https://fortune.com/section/health/',
-          'https://fortune.com/crypto/',
-        ];
+    const recentArticleListUrls = url ? [...url] : this.recentArticleListUrls;
 
     const page = await this.getPuppeteerPage();
 
@@ -112,7 +111,7 @@ export default class FortuneScraper extends AbstractNewsScraper implements NewsS
     const article: NewsArticleInterface = {
       url: url,
       title: linkedData.headline,
-      type: NewsArticleTypeEnum.TEXT,
+      multimediaType: NewsArticleMultimediaTypeEnum.TEXT,
       content: convert(content, {
         wordwrap: false,
       }),

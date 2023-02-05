@@ -3,40 +3,39 @@ import { convert } from 'html-to-text';
 import { AbstractNewsScraper } from '../AbstractNewsScraper';
 import { logger } from '../Services/Logger';
 import { NewsArticleInterface } from '../Types/NewsArticleInterface';
-import { NewsArticleTypeEnum } from '../Types/NewsArticleTypeEnum';
+import { NewsArticleMultimediaTypeEnum } from '../Types/NewsArticleMultimediaTypeEnum';
 import { NewsBasicArticleInterface } from '../Types/NewsBasicArticleInterface';
 import { NewsScraperInterface } from '../Types/NewsScraperInterface';
 
 export default class BarronsScraper extends AbstractNewsScraper implements NewsScraperInterface {
   key: string = 'barrons';
   domain: string = 'www.barrons.com';
+  recentArticleListUrls: string[] = [
+    'https://www.barrons.com/',
+    'https://www.barrons.com/topics/markets',
+    'https://www.barrons.com/topics/europe',
+    'https://www.barrons.com/topics/asia',
+    'https://www.barrons.com/topics/emerging-markets',
+    'https://www.barrons.com/topics/funds',
+    'https://www.barrons.com/market-data/stocks/stock-picks',
+    'https://www.barrons.com/topics/ceos-and-thought-leaders',
+    'https://www.barrons.com/topics/streetwise',
+    'https://www.barrons.com/topics/technology',
+    'https://www.barrons.com/topics/bonds',
+    'https://www.barrons.com/topics/commodities',
+    'https://www.barrons.com/topics/sustainable-investing',
+    'https://www.barrons.com/topics/financial-planning',
+    'https://www.barrons.com/topics/retirement',
+    'https://www.barrons.com/topics/economy-and-policy',
+    'https://www.barrons.com/topics/up-and-down-wall-street',
+    'https://www.barrons.com/topics/cryptocurrencies',
+    'https://www.barrons.com/topics/the-trader',
+    'https://www.barrons.com/news',
+  ];
 
   async scrapeRecentArticles(url?: string | string[]): Promise<NewsBasicArticleInterface[]> {
     const basicArticles: NewsBasicArticleInterface[] = [];
-    const recentArticleListUrls = url
-      ? [...url]
-      : [
-          'https://www.barrons.com/',
-          'https://www.barrons.com/topics/markets',
-          'https://www.barrons.com/topics/europe',
-          'https://www.barrons.com/topics/asia',
-          'https://www.barrons.com/topics/emerging-markets',
-          'https://www.barrons.com/topics/funds',
-          'https://www.barrons.com/market-data/stocks/stock-picks',
-          'https://www.barrons.com/topics/ceos-and-thought-leaders',
-          'https://www.barrons.com/topics/streetwise',
-          'https://www.barrons.com/topics/technology',
-          'https://www.barrons.com/topics/bonds',
-          'https://www.barrons.com/topics/commodities',
-          'https://www.barrons.com/topics/sustainable-investing',
-          'https://www.barrons.com/topics/financial-planning',
-          'https://www.barrons.com/topics/retirement',
-          'https://www.barrons.com/topics/economy-and-policy',
-          'https://www.barrons.com/topics/up-and-down-wall-street',
-          'https://www.barrons.com/topics/cryptocurrencies',
-          'https://www.barrons.com/topics/the-trader',
-          'https://www.barrons.com/news',
-        ];
+    const recentArticleListUrls = url ? [...url] : this.recentArticleListUrls;
 
     const page = await this.getPuppeteerPage();
 
@@ -136,7 +135,7 @@ export default class BarronsScraper extends AbstractNewsScraper implements NewsS
     const article: NewsArticleInterface = {
       url: url,
       title: linkedData.headline,
-      type: NewsArticleTypeEnum.TEXT,
+      multimediaType: NewsArticleMultimediaTypeEnum.TEXT,
       content: convert(content, {
         wordwrap: false,
       }),

@@ -1,4 +1,4 @@
-import { NewsArticleTypeEnum } from './NewsArticleTypeEnum';
+import { NewsArticleMultimediaTypeEnum } from './NewsArticleMultimediaTypeEnum';
 import { NewsBasicArticleInterface } from './NewsBasicArticleInterface';
 
 /**
@@ -6,7 +6,7 @@ import { NewsBasicArticleInterface } from './NewsBasicArticleInterface';
  */
 export interface NewsArticleInterface extends NewsBasicArticleInterface {
   title: string;
-  type: NewsArticleTypeEnum;
+  multimediaType: NewsArticleMultimediaTypeEnum;
   content: string;
   newsSiteArticleId: string;
   authorName?: string;

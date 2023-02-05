@@ -3,25 +3,24 @@ import { convert } from 'html-to-text';
 import { AbstractNewsScraper } from '../AbstractNewsScraper';
 import { logger } from '../Services/Logger';
 import { NewsArticleInterface } from '../Types/NewsArticleInterface';
-import { NewsArticleTypeEnum } from '../Types/NewsArticleTypeEnum';
+import { NewsArticleMultimediaTypeEnum } from '../Types/NewsArticleMultimediaTypeEnum';
 import { NewsBasicArticleInterface } from '../Types/NewsBasicArticleInterface';
 import { NewsScraperInterface } from '../Types/NewsScraperInterface';
 
 export default class CNBCScraper extends AbstractNewsScraper implements NewsScraperInterface {
   key: string = 'cnbc';
   domain: string = 'www.cnbc.com';
+  recentArticleListUrls: string[] = [
+    'https://www.cnbc.com/business/',
+    'https://www.cnbc.com/investing/',
+    'https://www.cnbc.com/technology/',
+    'https://www.cnbc.com/politics/',
+    // 'https://www.cnbc.com/tv/',
+  ];
 
   async scrapeRecentArticles(url?: string | string[]): Promise<NewsBasicArticleInterface[]> {
     const basicArticles: NewsBasicArticleInterface[] = [];
-    const recentArticleListUrls = url
-      ? [...url]
-      : [
-          'https://www.cnbc.com/business/',
-          'https://www.cnbc.com/investing/',
-          'https://www.cnbc.com/technology/',
-          'https://www.cnbc.com/politics/',
-          // 'https://www.cnbc.com/tv/',
-        ];
+    const recentArticleListUrls = url ? [...url] : this.recentArticleListUrls;
 
     const page = await this.getPuppeteerPage();
 
@@ -110,7 +109,7 @@ export default class CNBCScraper extends AbstractNewsScraper implements NewsScra
     const article: NewsArticleInterface = {
       url: url,
       title: title,
-      type: NewsArticleTypeEnum.TEXT,
+      multimediaType: NewsArticleMultimediaTypeEnum.TEXT,
       content: convert(content, {
         wordwrap: false,
       }),

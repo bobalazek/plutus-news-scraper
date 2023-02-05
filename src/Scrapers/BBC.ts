@@ -3,28 +3,27 @@ import { convert } from 'html-to-text';
 import { AbstractNewsScraper } from '../AbstractNewsScraper';
 import { logger } from '../Services/Logger';
 import { NewsArticleInterface } from '../Types/NewsArticleInterface';
-import { NewsArticleTypeEnum } from '../Types/NewsArticleTypeEnum';
+import { NewsArticleMultimediaTypeEnum } from '../Types/NewsArticleMultimediaTypeEnum';
 import { NewsBasicArticleInterface } from '../Types/NewsBasicArticleInterface';
 import { NewsScraperInterface } from '../Types/NewsScraperInterface';
 
 export default class BBCScraper extends AbstractNewsScraper implements NewsScraperInterface {
   key: string = 'bbc';
   domain: string = 'www.bbc.com';
+  recentArticleListUrls: string[] = [
+    'https://www.bbc.com/news',
+    'https://www.bbc.com/news/coronavirus',
+    'https://www.bbc.com/news/world',
+    'https://www.bbc.com/news/uk',
+    'https://www.bbc.com/news/business',
+    'https://www.bbc.com/news/technology',
+    'https://www.bbc.com/news/health',
+    'https://www.bbc.com/news/science_and_environment',
+  ];
 
   async scrapeRecentArticles(url?: string | string[]): Promise<NewsBasicArticleInterface[]> {
     const basicArticles: NewsBasicArticleInterface[] = [];
-    const recentArticleListUrls = url
-      ? [...url]
-      : [
-          'https://www.bbc.com/news',
-          'https://www.bbc.com/news/coronavirus',
-          'https://www.bbc.com/news/world',
-          'https://www.bbc.com/news/uk',
-          'https://www.bbc.com/news/business',
-          'https://www.bbc.com/news/technology',
-          'https://www.bbc.com/news/health',
-          'https://www.bbc.com/news/science_and_environment',
-        ];
+    const recentArticleListUrls = url ? [...url] : this.recentArticleListUrls;
 
     const page = await this.getPuppeteerPage();
 
@@ -124,7 +123,7 @@ export default class BBCScraper extends AbstractNewsScraper implements NewsScrap
     const article: NewsArticleInterface = {
       url: url,
       title: linkedData.headline,
-      type: NewsArticleTypeEnum.TEXT,
+      multimediaType: NewsArticleMultimediaTypeEnum.TEXT,
       content: convert(content, {
         wordwrap: false,
       }),

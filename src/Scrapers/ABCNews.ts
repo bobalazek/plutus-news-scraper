@@ -3,27 +3,26 @@ import { convert } from 'html-to-text';
 import { AbstractNewsScraper } from '../AbstractNewsScraper';
 import { logger } from '../Services/Logger';
 import { NewsArticleInterface } from '../Types/NewsArticleInterface';
-import { NewsArticleTypeEnum } from '../Types/NewsArticleTypeEnum';
+import { NewsArticleMultimediaTypeEnum } from '../Types/NewsArticleMultimediaTypeEnum';
 import { NewsBasicArticleInterface } from '../Types/NewsBasicArticleInterface';
 import { NewsScraperInterface } from '../Types/NewsScraperInterface';
 
 export default class ABCNewsScraper extends AbstractNewsScraper implements NewsScraperInterface {
   key: string = 'abc_news';
   domain: string = 'abcnews.go.com';
+  recentArticleListUrls: string[] = [
+    'https://abcnews.go.com',
+    'https://abcnews.go.com/US',
+    'https://abcnews.go.com/International',
+    'https://abcnews.go.com/Business',
+    'https://abcnews.go.com/Politics',
+    'https://abcnews.go.com/Technology',
+    'https://abcnews.go.com/Health',
+  ];
 
   async scrapeRecentArticles(url?: string | string[]): Promise<NewsBasicArticleInterface[]> {
     const basicArticles: NewsBasicArticleInterface[] = [];
-    const recentArticleListUrls = url
-      ? [...url]
-      : [
-          'https://abcnews.go.com',
-          'https://abcnews.go.com/US',
-          'https://abcnews.go.com/International',
-          'https://abcnews.go.com/Business',
-          'https://abcnews.go.com/Politics',
-          'https://abcnews.go.com/Technology',
-          'https://abcnews.go.com/Health',
-        ];
+    const recentArticleListUrls = url ? [...url] : this.recentArticleListUrls;
 
     const page = await this.getPuppeteerPage();
 
@@ -120,7 +119,7 @@ export default class ABCNewsScraper extends AbstractNewsScraper implements NewsS
     const article: NewsArticleInterface = {
       url: url,
       title: linkedData.headline,
-      type: NewsArticleTypeEnum.TEXT,
+      multimediaType: NewsArticleMultimediaTypeEnum.TEXT,
       content: convert(content, {
         wordwrap: false,
       }),
