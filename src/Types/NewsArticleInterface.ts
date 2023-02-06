@@ -16,9 +16,8 @@ export interface NewsArticleInterface extends NewsBasicArticleInterface {
   categoryName?: string;
   categoryUrl?: string;
   imageUrl?: string;
-  locale?: string;
   publishedAt: Date;
-  modifiedAt: Date;
+  modifiedAt?: Date;
 }
 
 /**
@@ -28,19 +27,9 @@ export interface NewsArticleInterface extends NewsBasicArticleInterface {
 export interface NewsArticleExtendedInterface extends NewsArticleInterface {
   type: NewsArticleTypeEnum;
   newsSiteKey: string;
-  /*
-  [
-    "stock:APPL@NASDAQ",
-    "company:Apple Inc.",
-    "currency:USD",
-    "cryptocurrency:BTC",
-    "asset-class:cryptocurrency",
-    "economy:USA",
-    "economy:global",
-  ]
-  */
-  relatedEntities?: string[];
+  relatedEntities?: string[]; // [ { type: "stock", value: "APPL@NASDAQ" }, { type: "company", value: "Apple Inc." }, { type: "currency", value: "USD" }, { type: "cryptocurrency", value: "BTC" } ]
   tags?: string[];
+  metadata?: Record<string, string>; // { locale: "en_US", countryCode: "global" (or ISO 3166 countryCode) }
   processingStatus?: NewsArticleProcessingStatusEnum;
   processingStatusFailedMessage?: string;
 }
