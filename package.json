@@ -9,6 +9,7 @@
   "scripts": {
     "preinstall": "npx only-allow npm",
     "postinstall": "npx husky install",
+    "prepare": "npx husky install",
     "lint": "npx eslint .",
     "test": "npx jest --passWithNoTests",
     "build": "rimraf ./dist && npx tsc",
@@ -29,6 +30,7 @@
   "dependencies": {
     "@lifeomic/attempt": "^3.0.3",
     "commander": "^10.0.0",
+    "dotenv": "^16.0.3",
     "html-to-text": "^9.0.3",
     "inversify": "^6.0.1",
     "pino": "^8.8.0",

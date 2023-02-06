@@ -1,5 +1,7 @@
 import puppeteer, { Browser, Page, PuppeteerLaunchOptions } from 'puppeteer';
 
+import { PUPPETEER_EXECUTABLE_PATH } from './Constants';
+
 export abstract class AbstractNewsScraper {
   private _browser: Browser;
   private _page: Page;
@@ -8,7 +10,12 @@ export abstract class AbstractNewsScraper {
 
   async getPuppeteerBrowser(options?: PuppeteerLaunchOptions) {
     if (!this._browser) {
-      this._browser = await puppeteer.launch({ defaultViewport: null, headless: !this._headful, ...options });
+      this._browser = await puppeteer.launch({
+        defaultViewport: null,
+        headless: !this._headful,
+        executablePath: PUPPETEER_EXECUTABLE_PATH,
+        ...options,
+      });
     }
 
     return this._browser;
