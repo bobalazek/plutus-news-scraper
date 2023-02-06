@@ -1,6 +1,7 @@
 import { convert } from 'html-to-text';
 
 import { AbstractNewsScraper } from '../AbstractNewsScraper';
+import { NewsArticleDataNotFoundError } from '../Errors/NewsArticleDataNotFoundError';
 import { logger } from '../Services/Logger';
 import { NewsArticleInterface } from '../Types/NewsArticleInterface';
 import { NewsArticleMultimediaTypeEnum } from '../Types/NewsArticleMultimediaTypeEnum';
@@ -10,17 +11,16 @@ import { NewsScraperInterface } from '../Types/NewsScraperInterface';
 export default class CNETScraper extends AbstractNewsScraper implements NewsScraperInterface {
   key: string = 'cnet';
   domain: string = 'www.cnet.com';
+  recentArticleListUrls: string[] = [
+    'https://www.cnet.com/tech/',
+    'https://www.cnet.com/personal-finance/',
+    'https://www.cnet.com/news/',
+    'https://www.cnet.com/science/',
+  ];
 
-  async scrapeRecentArticles(url?: string | string[]): Promise<NewsBasicArticleInterface[]> {
+  async scrapeRecentArticles(urls?: string[]): Promise<NewsBasicArticleInterface[]> {
     const basicArticles: NewsBasicArticleInterface[] = [];
-    const recentArticleListUrls = url
-      ? [...url]
-      : [
-          'https://www.cnet.com/tech/',
-          'https://www.cnet.com/personal-finance/',
-          'https://www.cnet.com/news/',
-          'https://www.cnet.com/science/',
-        ];
+    const recentArticleListUrls = Array.isArray(urls) ? urls : this.recentArticleListUrls;
 
     const page = await this.getPuppeteerPage();
 
@@ -101,7 +101,7 @@ export default class CNETScraper extends AbstractNewsScraper implements NewsScra
       return document.querySelector('head script[type="application/ld+json"]')?.innerHTML ?? '';
     });
     if (!linkedDataText) {
-      throw new Error(`No linked data found for URL ${url}`);
+      throw new NewsArticleDataNotFoundError(`No linked data found for URL ${url}`);
     }
 
     const linkedData = JSON.parse(linkedDataText);

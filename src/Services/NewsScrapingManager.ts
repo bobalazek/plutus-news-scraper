@@ -115,7 +115,7 @@ export class NewsScrapingManager {
     return { ...newsArticle, url, newsSiteKey: scraper.key, type: NewsArticleTypeEnum.NEWS_ARTICLE };
   }
 
-  async scrapeRecentArticles(newsSiteKey: string, url?: string): Promise<NewsBasicArticleExtendedInterface[]> {
+  async scrapeRecentArticles(newsSiteKey: string, urls?: string[]): Promise<NewsBasicArticleExtendedInterface[]> {
     const scraper = await this.get(newsSiteKey);
     if (typeof scraper === 'undefined') {
       throw new Error(`Scraper ${newsSiteKey} was not found`);
@@ -129,7 +129,7 @@ export class NewsScrapingManager {
 
     const recentArticles = await retry(
       async () => {
-        return scraper.scrapeRecentArticles(url);
+        return scraper.scrapeRecentArticles(urls);
       },
       {
         delay: 500,

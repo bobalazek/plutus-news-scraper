@@ -19,7 +19,7 @@ RUN npm prune --production
 FROM node:16-alpine AS runner
 WORKDIR /app
 
-ARG NODE_ENV=production
+ARG NODE_ENV=prod
 ENV NODE_ENV=$NODE_ENV
 
 COPY --from=builder /app/dist .

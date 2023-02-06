@@ -1,6 +1,7 @@
 import { NewsArticleMultimediaTypeEnum } from './NewsArticleMultimediaTypeEnum';
 import { NewsArticleTypeEnum } from './NewsArticleTypeEnum';
 import { NewsBasicArticleInterface } from './NewsBasicArticleInterface';
+import { NewsArticleProcessingStatusEnum } from './ProcessingStatusEnum';
 
 /**
  * This is the interface for our news scraper.
@@ -15,6 +16,7 @@ export interface NewsArticleInterface extends NewsBasicArticleInterface {
   categoryName?: string;
   categoryUrl?: string;
   imageUrl?: string;
+  locale?: string;
   publishedAt: Date;
   modifiedAt: Date;
 }
@@ -26,4 +28,19 @@ export interface NewsArticleInterface extends NewsBasicArticleInterface {
 export interface NewsArticleExtendedInterface extends NewsArticleInterface {
   type: NewsArticleTypeEnum;
   newsSiteKey: string;
+  /*
+  [
+    "stock:APPL@NASDAQ",
+    "company:Apple Inc.",
+    "currency:USD",
+    "cryptocurrency:BTC",
+    "asset-class:cryptocurrency",
+    "economy:USA",
+    "economy:global",
+  ]
+  */
+  relatedEntities?: string[];
+  tags?: string[];
+  processingStatus?: NewsArticleProcessingStatusEnum;
+  processingStatusFailedMessage?: string;
 }

@@ -1,6 +1,7 @@
 import { convert } from 'html-to-text';
 
 import { AbstractNewsScraper } from '../AbstractNewsScraper';
+import { NewsArticleDataNotFoundError } from '../Errors/NewsArticleDataNotFoundError';
 import { logger } from '../Services/Logger';
 import { NewsArticleInterface } from '../Types/NewsArticleInterface';
 import { NewsArticleMultimediaTypeEnum } from '../Types/NewsArticleMultimediaTypeEnum';
@@ -21,9 +22,9 @@ export default class BBCScraper extends AbstractNewsScraper implements NewsScrap
     'https://www.bbc.com/news/science_and_environment',
   ];
 
-  async scrapeRecentArticles(url?: string | string[]): Promise<NewsBasicArticleInterface[]> {
+  async scrapeRecentArticles(urls?: string[]): Promise<NewsBasicArticleInterface[]> {
     const basicArticles: NewsBasicArticleInterface[] = [];
-    const recentArticleListUrls = url ? [...url] : this.recentArticleListUrls;
+    const recentArticleListUrls = Array.isArray(urls) ? urls : this.recentArticleListUrls;
 
     const page = await this.getPuppeteerPage();
 
@@ -104,7 +105,7 @@ export default class BBCScraper extends AbstractNewsScraper implements NewsScrap
       return document.querySelector('head script[type="application/ld+json"]')?.innerHTML ?? '';
     });
     if (!linkedDataText) {
-      throw new Error(`No linked data found for URL ${url}`);
+      throw new NewsArticleDataNotFoundError(`No linked data found for URL ${url}`);
     }
 
     const linkedData = JSON.parse(linkedDataText);

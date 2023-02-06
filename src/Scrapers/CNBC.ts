@@ -18,9 +18,9 @@ export default class CNBCScraper extends AbstractNewsScraper implements NewsScra
     // 'https://www.cnbc.com/tv/',
   ];
 
-  async scrapeRecentArticles(url?: string | string[]): Promise<NewsBasicArticleInterface[]> {
+  async scrapeRecentArticles(urls?: string[]): Promise<NewsBasicArticleInterface[]> {
     const basicArticles: NewsBasicArticleInterface[] = [];
-    const recentArticleListUrls = url ? [...url] : this.recentArticleListUrls;
+    const recentArticleListUrls = Array.isArray(urls) ? urls : this.recentArticleListUrls;
 
     const page = await this.getPuppeteerPage();
 

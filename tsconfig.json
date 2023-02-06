@@ -3,11 +3,12 @@
   "compilerOptions": {
     "outDir": "dist",
     "moduleResolution": "NodeNext",
-    "importHelpers": true,
     "target": "ESNext",
     "module": "CommonJS",
     "lib": ["ESNext", "dom"],
     "types": ["node", "reflect-metadata"],
+    "declaration": true,
+    "importHelpers": true,
     "skipLibCheck": true,
     "skipDefaultLibCheck": true,
     "experimentalDecorators": true
