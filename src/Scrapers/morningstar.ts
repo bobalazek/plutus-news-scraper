@@ -8,19 +8,17 @@ import { NewsArticleMultimediaTypeEnum } from '../Types/NewsArticleMultimediaTyp
 import { NewsBasicArticleInterface } from '../Types/NewsBasicArticleInterface';
 import { NewsScraperInterface } from '../Types/NewsScraperInterface';
 
-export default class FortuneScraper extends AbstractNewsScraper implements NewsScraperInterface {
-  key: string = 'fortune';
-  domain: string = 'fortune.com';
+export default class MorningstarScraper extends AbstractNewsScraper implements NewsScraperInterface {
+  key: string = 'morningstar';
+  domain: string = 'www.morningstar.com';
   recentArticleListUrls: string[] = [
-    'https://fortune.com',
-    'https://fortune.com/section/tech/',
-    'https://fortune.com/section/finance/',
-    'https://fortune.com/section/politics/',
-    'https://fortune.com/section/success/',
-    'https://fortune.com/section/environment/',
-    'https://fortune.com/section/leadership/',
-    'https://fortune.com/section/health/',
-    'https://fortune.com/crypto/',
+    'https://www.morningstar.com/market-moments/coronavirus-economic-impact',
+    'https://www.morningstar.com/topics/sustainable-investing',
+    'https://www.morningstar.com/funds',
+    'https://www.morningstar.com/etfs',
+    'https://www.morningstar.com/stocks',
+    'https://www.morningstar.com/bonds',
+    'https://www.morningstar.com/markets',
   ];
 
   async scrapeRecentArticles(urls?: string[]): Promise<NewsBasicArticleInterface[]> {
@@ -29,7 +27,7 @@ export default class FortuneScraper extends AbstractNewsScraper implements NewsS
 
     const page = await this.getPuppeteerPage();
 
-    logger.info(`Starting to scrape the recent articles on Fortune ...`);
+    logger.info(`Starting to scrape the recent articles on Morningstar ...`);
 
     for (const recentArticleListUrl of recentArticleListUrls) {
       logger.info(`Going to URL ${recentArticleListUrl} ...`);
@@ -41,7 +39,10 @@ export default class FortuneScraper extends AbstractNewsScraper implements NewsS
       const articleUrls = this.getUniqueArray(
         await page.evaluate(() => {
           // Get all the possible (anchor) elements that have the links to articles
-          const querySelector = ['a[aria-label^="Go to full article"]'].join(', ');
+          const querySelector = [
+            '.market-moment .mdc-carousel-item a.mdc-link',
+            '.mdc-grid-item__content a.mdc-link',
+          ].join(', ');
 
           // Fetch those with the .querySelectoAll() and convert it to an array
           const $elements = Array.from(document.querySelectorAll(querySelector));
@@ -51,9 +52,13 @@ export default class FortuneScraper extends AbstractNewsScraper implements NewsS
             return $el.getAttribute('href') ?? ''; // Needs to have a '' (empty string) as a fallback, because otherwise it could be null, which we don't want
           });
         })
-      ).filter((href) => {
-        return href !== ''; // Now we want to filter out any links that are '', just in case
-      });
+      )
+        .filter((href) => {
+          return href !== ''; // Now we want to filter out any links that are '', just in case
+        })
+        .map((uri) => {
+          return `https://www.morningstar.com${uri}`;
+        });
 
       logger.info(`Found ${articleUrls.length} articles on this page`);
 
@@ -87,20 +92,23 @@ export default class FortuneScraper extends AbstractNewsScraper implements NewsS
       waitUntil: 'domcontentloaded',
     });
 
-    const linkedDataText = await page.evaluate(() => {
-      return document.querySelector('head script[type="application/ld+json"]')?.innerHTML ?? '';
+    const urlSplit = url.split('/');
+    const urlId = urlSplit[urlSplit.length - 2];
+    const newsSiteArticleId = urlId;
+
+    const datePublished = await page.evaluate(() => {
+      return document.querySelector('head meta[property="og:article:published_time"]')?.getAttribute('content') ?? '';
     });
-    if (!linkedDataText) {
-      throw new NewsArticleDataNotFoundError(`No linked data found for URL ${url}`);
-    }
-
-    const linkedData = JSON.parse(linkedDataText);
-
-    const newsSiteArticleId = linkedData.identifier + ''; // .identifier in this case is a number, so we convert it into a string
+    const dateModified = await page.evaluate(() => {
+      return document.querySelector('head meta[property="og:article:modified_time"]')?.getAttribute('content') ?? '';
+    });
+    const title = await page.evaluate(() => {
+      return document.querySelector('head meta[property="og:title"]')?.getAttribute('content') ?? '';
+    });
 
     // Content
     const content = await page.evaluate(() => {
-      return Array.from(document.querySelectorAll('#content p'))
+      return Array.from(document.querySelectorAll('.article__container .article__body p'))
         .map((element) => {
           return element.innerHTML;
         })
@@ -111,14 +119,14 @@ export default class FortuneScraper extends AbstractNewsScraper implements NewsS
 
     const article: NewsArticleInterface = {
       url: url,
-      title: linkedData.headline,
+      title: title,
       multimediaType: NewsArticleMultimediaTypeEnum.TEXT,
       content: convert(content, {
         wordwrap: false,
       }),
       newsSiteArticleId: newsSiteArticleId,
-      publishedAt: new Date(linkedData.datePublished),
-      modifiedAt: new Date(linkedData.dateModified),
+      publishedAt: new Date(datePublished),
+      modifiedAt: new Date(dateModified),
     };
 
     logger.debug(`Article data:`);

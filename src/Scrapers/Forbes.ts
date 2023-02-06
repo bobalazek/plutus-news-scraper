@@ -85,10 +85,9 @@ export default class ForbesScraper extends AbstractNewsScraper implements NewsSc
     });
 
     const newsSiteArticleId = await page.evaluate(() => {
-      const content = document.querySelector('head meta[property="article:id"]')?.getAttribute('content') ?? '';
-      const lastSlashIndex = content.lastIndexOf('/');
-      const numbersAfterLastSlash = content.substring(lastSlashIndex + 1);
-      return numbersAfterLastSlash;
+      const articleId = document.querySelector('head meta[property="article:id"]')?.getAttribute('content') ?? '';
+      const articleIdSplit = articleId.split('/');
+      return articleIdSplit[articleIdSplit.length - 1];
     });
 
     const linkedDataText = await page.evaluate(() => {

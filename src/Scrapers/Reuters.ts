@@ -8,19 +8,17 @@ import { NewsArticleMultimediaTypeEnum } from '../Types/NewsArticleMultimediaTyp
 import { NewsBasicArticleInterface } from '../Types/NewsBasicArticleInterface';
 import { NewsScraperInterface } from '../Types/NewsScraperInterface';
 
-export default class FortuneScraper extends AbstractNewsScraper implements NewsScraperInterface {
-  key: string = 'fortune';
-  domain: string = 'fortune.com';
+export default class ReutersScraper extends AbstractNewsScraper implements NewsScraperInterface {
+  key: string = 'reuters';
+  domain: string = 'www.reuters.com';
   recentArticleListUrls: string[] = [
-    'https://fortune.com',
-    'https://fortune.com/section/tech/',
-    'https://fortune.com/section/finance/',
-    'https://fortune.com/section/politics/',
-    'https://fortune.com/section/success/',
-    'https://fortune.com/section/environment/',
-    'https://fortune.com/section/leadership/',
-    'https://fortune.com/section/health/',
-    'https://fortune.com/crypto/',
+    'https://www.reuters.com',
+    'https://www.reuters.com/world',
+    'https://www.reuters.com/business',
+    'https://www.reuters.com/legal',
+    'https://www.reuters.com/markets',
+    'https://www.reuters.com/breakingviews',
+    'https://www.reuters.com/technology',
   ];
 
   async scrapeRecentArticles(urls?: string[]): Promise<NewsBasicArticleInterface[]> {
@@ -29,7 +27,7 @@ export default class FortuneScraper extends AbstractNewsScraper implements NewsS
 
     const page = await this.getPuppeteerPage();
 
-    logger.info(`Starting to scrape the recent articles on Fortune ...`);
+    logger.info(`Starting to scrape the recent articles on Reuters ...`);
 
     for (const recentArticleListUrl of recentArticleListUrls) {
       logger.info(`Going to URL ${recentArticleListUrl} ...`);
@@ -41,7 +39,7 @@ export default class FortuneScraper extends AbstractNewsScraper implements NewsS
       const articleUrls = this.getUniqueArray(
         await page.evaluate(() => {
           // Get all the possible (anchor) elements that have the links to articles
-          const querySelector = ['a[aria-label^="Go to full article"]'].join(', ');
+          const querySelector = ['a[data-testid="Heading"]'].join(', ');
 
           // Fetch those with the .querySelectoAll() and convert it to an array
           const $elements = Array.from(document.querySelectorAll(querySelector));
@@ -51,9 +49,13 @@ export default class FortuneScraper extends AbstractNewsScraper implements NewsS
             return $el.getAttribute('href') ?? ''; // Needs to have a '' (empty string) as a fallback, because otherwise it could be null, which we don't want
           });
         })
-      ).filter((href) => {
-        return href !== ''; // Now we want to filter out any links that are '', just in case
-      });
+      )
+        .filter((href) => {
+          return href !== ''; // Now we want to filter out any links that are '', just in case
+        })
+        .map((uri) => {
+          return `https://www.reuters.com${uri}`;
+        });
 
       logger.info(`Found ${articleUrls.length} articles on this page`);
 
@@ -87,6 +89,10 @@ export default class FortuneScraper extends AbstractNewsScraper implements NewsS
       waitUntil: 'domcontentloaded',
     });
 
+    const newsSiteArticleId = await page.evaluate(() => {
+      return document.querySelector('body header[article_id]')?.getAttribute('article_id') ?? '';
+    });
+
     const linkedDataText = await page.evaluate(() => {
       return document.querySelector('head script[type="application/ld+json"]')?.innerHTML ?? '';
     });
@@ -96,11 +102,9 @@ export default class FortuneScraper extends AbstractNewsScraper implements NewsS
 
     const linkedData = JSON.parse(linkedDataText);
 
-    const newsSiteArticleId = linkedData.identifier + ''; // .identifier in this case is a number, so we convert it into a string
-
     // Content
     const content = await page.evaluate(() => {
-      return Array.from(document.querySelectorAll('#content p'))
+      return Array.from(document.querySelectorAll('article div[class^="article__main__"]'))
         .map((element) => {
           return element.innerHTML;
         })

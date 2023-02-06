@@ -1,5 +1,3 @@
-import { convert } from 'html-to-text';
-
 import { AbstractNewsScraper } from '../AbstractNewsScraper';
 import { NewsArticleDataNotFoundError } from '../Errors/NewsArticleDataNotFoundError';
 import { logger } from '../Services/Logger';
@@ -8,19 +6,18 @@ import { NewsArticleMultimediaTypeEnum } from '../Types/NewsArticleMultimediaTyp
 import { NewsBasicArticleInterface } from '../Types/NewsBasicArticleInterface';
 import { NewsScraperInterface } from '../Types/NewsScraperInterface';
 
-export default class FortuneScraper extends AbstractNewsScraper implements NewsScraperInterface {
-  key: string = 'fortune';
-  domain: string = 'fortune.com';
+export default class MarketsInsiderScraper extends AbstractNewsScraper implements NewsScraperInterface {
+  key: string = 'markets_insider';
+  domain: string = 'markets.businessinsider.com';
   recentArticleListUrls: string[] = [
-    'https://fortune.com',
-    'https://fortune.com/section/tech/',
-    'https://fortune.com/section/finance/',
-    'https://fortune.com/section/politics/',
-    'https://fortune.com/section/success/',
-    'https://fortune.com/section/environment/',
-    'https://fortune.com/section/leadership/',
-    'https://fortune.com/section/health/',
-    'https://fortune.com/crypto/',
+    'https://markets.businessinsider.com/',
+    'https://markets.businessinsider.com/stocks',
+    'https://markets.businessinsider.com/indices',
+    'https://markets.businessinsider.com/commodities',
+    'https://markets.businessinsider.com/cryptocurrencies',
+    'https://markets.businessinsider.com/currencies',
+    'https://markets.businessinsider.com/etfs',
+    'https://markets.businessinsider.com/news',
   ];
 
   async scrapeRecentArticles(urls?: string[]): Promise<NewsBasicArticleInterface[]> {
@@ -29,7 +26,7 @@ export default class FortuneScraper extends AbstractNewsScraper implements NewsS
 
     const page = await this.getPuppeteerPage();
 
-    logger.info(`Starting to scrape the recent articles on Fortune ...`);
+    logger.info(`Starting to scrape the recent articles on Markets Insider ...`);
 
     for (const recentArticleListUrl of recentArticleListUrls) {
       logger.info(`Going to URL ${recentArticleListUrl} ...`);
@@ -41,7 +38,11 @@ export default class FortuneScraper extends AbstractNewsScraper implements NewsS
       const articleUrls = this.getUniqueArray(
         await page.evaluate(() => {
           // Get all the possible (anchor) elements that have the links to articles
-          const querySelector = ['a[aria-label^="Go to full article"]'].join(', ');
+          const querySelector = [
+            '.top-story .top-story__story a.top-story__link',
+            '.instrument-stories .instrument-stories__story  a.instrument-stories__link',
+            '.popular-articles .popular-articles__story a.popular-articles__link',
+          ].join(', ');
 
           // Fetch those with the .querySelectoAll() and convert it to an array
           const $elements = Array.from(document.querySelectorAll(querySelector));
@@ -51,9 +52,13 @@ export default class FortuneScraper extends AbstractNewsScraper implements NewsS
             return $el.getAttribute('href') ?? ''; // Needs to have a '' (empty string) as a fallback, because otherwise it could be null, which we don't want
           });
         })
-      ).filter((href) => {
-        return href !== ''; // Now we want to filter out any links that are '', just in case
-      });
+      )
+        .filter((href) => {
+          return href !== ''; // Now we want to filter out any links that are '', just in case
+        })
+        .map((uri) => {
+          return `https://markets.businessinsider.com${uri}`;
+        });
 
       logger.info(`Found ${articleUrls.length} articles on this page`);
 
@@ -87,6 +92,10 @@ export default class FortuneScraper extends AbstractNewsScraper implements NewsS
       waitUntil: 'domcontentloaded',
     });
 
+    const newsSiteArticleId = await page.evaluate(() => {
+      return document.querySelector('head meta[name="viking-id"]')?.getAttribute('value') ?? '';
+    });
+
     const linkedDataText = await page.evaluate(() => {
       return document.querySelector('head script[type="application/ld+json"]')?.innerHTML ?? '';
     });
@@ -96,26 +105,13 @@ export default class FortuneScraper extends AbstractNewsScraper implements NewsS
 
     const linkedData = JSON.parse(linkedDataText);
 
-    const newsSiteArticleId = linkedData.identifier + ''; // .identifier in this case is a number, so we convert it into a string
-
-    // Content
-    const content = await page.evaluate(() => {
-      return Array.from(document.querySelectorAll('#content p'))
-        .map((element) => {
-          return element.innerHTML;
-        })
-        .join('');
-    });
-
     await this.closePuppeteerBrowser();
 
     const article: NewsArticleInterface = {
       url: url,
       title: linkedData.headline,
       multimediaType: NewsArticleMultimediaTypeEnum.TEXT,
-      content: convert(content, {
-        wordwrap: false,
-      }),
+      content: linkedData.articleBody,
       newsSiteArticleId: newsSiteArticleId,
       publishedAt: new Date(linkedData.datePublished),
       modifiedAt: new Date(linkedData.dateModified),

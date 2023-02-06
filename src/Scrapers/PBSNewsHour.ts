@@ -8,19 +8,18 @@ import { NewsArticleMultimediaTypeEnum } from '../Types/NewsArticleMultimediaTyp
 import { NewsBasicArticleInterface } from '../Types/NewsBasicArticleInterface';
 import { NewsScraperInterface } from '../Types/NewsScraperInterface';
 
-export default class FortuneScraper extends AbstractNewsScraper implements NewsScraperInterface {
-  key: string = 'fortune';
-  domain: string = 'fortune.com';
+export default class PbsNewsHourScraper extends AbstractNewsScraper implements NewsScraperInterface {
+  key: string = 'pbs_news_hour';
+  domain: string = 'www.pbs.org';
   recentArticleListUrls: string[] = [
-    'https://fortune.com',
-    'https://fortune.com/section/tech/',
-    'https://fortune.com/section/finance/',
-    'https://fortune.com/section/politics/',
-    'https://fortune.com/section/success/',
-    'https://fortune.com/section/environment/',
-    'https://fortune.com/section/leadership/',
-    'https://fortune.com/section/health/',
-    'https://fortune.com/crypto/',
+    'https://www.pbs.org/newshour',
+    'https://www.pbs.org/newshour/latest',
+    'https://www.pbs.org/newshour/politics',
+    'https://www.pbs.org/newshour/nation',
+    'https://www.pbs.org/newshour/world',
+    'https://www.pbs.org/newshour/economy',
+    'https://www.pbs.org/newshour/science',
+    'https://www.pbs.org/newshour/education',
   ];
 
   async scrapeRecentArticles(urls?: string[]): Promise<NewsBasicArticleInterface[]> {
@@ -29,7 +28,7 @@ export default class FortuneScraper extends AbstractNewsScraper implements NewsS
 
     const page = await this.getPuppeteerPage();
 
-    logger.info(`Starting to scrape the recent articles on Fortune ...`);
+    logger.info(`Starting to scrape the recent articles on PBS News Hour ...`);
 
     for (const recentArticleListUrl of recentArticleListUrls) {
       logger.info(`Going to URL ${recentArticleListUrl} ...`);
@@ -41,7 +40,14 @@ export default class FortuneScraper extends AbstractNewsScraper implements NewsS
       const articleUrls = this.getUniqueArray(
         await page.evaluate(() => {
           // Get all the possible (anchor) elements that have the links to articles
-          const querySelector = ['a[aria-label^="Go to full article"]'].join(', ');
+          const querySelector = [
+            '.page__body .home-hero__body a',
+            '.home-hero__related article .card-sm__body a',
+            '.page__body .card-timeline .card-timeline__intro a',
+            '.page__body .archive__cards a.card-xl__title',
+            '.page__body .archive-grid a.card-lg__title',
+            '.page__body .archive-list a.card-horiz__title',
+          ].join(', ');
 
           // Fetch those with the .querySelectoAll() and convert it to an array
           const $elements = Array.from(document.querySelectorAll(querySelector));
@@ -87,20 +93,33 @@ export default class FortuneScraper extends AbstractNewsScraper implements NewsS
       waitUntil: 'domcontentloaded',
     });
 
-    const linkedDataText = await page.evaluate(() => {
-      return document.querySelector('head script[type="application/ld+json"]')?.innerHTML ?? '';
+    const bodyClasses = await page.evaluate(() => {
+      return document.querySelector('body')?.getAttribute('class') ?? '';
     });
-    if (!linkedDataText) {
-      throw new NewsArticleDataNotFoundError(`No linked data found for URL ${url}`);
+
+    const bodyPostIdClasses = bodyClasses.split(' ').filter((singleClass) => {
+      return singleClass.startsWith('postid-');
+    });
+
+    if (bodyPostIdClasses.length === 0) {
+      throw new NewsArticleDataNotFoundError(`No post id data found for URL ${url}`);
     }
 
-    const linkedData = JSON.parse(linkedDataText);
+    const newsSiteArticleId = bodyPostIdClasses[0].replace('postid-', '');
 
-    const newsSiteArticleId = linkedData.identifier + ''; // .identifier in this case is a number, so we convert it into a string
+    const datePublished = await page.evaluate(() => {
+      return document.querySelector('head meta[property="article:published_time"]')?.getAttribute('content') ?? '';
+    });
+    const dateModified = await page.evaluate(() => {
+      return document.querySelector('head meta[property="article:published_time"]')?.getAttribute('content') ?? '';
+    });
+    const title = await page.evaluate(() => {
+      return document.querySelector('head meta[property="og:title"]')?.getAttribute('content') ?? '';
+    });
 
     // Content
     const content = await page.evaluate(() => {
-      return Array.from(document.querySelectorAll('#content p'))
+      return Array.from(document.querySelectorAll('article .body-text p'))
         .map((element) => {
           return element.innerHTML;
         })
@@ -111,14 +130,14 @@ export default class FortuneScraper extends AbstractNewsScraper implements NewsS
 
     const article: NewsArticleInterface = {
       url: url,
-      title: linkedData.headline,
+      title: title,
       multimediaType: NewsArticleMultimediaTypeEnum.TEXT,
       content: convert(content, {
         wordwrap: false,
       }),
       newsSiteArticleId: newsSiteArticleId,
-      publishedAt: new Date(linkedData.datePublished),
-      modifiedAt: new Date(linkedData.dateModified),
+      publishedAt: new Date(datePublished),
+      modifiedAt: new Date(dateModified),
     };
 
     logger.debug(`Article data:`);
