@@ -5,11 +5,11 @@ import { TYPES } from '../ContainerTypes';
 import { logger } from '../Services/Logger';
 import { NewsScrapingManager } from '../Services/NewsScrapingManager';
 
-export const addArchivedArticlesScrapeCommand = (program: Command) => {
+export const addNewsArchivedArticlesScrapeCommand = (program: Command) => {
   const command = program
     .command('news:archived-articles:scrape')
     .requiredOption('-n, --news-site <newsSite>', 'Which platform do we want to scrape?')
-    .option('-o, --options <options>', 'Which options you want to provide?')
+    .option('-o, --options <options>', 'Which options you want to provide? Needs to be a valid JSON string.')
     .option('-h, --headful', 'If this option is passed, then it will open an actual browser window')
     .option('-p, --prevent-close', 'Should we prevent closing the scraper at the end?')
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -24,7 +24,9 @@ export const addArchivedArticlesScrapeCommand = (program: Command) => {
       newsScrapingManager.setPreventClose(preventClose);
 
       try {
-        await newsScrapingManager.scrapeArchivedArticles(newsSite, JSON.parse(optionsString));
+        const parsedOptions = JSON.parse(optionsString);
+
+        await newsScrapingManager.scrapeArchivedArticles(newsSite, parsedOptions);
       } catch (err) {
         await newsScrapingManager.terminateScraper();
 
