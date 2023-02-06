@@ -26,6 +26,7 @@
     "typescript": "^4.9.5"
   },
   "dependencies": {
+    "@lifeomic/attempt": "^3.0.3",
     "commander": "^10.0.0",
     "html-to-text": "^9.0.3",
     "inversify": "^6.0.1",

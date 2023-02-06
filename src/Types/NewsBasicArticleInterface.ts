@@ -11,6 +11,6 @@ export interface NewsBasicArticleInterface {
 /**
  * This is just the same basic article as above, but it also includes the newsSiteKey.
  */
-export interface NewsBasicArticleWithSiteKeyInterface extends NewsBasicArticleInterface {
+export interface NewsBasicArticleExtendedInterface extends NewsBasicArticleInterface {
   newsSiteKey: string;
 }

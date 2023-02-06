@@ -1,11 +1,15 @@
+import { retry } from '@lifeomic/attempt';
 import { readdirSync } from 'fs';
 import { injectable } from 'inversify/lib/annotation/injectable';
 import { join } from 'path';
 
 import type { AbstractNewsScraper } from '../AbstractNewsScraper';
 import { ROOT_DIRECTORY } from '../Constants';
-import { NewsArticleWithSiteKeyInterface } from '../Types/NewsArticleInterface';
-import { NewsBasicArticleWithSiteKeyInterface } from '../Types/NewsBasicArticleInterface';
+import { NewsArticleNotFoundError } from '../Errors/NewsArticleNotFoundError';
+import { NewsArticlesNotFoundError } from '../Errors/NewsArticlesNotFoundError';
+import { NewsArticleExtendedInterface } from '../Types/NewsArticleInterface';
+import { NewsArticleTypeEnum } from '../Types/NewsArticleTypeEnum';
+import { NewsBasicArticleExtendedInterface } from '../Types/NewsBasicArticleInterface';
 import { NewsScraperInterface } from '../Types/NewsScraperInterface';
 
 @injectable()
@@ -85,42 +89,56 @@ export class NewsScrapingManager {
     return this.get(this._scrapersDomainMap[domain]);
   }
 
-  async scrapeArticle(url: string): Promise<NewsArticleWithSiteKeyInterface> {
+  async scrapeArticle(url: string): Promise<NewsArticleExtendedInterface> {
     const urlObject = new URL(url);
     const scraper = await this.getForDomain(urlObject.hostname);
     if (typeof scraper === 'undefined') {
       throw new Error(`No scraper for the domain "${urlObject.hostname}" was found`);
     }
 
-    this._currentScraper = scraper as unknown as AbstractNewsScraper;
-    this._currentScraper.setHeadful(this._headful);
-    this._currentScraper.setPreventClose(this._preventClose);
+    this._currentScraper = this._prepareScraper(scraper);
 
-    const newsArticle = await scraper.scrapeArticle({ url });
+    const newsArticle = await retry(
+      async () => {
+        return scraper.scrapeArticle({ url });
+      },
+      {
+        delay: 500,
+        factor: 2,
+        maxAttempts: 3,
+      }
+    );
     if (!newsArticle) {
-      throw new Error(`Article data not found.`);
+      throw new NewsArticleNotFoundError(`Article data not found.`);
     }
 
-    return { ...newsArticle, url, newsSiteKey: scraper.key };
+    return { ...newsArticle, url, newsSiteKey: scraper.key, type: NewsArticleTypeEnum.NEWS_ARTICLE };
   }
 
-  async scrapeRecentArticles(newsSiteKey: string, url?: string): Promise<NewsBasicArticleWithSiteKeyInterface[]> {
+  async scrapeRecentArticles(newsSiteKey: string, url?: string): Promise<NewsBasicArticleExtendedInterface[]> {
     const scraper = await this.get(newsSiteKey);
     if (typeof scraper === 'undefined') {
       throw new Error(`Scraper ${newsSiteKey} was not found`);
     }
 
-    this._currentScraper = scraper as unknown as AbstractNewsScraper;
-    this._currentScraper.setHeadful(this._headful);
-    this._currentScraper.setPreventClose(this._preventClose);
+    this._currentScraper = this._prepareScraper(scraper);
 
     if (typeof scraper.scrapeRecentArticles === 'undefined') {
       throw new Error(`This scraper (${newsSiteKey}) does not have the .scrapeRecentArticles() method implemented`);
     }
 
-    const recentArticles = await scraper.scrapeRecentArticles(url);
+    const recentArticles = await retry(
+      async () => {
+        return scraper.scrapeRecentArticles(url);
+      },
+      {
+        delay: 500,
+        factor: 2,
+        maxAttempts: 3,
+      }
+    );
     if (recentArticles.length === 0) {
-      throw new Error(`No recent articles found for this news site`);
+      throw new NewsArticlesNotFoundError(`No recent articles found for this news site`);
     }
 
     return recentArticles.map((recentArticle) => {
@@ -135,26 +153,33 @@ export class NewsScrapingManager {
     newsSiteKey: string,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     options: Record<string, string>
-  ): Promise<NewsBasicArticleWithSiteKeyInterface[]> {
+  ): Promise<NewsBasicArticleExtendedInterface[]> {
     const scraper = await this.get(newsSiteKey);
     if (typeof scraper === 'undefined') {
       throw new Error(`Scraper ${newsSiteKey} was not found`);
     }
 
-    this._currentScraper = scraper as unknown as AbstractNewsScraper;
-    this._currentScraper.setHeadful(this._headful);
-    this._currentScraper.setPreventClose(this._preventClose);
+    this._currentScraper = this._prepareScraper(scraper);
 
     if (typeof scraper.scrapeArchivedArticles === 'undefined') {
       throw new Error(`This scraper (${newsSiteKey}) does not have the .scrapeArchivedArticles() method implemented`);
     }
 
-    const recentArticles = await scraper.scrapeArchivedArticles(options);
-    if (recentArticles.length === 0) {
-      throw new Error(`No archived articles found for this news site`);
+    const archivedArticles = await retry(
+      async () => {
+        return scraper.scrapeArchivedArticles(options);
+      },
+      {
+        delay: 500,
+        factor: 2,
+        maxAttempts: 3,
+      }
+    );
+    if (archivedArticles.length === 0) {
+      throw new NewsArticlesNotFoundError(`No archived articles found for this news site`);
     }
 
-    return recentArticles.map((recentArticle) => {
+    return archivedArticles.map((recentArticle) => {
       return {
         ...recentArticle,
         newsSiteKey: scraper.key,
@@ -165,7 +190,6 @@ export class NewsScrapingManager {
   /**
    * ========== Helpers ==========
    */
-
   /**
    * If this is set to true, then it will open an actual browser window
    *
@@ -173,6 +197,8 @@ export class NewsScrapingManager {
    */
   setHeadful(value: boolean) {
     this._headful = value;
+
+    return this;
   }
 
   /**
@@ -184,5 +210,17 @@ export class NewsScrapingManager {
     this._preventClose = value;
 
     return this;
+  }
+
+  /**
+   * ========== Private ==========
+   */
+
+  private _prepareScraper(scraper: NewsScraperInterface) {
+    const newsScraper = scraper as unknown as AbstractNewsScraper;
+    newsScraper.setHeadful(this._headful);
+    newsScraper.setPreventClose(this._preventClose);
+
+    return newsScraper;
   }
 }

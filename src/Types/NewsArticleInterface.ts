@@ -1,4 +1,5 @@
 import { NewsArticleMultimediaTypeEnum } from './NewsArticleMultimediaTypeEnum';
+import { NewsArticleTypeEnum } from './NewsArticleTypeEnum';
 import { NewsBasicArticleInterface } from './NewsBasicArticleInterface';
 
 /**
@@ -22,6 +23,7 @@ export interface NewsArticleInterface extends NewsBasicArticleInterface {
  * This interface would mostly be used when we are persisting that data somewhere like
  * into a file or into the database.
  */
-export interface NewsArticleWithSiteKeyInterface extends NewsArticleInterface {
+export interface NewsArticleExtendedInterface extends NewsArticleInterface {
+  type: NewsArticleTypeEnum;
   newsSiteKey: string;
 }

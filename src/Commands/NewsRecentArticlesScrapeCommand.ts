@@ -5,17 +5,17 @@ import { TYPES } from '../ContainerTypes';
 import { logger } from '../Services/Logger';
 import { NewsScrapingManager } from '../Services/NewsScrapingManager';
 
-export const addScrapeArchivedArticlesCommand = (program: Command) => {
+export const addNewsRecentArticlesScrapeCommand = (program: Command) => {
   const command = program
-    .command('archived-articles:scrape')
+    .command('news:recent-articles:scrape')
     .requiredOption('-n, --news-site <newsSite>', 'Which platform do we want to scrape?')
-    .option('-o, --options <options>', 'Which options you want to provide?')
+    .option('-u, --url <url>', 'Is there a specific URL we want to scrape?')
     .option('-h, --headful', 'If this option is passed, then it will open an actual browser window')
     .option('-p, --prevent-close', 'Should we prevent closing the scraper at the end?')
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     .action(async (options: any) => {
       const newsSite = options.newsSite;
-      const optionsString = options.options;
+      const url = options.url;
       const headful = options.headful;
       const preventClose = options.preventClose;
 
@@ -24,7 +24,7 @@ export const addScrapeArchivedArticlesCommand = (program: Command) => {
       newsScrapingManager.setPreventClose(preventClose);
 
       try {
-        await newsScrapingManager.scrapeArchivedArticles(newsSite, JSON.parse(optionsString));
+        await newsScrapingManager.scrapeRecentArticles(newsSite, url);
       } catch (err) {
         await newsScrapingManager.terminateScraper();
 

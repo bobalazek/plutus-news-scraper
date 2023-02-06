@@ -1,11 +1,13 @@
 import { Command } from 'commander';
 
-import { addScrapeArticleCommand } from './Commands/ScrapeArticleCommand';
-import { addScrapeRecentArticlesCommand } from './Commands/ScrapeRecentArticlesCommand';
+import { addArchivedArticlesScrapeCommand } from './Commands/ArchivedArticlesScrapeCommand';
+import { addNewsArticleScrapeCommand } from './Commands/NewsArticleScrapeCommand';
+import { addNewsRecentArticlesScrapeCommand } from './Commands/NewsRecentArticlesScrapeCommand';
 
 const program = new Command();
 
-addScrapeRecentArticlesCommand(program);
-addScrapeArticleCommand(program);
+addNewsArticleScrapeCommand(program);
+addNewsRecentArticlesScrapeCommand(program);
+addArchivedArticlesScrapeCommand(program);
 
 program.parse(process.argv);
