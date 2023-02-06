@@ -10,7 +10,7 @@ import { NewsScraperInterface } from '../Types/NewsScraperInterface';
 
 export default class FortuneScraper extends AbstractNewsScraper implements NewsScraperInterface {
   key: string = 'fortune';
-  domain: string = 'www.fortune.com';
+  domain: string = 'fortune.com';
   recentArticleListUrls: string[] = [
     'https://fortune.com',
     'https://fortune.com/section/tech/',

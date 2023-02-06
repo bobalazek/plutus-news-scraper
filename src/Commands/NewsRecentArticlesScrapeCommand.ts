@@ -24,7 +24,7 @@ export const addNewsRecentArticlesScrapeCommand = (program: Command) => {
       newsScrapingManager.setPreventClose(preventClose);
 
       try {
-        await newsScrapingManager.scrapeRecentArticles(newsSite, [url]);
+        await newsScrapingManager.scrapeRecentArticles(newsSite, url ? [url] : undefined);
       } catch (err) {
         await newsScrapingManager.terminateScraper();
 
