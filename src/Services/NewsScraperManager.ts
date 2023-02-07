@@ -22,6 +22,10 @@ export class NewsScraperManager {
   private _preventClose: boolean = false;
 
   async terminateScraper() {
+    if (this._preventClose) {
+      return;
+    }
+
     await this._currentScraper?.closePuppeteerBrowser(true);
   }
 
