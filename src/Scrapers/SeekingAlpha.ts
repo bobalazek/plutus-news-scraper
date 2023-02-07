@@ -8,7 +8,7 @@ import { NewsArticleMultimediaTypeEnum } from '../Types/NewsArticleMultimediaTyp
 import { NewsBasicArticleInterface } from '../Types/NewsBasicArticleInterface';
 import { NewsScraperInterface } from '../Types/NewsScraperInterface';
 
-export default class SeekingAlphaScraper extends AbstractNewsScraper implements NewsScraperInterface {
+export default class SeekingAlphaNewsScraper extends AbstractNewsScraper implements NewsScraperInterface {
   key: string = 'seeking_alpha';
   domain: string = 'seekingalpha.com';
   recentArticleListUrls: string[] = [

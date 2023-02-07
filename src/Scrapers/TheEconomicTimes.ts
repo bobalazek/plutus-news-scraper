@@ -8,7 +8,7 @@ import { NewsArticleMultimediaTypeEnum } from '../Types/NewsArticleMultimediaTyp
 import { NewsBasicArticleInterface } from '../Types/NewsBasicArticleInterface';
 import { NewsScraperInterface } from '../Types/NewsScraperInterface';
 
-export default class TheEconomicTimesScraper extends AbstractNewsScraper implements NewsScraperInterface {
+export default class TheEconomicTimesNewsScraper extends AbstractNewsScraper implements NewsScraperInterface {
   key: string = 'the_economic_times';
   domain: string = 'economictimes.indiatimes.com';
   recentArticleListUrls: string[] = [

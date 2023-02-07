@@ -8,7 +8,7 @@ import { NewsArticleMultimediaTypeEnum } from '../Types/NewsArticleMultimediaTyp
 import { NewsBasicArticleInterface } from '../Types/NewsBasicArticleInterface';
 import { NewsScraperInterface } from '../Types/NewsScraperInterface';
 
-export default class BBCScraper extends AbstractNewsScraper implements NewsScraperInterface {
+export default class BBCNewsScraper extends AbstractNewsScraper implements NewsScraperInterface {
   key: string = 'bbc';
   domain: string = 'www.bbc.com';
   recentArticleListUrls: string[] = [

@@ -8,7 +8,7 @@ import { NewsArticleMultimediaTypeEnum } from '../Types/NewsArticleMultimediaTyp
 import { NewsBasicArticleInterface } from '../Types/NewsBasicArticleInterface';
 import { NewsScraperInterface } from '../Types/NewsScraperInterface';
 
-export default class BarronsScraper extends AbstractNewsScraper implements NewsScraperInterface {
+export default class BarronsNewsScraper extends AbstractNewsScraper implements NewsScraperInterface {
   key: string = 'barrons';
   domain: string = 'www.barrons.com';
   recentArticleListUrls: string[] = [

@@ -6,7 +6,7 @@ import { NewsArticleMultimediaTypeEnum } from '../Types/NewsArticleMultimediaTyp
 import { NewsBasicArticleInterface } from '../Types/NewsBasicArticleInterface';
 import { NewsScraperInterface } from '../Types/NewsScraperInterface';
 
-export default class BusinessInsiderScraper extends AbstractNewsScraper implements NewsScraperInterface {
+export default class BusinessInsiderNewsScraper extends AbstractNewsScraper implements NewsScraperInterface {
   key: string = 'business_insider';
   domain: string = 'www.businessinsider.com';
   recentArticleListUrls: string[] = [

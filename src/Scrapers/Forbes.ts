@@ -8,7 +8,7 @@ import { NewsArticleMultimediaTypeEnum } from '../Types/NewsArticleMultimediaTyp
 import { NewsBasicArticleInterface } from '../Types/NewsBasicArticleInterface';
 import { NewsScraperInterface } from '../Types/NewsScraperInterface';
 
-export default class ForbesScraper extends AbstractNewsScraper implements NewsScraperInterface {
+export default class ForbesNewsScraper extends AbstractNewsScraper implements NewsScraperInterface {
   key: string = 'forbes';
   domain: string = 'www.forbes.com';
   recentArticleListUrls: string[] = [

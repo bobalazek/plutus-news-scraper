@@ -8,7 +8,7 @@ import { NewsArticleMultimediaTypeEnum } from '../Types/NewsArticleMultimediaTyp
 import { NewsBasicArticleInterface } from '../Types/NewsBasicArticleInterface';
 import { NewsScraperInterface } from '../Types/NewsScraperInterface';
 
-export default class PbsNewsHourScraper extends AbstractNewsScraper implements NewsScraperInterface {
+export default class PbsNewsHourNewsScraper extends AbstractNewsScraper implements NewsScraperInterface {
   key: string = 'pbs_news_hour';
   domain: string = 'www.pbs.org';
   recentArticleListUrls: string[] = [

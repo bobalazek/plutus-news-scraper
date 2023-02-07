@@ -7,7 +7,7 @@ import { NewsArticleMultimediaTypeEnum } from '../Types/NewsArticleMultimediaTyp
 import { NewsBasicArticleInterface } from '../Types/NewsBasicArticleInterface';
 import { NewsScraperInterface } from '../Types/NewsScraperInterface';
 
-export default class CNBCScraper extends AbstractNewsScraper implements NewsScraperInterface {
+export default class CNBCNewsScraper extends AbstractNewsScraper implements NewsScraperInterface {
   key: string = 'cnbc';
   domain: string = 'www.cnbc.com';
   recentArticleListUrls: string[] = [

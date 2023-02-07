@@ -8,7 +8,7 @@ import { NewsArticleMultimediaTypeEnum } from '../Types/NewsArticleMultimediaTyp
 import { NewsBasicArticleInterface } from '../Types/NewsBasicArticleInterface';
 import { NewsScraperInterface } from '../Types/NewsScraperInterface';
 
-export default class NewYorkPostScraper extends AbstractNewsScraper implements NewsScraperInterface {
+export default class NewYorkPostNewsScraper extends AbstractNewsScraper implements NewsScraperInterface {
   key: string = 'new_york_post';
   domain: string = 'nypost.com';
   recentArticleListUrls: string[] = [

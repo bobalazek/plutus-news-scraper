@@ -8,7 +8,7 @@ import { NewsArticleMultimediaTypeEnum } from '../Types/NewsArticleMultimediaTyp
 import { NewsBasicArticleInterface } from '../Types/NewsBasicArticleInterface';
 import { NewsScraperInterface } from '../Types/NewsScraperInterface';
 
-export default class InvestopediaScraper extends AbstractNewsScraper implements NewsScraperInterface {
+export default class InvestopediaNewsScraper extends AbstractNewsScraper implements NewsScraperInterface {
   key: string = 'investopedia';
   domain: string = 'www.investopedia.com';
   recentArticleListUrls: string[] = [
