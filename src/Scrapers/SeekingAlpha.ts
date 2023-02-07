@@ -8,18 +8,15 @@ import { NewsArticleMultimediaTypeEnum } from '../Types/NewsArticleMultimediaTyp
 import { NewsBasicArticleInterface } from '../Types/NewsBasicArticleInterface';
 import { NewsScraperInterface } from '../Types/NewsScraperInterface';
 
-export default class PbsNewsHourScraper extends AbstractNewsScraper implements NewsScraperInterface {
-  key: string = 'pbs_news_hour';
-  domain: string = 'www.pbs.org';
+export default class SeekingAlphaScraper extends AbstractNewsScraper implements NewsScraperInterface {
+  key: string = 'seeking_alpha';
+  domain: string = 'seekingalpha.com';
   recentArticleListUrls: string[] = [
-    'https://www.pbs.org/newshour',
-    'https://www.pbs.org/newshour/latest',
-    'https://www.pbs.org/newshour/politics',
-    'https://www.pbs.org/newshour/nation',
-    'https://www.pbs.org/newshour/world',
-    'https://www.pbs.org/newshour/economy',
-    'https://www.pbs.org/newshour/science',
-    'https://www.pbs.org/newshour/education',
+    'https://seekingalpha.com/market-news',
+    'https://seekingalpha.com/market-outlook',
+    'https://seekingalpha.com/stock-ideas',
+    'https://seekingalpha.com/dividends',
+    'https://seekingalpha.com/etfs-and-funds',
   ];
 
   async scrapeRecentArticles(urls?: string[]): Promise<NewsBasicArticleInterface[]> {
@@ -28,7 +25,7 @@ export default class PbsNewsHourScraper extends AbstractNewsScraper implements N
 
     const page = await this.getPuppeteerPage();
 
-    logger.info(`Starting to scrape the recent articles on PBS News Hour ...`);
+    logger.info(`Starting to scrape the recent articles on Seeking Alpha ...`);
 
     for (const recentArticleListUrl of recentArticleListUrls) {
       logger.info(`Going to URL ${recentArticleListUrl} ...`);
@@ -41,12 +38,9 @@ export default class PbsNewsHourScraper extends AbstractNewsScraper implements N
         await page.evaluate(() => {
           // Get all the possible (anchor) elements that have the links to articles
           const querySelector = [
-            '.page__body .home-hero__body a',
-            '.home-hero__related article .card-sm__body a',
-            '.page__body .card-timeline .card-timeline__intro a',
-            '.page__body .archive__cards a.card-xl__title',
-            '.page__body .archive-grid a.card-lg__title',
-            '.page__body .archive-list a.card-horiz__title',
+            'div[data-test-id="trending-news-cards-body"] a[data-test-id="post-list-item-title"]',
+            'div[data-test-id="post-list"] a[data-test-id="post-list-item-title"]',
+            'section[data-test-id="post-list"] a[data-test-id="post-list-item-title"]',
           ].join(', ');
 
           // Fetch those with the .querySelectoAll() and convert it to an array
@@ -57,9 +51,13 @@ export default class PbsNewsHourScraper extends AbstractNewsScraper implements N
             return $el.getAttribute('href') ?? ''; // Needs to have a '' (empty string) as a fallback, because otherwise it could be null, which we don't want
           });
         })
-      ).filter((href) => {
-        return href !== ''; // Now we want to filter out any links that are '', just in case
-      });
+      )
+        .filter((href) => {
+          return href !== ''; // Now we want to filter out any links that are '', just in case
+        })
+        .map((uri) => {
+          return `https://seekingalpha.com${uri}`;
+        });
 
       logger.info(`Found ${articleUrls.length} articles on this page`);
 
@@ -93,33 +91,24 @@ export default class PbsNewsHourScraper extends AbstractNewsScraper implements N
       waitUntil: 'domcontentloaded',
     });
 
-    const bodyClasses = await page.evaluate(() => {
-      return document.querySelector('body')?.getAttribute('class') ?? '';
-    });
+    const urlSplit = url.split('/');
+    const slug = urlSplit[urlSplit.length - 1];
+    const slugSplit = slug.split('-');
 
-    const bodyPostIdClass = bodyClasses.split(' ').find((singleClass) => {
-      return singleClass.startsWith('postid-');
-    });
+    const newsSiteArticleId = slugSplit[0];
 
-    if (!bodyPostIdClass) {
-      throw new NewsArticleDataNotFoundError(`No post id data found for URL ${url}`);
+    const linkedDataText = await page.evaluate(() => {
+      return document.querySelector('body script[type="application/ld+json"]:nth-child(2)')?.innerHTML ?? '';
+    });
+    if (!linkedDataText) {
+      throw new NewsArticleDataNotFoundError(`No linked data found for URL ${url}`);
     }
 
-    const newsSiteArticleId = bodyPostIdClass.replace('postid-', '');
-
-    const datePublished = await page.evaluate(() => {
-      return document.querySelector('head meta[property="article:published_time"]')?.getAttribute('content') ?? '';
-    });
-    const dateModified = await page.evaluate(() => {
-      return document.querySelector('head meta[property="article:published_time"]')?.getAttribute('content') ?? '';
-    });
-    const title = await page.evaluate(() => {
-      return document.querySelector('head meta[property="og:title"]')?.getAttribute('content') ?? '';
-    });
+    const linkedData = JSON.parse(linkedDataText);
 
     // Content
     const content = await page.evaluate(() => {
-      return Array.from(document.querySelectorAll('article .body-text p'))
+      return Array.from(document.querySelectorAll('div[class^="paywall-full-"]'))
         .map((element) => {
           return element.innerHTML;
         })
@@ -130,14 +119,14 @@ export default class PbsNewsHourScraper extends AbstractNewsScraper implements N
 
     const article: NewsArticleInterface = {
       url: url,
-      title: title,
+      title: linkedData.headline,
       multimediaType: NewsArticleMultimediaTypeEnum.TEXT,
       content: convert(content, {
         wordwrap: false,
       }),
       newsSiteArticleId: newsSiteArticleId,
-      publishedAt: new Date(datePublished),
-      modifiedAt: new Date(dateModified),
+      publishedAt: new Date(linkedData.datePublished),
+      modifiedAt: new Date(linkedData.dateModified),
     };
 
     logger.debug(`Article data:`);
