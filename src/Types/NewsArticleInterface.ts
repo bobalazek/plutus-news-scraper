@@ -31,5 +31,8 @@ export interface NewsArticleExtendedInterface extends NewsArticleInterface {
   tags?: string[];
   metadata?: Record<string, string>; // { locale: "en_US", countryCode: "global" (or ISO 3166 countryCode) }
   processingStatus?: NewsArticleProcessingStatusEnum;
-  processingStatusFailedMessage?: string;
+  processingFailedMessage?: string;
+  processingStartedAt?: Date;
+  processingFailedAt?: Date;
+  processedAt?: Date;
 }

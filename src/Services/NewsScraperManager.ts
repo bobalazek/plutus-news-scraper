@@ -1,6 +1,6 @@
 import { retry } from '@lifeomic/attempt';
 import { readdirSync } from 'fs';
-import { injectable } from 'inversify/lib/annotation/injectable';
+import { injectable } from 'inversify';
 import { join } from 'path';
 
 import type { AbstractNewsScraper } from '../AbstractNewsScraper';
@@ -21,72 +21,26 @@ export class NewsScraperManager {
   private _headful: boolean = false;
   private _preventClose: boolean = false;
 
-  async init() {
-    if (this._initialized) {
-      return;
-    }
-
-    const directoryFiles = readdirSync(join(ROOT_DIRECTORY, 'dist', 'Scrapers'));
-    for (const scraperFileName of directoryFiles) {
-      if (!scraperFileName.endsWith('.js')) {
-        continue;
-      }
-
-      try {
-        const importedModule = await import(`../Scrapers/${scraperFileName}`); // Needs to be the relative path from the transpiled .js file
-        const scraperModule = new importedModule.default.default() as NewsScraperInterface;
-
-        if (!scraperModule.domain) {
-          throw new Error(`Domain not set for the scraper ${scraperFileName}`);
-        }
-
-        if (!scraperModule.scrapeArticle) {
-          throw new Error(`Scraper ${scraperFileName} is missing the processArticle() method`);
-        }
-
-        if (typeof this._scrapers[scraperModule.domain] !== 'undefined') {
-          throw new Error(
-            `Scraper with domain ${scraperModule.domain} already exists - duplicate found in the "${scraperFileName}" file`
-          );
-        }
-
-        this._scrapers[scraperModule.key] = scraperModule;
-
-        this._scrapersDomainMap[scraperModule.domain] = scraperModule.key;
-
-        if (Array.isArray(scraperModule.domainAliases)) {
-          for (const domainAlias of scraperModule.domainAliases) {
-            if (typeof this._scrapers[domainAlias] !== 'undefined') {
-              throw new Error(
-                `Scraper with domain ${domainAlias} already exists - duplicate found in the "${scraperFileName}" file`
-              );
-            }
-
-            this._scrapersDomainMap[domainAlias] = scraperModule.key;
-          }
-        }
-      } catch (err) {
-        throw new Error(`Error: ${err}`);
-      }
-    }
-
-    this._initialized = true;
-  }
-
   async terminateScraper() {
     await this._currentScraper?.closePuppeteerBrowser(true);
   }
 
   async get(newsSiteKey: string) {
-    await this.init();
+    await this._init();
 
     return this._scrapers[newsSiteKey] ?? undefined;
   }
 
   async getForDomain(domain: string) {
-    await this.init();
+    await this._init();
 
     return this.get(this._scrapersDomainMap[domain]);
+  }
+
+  async getAll() {
+    await this._init();
+
+    return Object.values(this._scrapers);
   }
 
   async scrapeArticle(url: string): Promise<NewsArticleExtendedInterface> {
@@ -215,6 +169,57 @@ export class NewsScraperManager {
   /**
    * ========== Private ==========
    */
+  private async _init() {
+    if (this._initialized) {
+      return;
+    }
+
+    const directoryFiles = readdirSync(join(ROOT_DIRECTORY, 'dist', 'Scrapers'));
+    for (const scraperFileName of directoryFiles) {
+      if (!scraperFileName.endsWith('.js')) {
+        continue;
+      }
+
+      try {
+        const importedModule = await import(`../Scrapers/${scraperFileName}`); // Needs to be the relative path from the transpiled .js file
+        const scraperModule = new importedModule.default.default() as NewsScraperInterface;
+
+        if (!scraperModule.domain) {
+          throw new Error(`Domain not set for the scraper ${scraperFileName}`);
+        }
+
+        if (!scraperModule.scrapeArticle) {
+          throw new Error(`Scraper ${scraperFileName} is missing the processArticle() method`);
+        }
+
+        if (typeof this._scrapers[scraperModule.domain] !== 'undefined') {
+          throw new Error(
+            `Scraper with domain ${scraperModule.domain} already exists - duplicate found in the "${scraperFileName}" file`
+          );
+        }
+
+        this._scrapers[scraperModule.key] = scraperModule;
+
+        this._scrapersDomainMap[scraperModule.domain] = scraperModule.key;
+
+        if (Array.isArray(scraperModule.domainAliases)) {
+          for (const domainAlias of scraperModule.domainAliases) {
+            if (typeof this._scrapers[domainAlias] !== 'undefined') {
+              throw new Error(
+                `Scraper with domain ${domainAlias} already exists - duplicate found in the "${scraperFileName}" file`
+              );
+            }
+
+            this._scrapersDomainMap[domainAlias] = scraperModule.key;
+          }
+        }
+      } catch (err) {
+        throw new Error(`Error: ${err}`);
+      }
+    }
+
+    this._initialized = true;
+  }
 
   private _prepareScraper(scraper: NewsScraperInterface) {
     const newsScraper = scraper as unknown as AbstractNewsScraper;

@@ -29,6 +29,7 @@
   },
   "dependencies": {
     "@lifeomic/attempt": "^3.0.3",
+    "amqplib": "^0.10.3",
     "commander": "^10.0.0",
     "dotenv": "^16.0.3",
     "html-to-text": "^9.0.3",
@@ -36,7 +37,9 @@
     "pino": "^8.8.0",
     "pino-pretty": "^9.1.1",
     "puppeteer": "^19.6.2",
+    "redis": "^4.6.4",
     "reflect-metadata": "^0.1.13",
+    "superjson": "^1.12.2",
     "tslib": "^2.5.0"
   }
 }

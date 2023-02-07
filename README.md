@@ -11,6 +11,7 @@ This is the news component of the Plutus platform.
 - To scrape an article, run: `yarn cli news:article:scrape --url <url> [-h,--headful][-p,--prevent-close]`
 - To scrape the recent articles, run: `yarn cli news:recent-articles:scrape --news-site <news-site> [-h,--headful][-p,--prevent-close]`
 - To scrape the archived articles, run: `yarn cli news:archived-articles:scrape --news-site <news-site> [-h,--headful][-p,--prevent-close]`
+- To start the daemon, run: `yarn cli news:daemon:start`
 
 ## Docker
 
