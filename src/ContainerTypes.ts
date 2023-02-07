@@ -1,3 +1,3 @@
 export const TYPES = {
-  NewsScrapingManager: Symbol.for('NewsScrapingManager'),
+  NewsScraperManager: Symbol.for('NewsScraperManager'),
 };

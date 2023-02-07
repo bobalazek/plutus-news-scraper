@@ -3,7 +3,7 @@ import { Command } from 'commander';
 import { container } from '../Container';
 import { TYPES } from '../ContainerTypes';
 import { logger } from '../Services/Logger';
-import { NewsScrapingManager } from '../Services/NewsScrapingManager';
+import { NewsScraperManager } from '../Services/NewsScraperManager';
 
 export const addNewsRecentArticlesScrapeCommand = (program: Command) => {
   const command = program
@@ -19,14 +19,14 @@ export const addNewsRecentArticlesScrapeCommand = (program: Command) => {
       const headful = options.headful;
       const preventClose = options.preventClose;
 
-      const newsScrapingManager = container.get<NewsScrapingManager>(TYPES.NewsScrapingManager);
-      newsScrapingManager.setHeadful(headful);
-      newsScrapingManager.setPreventClose(preventClose);
+      const newsScraperManager = container.get<NewsScraperManager>(TYPES.NewsScraperManager);
+      newsScraperManager.setHeadful(headful);
+      newsScraperManager.setPreventClose(preventClose);
 
       try {
-        await newsScrapingManager.scrapeRecentArticles(newsSite, url ? [url] : undefined);
+        await newsScraperManager.scrapeRecentArticles(newsSite, url ? [url] : undefined);
       } catch (err) {
-        await newsScrapingManager.terminateScraper();
+        await newsScraperManager.terminateScraper();
 
         logger.error(err.message);
       }

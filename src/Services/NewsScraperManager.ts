@@ -13,7 +13,7 @@ import { NewsBasicArticleExtendedInterface } from '../Types/NewsBasicArticleInte
 import { NewsScraperInterface } from '../Types/NewsScraperInterface';
 
 @injectable()
-export class NewsScrapingManager {
+export class NewsScraperManager {
   private _scrapers: Record<string, NewsScraperInterface> = {};
   private _scrapersDomainMap: Record<string, string> = {};
   private _initialized: boolean = false;

@@ -2,13 +2,13 @@ import { Container } from 'inversify';
 import 'reflect-metadata';
 
 import { TYPES } from './ContainerTypes';
-import { NewsScrapingManager } from './Services/NewsScrapingManager';
+import { NewsScraperManager } from './Services/NewsScraperManager';
 
 const container = new Container({
   defaultScope: 'Singleton',
   autoBindInjectable: true,
 });
 
-container.bind<NewsScrapingManager>(TYPES.NewsScrapingManager).to(NewsScrapingManager);
+container.bind<NewsScraperManager>(TYPES.NewsScraperManager).to(NewsScraperManager);
 
 export { container };
