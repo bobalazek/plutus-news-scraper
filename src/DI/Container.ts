@@ -1,12 +1,12 @@
 import { Container } from 'inversify';
 import 'reflect-metadata';
 
+import { NewsScraperManager } from '../Services/NewsScraperManager';
+import { NewsScraperScheduler } from '../Services/NewsScraperScheduler';
+import { NewsScraperWorker } from '../Services/NewsScraperWorker';
+import { RabbitMQService } from '../Services/RabbitMQService';
+import { RedisService } from '../Services/RedisService';
 import { TYPES } from './ContainerTypes';
-import { NewsScraperManager } from './Services/NewsScraperManager';
-import { NewsScraperScheduler } from './Services/NewsScraperScheduler';
-import { NewsScraperWorker } from './Services/NewsScraperWorker';
-import { RabbitMQService } from './Services/RabbitMQService';
-import { RedisService } from './Services/RedisService';
 
 const container = new Container({
   defaultScope: 'Singleton',

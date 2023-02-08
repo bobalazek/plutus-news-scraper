@@ -3,9 +3,9 @@ import { readdirSync } from 'fs';
 import { injectable } from 'inversify';
 import { join } from 'path';
 
-import type { AbstractNewsScraper } from '../AbstractNewsScraper';
 import { NewsArticleNotFoundError } from '../Errors/NewsArticleNotFoundError';
 import { NewsArticlesNotFoundError } from '../Errors/NewsArticlesNotFoundError';
+import type { AbstractNewsScraper } from '../Scrapers/AbstractNewsScraper';
 import { NewsArticleExtendedInterface } from '../Types/NewsArticleInterface';
 import { NewsArticleTypeEnum } from '../Types/NewsArticleTypeEnum';
 import { NewsBasicArticleExtendedInterface } from '../Types/NewsBasicArticleInterface';
@@ -180,7 +180,7 @@ export class NewsScraperManager {
       return;
     }
 
-    const directoryFiles = readdirSync(join(ROOT_DIRECTORY, 'dist', 'Scrapers'));
+    const directoryFiles = readdirSync(join(ROOT_DIRECTORY, '..', 'dist', 'Scrapers'));
     for (const scraperFileName of directoryFiles) {
       if (!scraperFileName.endsWith('.js') || scraperFileName.startsWith('Abstract')) {
         continue;
