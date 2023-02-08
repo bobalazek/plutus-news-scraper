@@ -1,12 +1,12 @@
 import { convert } from 'html-to-text';
 
-import { AbstractNewsScraper } from '../AbstractNewsScraper';
 import { NewsArticleDataNotFoundError } from '../Errors/NewsArticleDataNotFoundError';
 import { logger } from '../Services/Logger';
 import { NewsArticleInterface } from '../Types/NewsArticleInterface';
 import { NewsArticleMultimediaTypeEnum } from '../Types/NewsArticleMultimediaTypeEnum';
 import { NewsBasicArticleInterface } from '../Types/NewsBasicArticleInterface';
 import { NewsScraperInterface } from '../Types/NewsScraperInterface';
+import { AbstractNewsScraper } from './AbstractNewsScraper';
 
 export default class TheGuardianNewsScraper extends AbstractNewsScraper implements NewsScraperInterface {
   key: string = 'the_guardian';
