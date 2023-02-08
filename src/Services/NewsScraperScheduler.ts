@@ -5,11 +5,11 @@ import { logger } from './Logger';
 import { NewsScraperManager } from './NewsScraperManager';
 
 @injectable()
-export class NewsScraperDaemon {
+export class NewsScraperScheduler {
   constructor(@inject(TYPES.NewsScraperManager) private _newsScrapermanager: NewsScraperManager) {}
 
   async start() {
-    logger.info('========== Starting the daemon ... ==========');
+    logger.info('========== Starting the scheduler ... ==========');
 
     // TODO
 

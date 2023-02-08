@@ -2,8 +2,8 @@ import { Container } from 'inversify';
 import 'reflect-metadata';
 
 import { TYPES } from './ContainerTypes';
-import { NewsScraperDaemon } from './Services/NewsScraperDaemon';
 import { NewsScraperManager } from './Services/NewsScraperManager';
+import { NewsScraperScheduler } from './Services/NewsScraperScheduler';
 
 const container = new Container({
   defaultScope: 'Singleton',
@@ -11,6 +11,6 @@ const container = new Container({
 });
 
 container.bind<NewsScraperManager>(TYPES.NewsScraperManager).to(NewsScraperManager);
-container.bind<NewsScraperDaemon>(TYPES.NewsScraperDaemon).to(NewsScraperDaemon);
+container.bind<NewsScraperScheduler>(TYPES.NewsScraperScheduler).to(NewsScraperScheduler);
 
 export { container };
