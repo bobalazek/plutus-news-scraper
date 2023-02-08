@@ -11,4 +11,4 @@ export const NEWS_RECENT_ARTICLES_SCRAPE_CHANNEL = 'news.recent_articles.scrape'
 export const NEWS_ARTICLE_SCRAPE_CHANNEL = 'news.article.scrape';
 
 // Paths
-export const ROOT_DIRECTORY = join(__dirname, '..');
+export const ROOT_DIRECTORY = join(__dirname, '..'); // This is basically /src, or the files root. When compiled, this will be /dist
