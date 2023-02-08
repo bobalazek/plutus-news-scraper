@@ -180,7 +180,7 @@ export class NewsScraperManager {
       return;
     }
 
-    const directoryFiles = readdirSync(join(ROOT_DIRECTORY, '..', 'dist', 'Scrapers'));
+    const directoryFiles = readdirSync(join(ROOT_DIRECTORY, 'Scrapers'));
     for (const scraperFileName of directoryFiles) {
       if (!scraperFileName.endsWith('.js') || scraperFileName.startsWith('Abstract')) {
         continue;
