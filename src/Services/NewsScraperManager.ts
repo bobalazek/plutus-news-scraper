@@ -4,13 +4,13 @@ import { injectable } from 'inversify';
 import { join } from 'path';
 
 import type { AbstractNewsScraper } from '../AbstractNewsScraper';
-import { ROOT_DIRECTORY } from '../Constants';
 import { NewsArticleNotFoundError } from '../Errors/NewsArticleNotFoundError';
 import { NewsArticlesNotFoundError } from '../Errors/NewsArticlesNotFoundError';
 import { NewsArticleExtendedInterface } from '../Types/NewsArticleInterface';
 import { NewsArticleTypeEnum } from '../Types/NewsArticleTypeEnum';
 import { NewsBasicArticleExtendedInterface } from '../Types/NewsBasicArticleInterface';
 import { NewsScraperInterface } from '../Types/NewsScraperInterface';
+import { ROOT_DIRECTORY } from '../Utils/Constants';
 
 @injectable()
 export class NewsScraperManager {
@@ -111,7 +111,6 @@ export class NewsScraperManager {
 
   async scrapeArchivedArticles(
     newsSiteKey: string,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     options: Record<string, string>
   ): Promise<NewsBasicArticleExtendedInterface[]> {
     const scraper = await this.get(newsSiteKey);
@@ -183,7 +182,7 @@ export class NewsScraperManager {
 
     const directoryFiles = readdirSync(join(ROOT_DIRECTORY, 'dist', 'Scrapers'));
     for (const scraperFileName of directoryFiles) {
-      if (!scraperFileName.endsWith('.js')) {
+      if (!scraperFileName.endsWith('.js') || scraperFileName.startsWith('Abstract')) {
         continue;
       }
 

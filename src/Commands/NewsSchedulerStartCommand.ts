@@ -1,7 +1,7 @@
 import { Command } from 'commander';
 
-import { container } from '../Container';
-import { TYPES } from '../ContainerTypes';
+import { container } from '../DI/Container';
+import { TYPES } from '../DI/ContainerTypes';
 import { logger } from '../Services/Logger';
 import { NewsScraperScheduler } from '../Services/NewsScraperScheduler';
 

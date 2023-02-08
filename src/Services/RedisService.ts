@@ -1,7 +1,7 @@
 import { createClient } from 'redis';
 import superjson from 'superjson';
 
-import { REDIS_URL } from '../Constants';
+import { REDIS_URL } from '../Utils/Constants';
 
 export class RedisService {
   private _client?: ReturnType<typeof createClient>;

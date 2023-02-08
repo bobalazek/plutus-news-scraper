@@ -1,7 +1,7 @@
 import * as amqplib from 'amqplib';
 import superjson from 'superjson';
 
-import { RABBITMQ_URL } from '../Constants';
+import { RABBITMQ_URL } from '../Utils/Constants';
 
 export class RabbitMQService {
   private _connection?: amqplib.Connection;

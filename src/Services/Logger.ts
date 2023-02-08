@@ -1,6 +1,6 @@
 import pino from 'pino';
 
-import { IS_DEVELOPMENT } from '../Constants';
+import { IS_DEVELOPMENT } from '../Utils/Constants';
 
 const logger = pino({
   level: 'debug',

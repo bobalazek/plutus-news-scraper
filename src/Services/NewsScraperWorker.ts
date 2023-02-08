@@ -1,6 +1,6 @@
 import { inject, injectable } from 'inversify';
 
-import { TYPES } from '../ContainerTypes';
+import { TYPES } from '../DI/ContainerTypes';
 import { logger } from './Logger';
 import { NewsScraperManager } from './NewsScraperManager';
 
