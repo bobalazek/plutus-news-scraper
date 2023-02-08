@@ -56,6 +56,7 @@ export class NewsScraperManager {
 
     this._currentScraper = this._prepareScraper(scraper);
 
+    // TODO: implement IP change after each retry?
     const newsArticle = await retry(
       async () => {
         return scraper.scrapeArticle({ url });
@@ -85,6 +86,7 @@ export class NewsScraperManager {
       throw new Error(`This scraper (${newsSiteKey}) does not have the .scrapeRecentArticles() method implemented`);
     }
 
+    // TODO: implement IP change after each retry?
     const recentArticles = await retry(
       async () => {
         return scraper.scrapeRecentArticles(urls);
@@ -123,6 +125,7 @@ export class NewsScraperManager {
       throw new Error(`This scraper (${newsSiteKey}) does not have the .scrapeArchivedArticles() method implemented`);
     }
 
+    // TODO: implement IP change after each retry?
     const archivedArticles = await retry(
       async () => {
         return scraper.scrapeArchivedArticles(options);
