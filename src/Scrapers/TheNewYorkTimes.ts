@@ -8,20 +8,17 @@ import { NewsBasicArticleInterface } from '../Types/NewsBasicArticleInterface';
 import { NewsScraperInterface } from '../Types/NewsScraperInterface';
 import { AbstractNewsScraper } from './AbstractNewsScraper';
 
-export default class TheGuardianNewsScraper extends AbstractNewsScraper implements NewsScraperInterface {
-  key: string = 'the_guardian';
-  domain: string = 'www.theguardian.com';
+export default class TheNewYorkTimesNewsScraper extends AbstractNewsScraper implements NewsScraperInterface {
+  key: string = 'the_new_york_times';
+  domain: string = 'www.nytimes.com';
   recentArticleListUrls: string[] = [
-    'https://www.theguardian.com/international',
-    'https://www.theguardian.com/world',
-    'https://www.theguardian.com/uk-news',
-    'https://www.theguardian.com/world/coronavirus-outbreak',
-    'https://www.theguardian.com/environment/climate-crisis',
-    'https://www.theguardian.com/uk/environment',
-    'https://www.theguardian.com/science',
-    'https://www.theguardian.com/global-development',
-    'https://www.theguardian.com/uk/technology',
-    'https://www.theguardian.com/uk/business',
+    'https://www.nytimes.com/international/',
+    'https://www.nytimes.com/international/section/world',
+    'https://www.nytimes.com/international/section/us',
+    'https://www.nytimes.com/international/section/politics',
+    'https://www.nytimes.com/international/section/business',
+    'https://www.nytimes.com/international/section/science',
+    'https://www.nytimes.com/international/section/health',
   ];
 
   async scrapeRecentArticles(urls?: string[]): Promise<NewsBasicArticleInterface[]> {
@@ -30,7 +27,7 @@ export default class TheGuardianNewsScraper extends AbstractNewsScraper implemen
 
     const page = await this.getPuppeteerPage();
 
-    logger.info(`Starting to scrape the recent articles on The Guardian ...`);
+    logger.info(`Starting to scrape the recent articles on The New York Times ...`);
 
     for (const recentArticleListUrl of recentArticleListUrls) {
       logger.info(`Going to URL ${recentArticleListUrl} ...`);
@@ -42,7 +39,11 @@ export default class TheGuardianNewsScraper extends AbstractNewsScraper implemen
       const articleUrls = this.getUniqueArray(
         await page.evaluate(() => {
           // Get all the possible (anchor) elements that have the links to articles
-          const querySelector = ['.fc-container__body .fc-item__container a.js-headline-text'].join(', ');
+          const querySelector = [
+            '#site-content .story-wrapper a',
+            '#site-content article a',
+            '#stream-panel li a',
+          ].join(', ');
 
           // Fetch those with the .querySelectoAll() and convert it to an array
           const $elements = Array.from(document.querySelectorAll(querySelector));
@@ -52,9 +53,13 @@ export default class TheGuardianNewsScraper extends AbstractNewsScraper implemen
             return $el.getAttribute('href') ?? ''; // Needs to have a '' (empty string) as a fallback, because otherwise it could be null, which we don't want
           });
         })
-      ).filter((href) => {
-        return href !== ''; // Now we want to filter out any links that are '', just in case
-      });
+      )
+        .filter((href) => {
+          return href !== ''; // Now we want to filter out any links that are '', just in case
+        })
+        .map((uri) => {
+          return `https://www.nytimes.com${uri}`;
+        });
 
       logger.info(`Found ${articleUrls.length} articles on this page`);
 
@@ -88,7 +93,9 @@ export default class TheGuardianNewsScraper extends AbstractNewsScraper implemen
       waitUntil: 'domcontentloaded',
     });
 
-    const newsSiteArticleId = url;
+    const newsSiteArticleId = await page.evaluate(() => {
+      return document.querySelector('head meta[name="articleid"]')?.getAttribute('content') ?? '';
+    });
 
     const linkedDataText = await page.evaluate(() => {
       return document.querySelector('head script[type="application/ld+json"]')?.innerHTML ?? '';
@@ -101,7 +108,7 @@ export default class TheGuardianNewsScraper extends AbstractNewsScraper implemen
 
     // Content
     const content = await page.evaluate(() => {
-      return Array.from(document.querySelectorAll('#maincontent .article-body-commercial-selector p'))
+      return Array.from(document.querySelectorAll('article p'))
         .map((element) => {
           return element.innerHTML;
         })
@@ -112,14 +119,14 @@ export default class TheGuardianNewsScraper extends AbstractNewsScraper implemen
 
     const article: NewsArticleInterface = {
       url: url,
-      title: linkedData[0].headline,
+      title: linkedData.headline,
       multimediaType: NewsArticleMultimediaTypeEnum.TEXT,
       content: convert(content, {
         wordwrap: false,
       }),
       newsSiteArticleId: newsSiteArticleId,
-      publishedAt: new Date(linkedData[0].datePublished),
-      modifiedAt: new Date(linkedData[0].dateModified),
+      publishedAt: new Date(linkedData.datePublished),
+      modifiedAt: new Date(linkedData.dateModified),
     };
 
     logger.debug(`Article data:`);
