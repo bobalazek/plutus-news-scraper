@@ -1,6 +1,7 @@
 import { inject, injectable } from 'inversify';
 
 import { TYPES } from '../DI/ContainerTypes';
+import { NewsMessageBrokerChannelsDataType, NewsMessageBrokerChannelsEnum } from '../Types/NewsMessageBrokerChannels';
 import { logger } from './Logger';
 import { NewsScraperManager } from './NewsScraperManager';
 import { RabbitMQService } from './RabbitMQService';
@@ -18,7 +19,14 @@ export class NewsScraperScheduler {
     const scrapers = await this._newsScrapermanager.getAll();
 
     setInterval(() => {
-      // TODO: schedule the recent articles scrape
+      for (const scraper of scrapers) {
+        this._rabbitMQService.send<NewsMessageBrokerChannelsDataType>(
+          NewsMessageBrokerChannelsEnum.NEWS_ARTICLE_SCRAPE,
+          {
+            newsSite: scraper.key,
+          }
+        );
+      }
     }, 15000);
 
     return new Promise(() => {
