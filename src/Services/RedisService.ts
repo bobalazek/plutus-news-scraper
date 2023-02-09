@@ -1,8 +1,10 @@
+import { injectable } from 'inversify';
 import { createClient } from 'redis';
 import superjson from 'superjson';
 
 import { REDIS_URL } from '../Utils/Constants';
 
+@injectable()
 export class RedisService {
   private _client?: ReturnType<typeof createClient>;
   private _subClient?: ReturnType<typeof createClient>;

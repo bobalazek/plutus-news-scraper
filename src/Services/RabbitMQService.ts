@@ -1,8 +1,10 @@
 import * as amqplib from 'amqplib';
+import { injectable } from 'inversify';
 import superjson from 'superjson';
 
 import { RABBITMQ_URL } from '../Utils/Constants';
 
+@injectable()
 export class RabbitMQService {
   private _connection?: amqplib.Connection;
   private _channelsMap: Map<string, amqplib.Channel> = new Map();
@@ -36,18 +38,21 @@ export class RabbitMQService {
   // TODO: typescript is not yet fully inferring it correcly when we are calling that
   async consume<T extends Record<string, Record<string, string>>>(
     channelName: keyof T,
-    callback: (data: T[keyof T], fields: amqplib.ConsumeMessageFields, properties: amqplib.MessageProperties) => void
+    callback: (data: T[keyof T], message: amqplib.ConsumeMessage, channel: amqplib.Channel) => void,
+    autoAcknowledge: boolean = true
   ) {
     const channel = await this.getChannel(channelName as string);
 
-    return channel.consume(channelName as string, (msg) => {
-      if (msg === null) {
+    return channel.consume(channelName as string, (message) => {
+      if (message === null) {
         return;
       }
 
-      callback(superjson.parse<T[keyof T]>(msg.content.toString()), msg.fields, msg.properties);
+      callback(superjson.parse<T[keyof T]>(message.content.toString()), message, channel);
 
-      channel.ack(msg);
+      if (autoAcknowledge) {
+        channel.ack(message);
+      }
     });
   }
 
