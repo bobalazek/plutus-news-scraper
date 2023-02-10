@@ -9,6 +9,8 @@ import { RabbitMQService } from './RabbitMQService';
 
 @injectable()
 export class NewsScraperScheduler {
+  private _scrapeInterval: number = 10000;
+
   constructor(
     @inject(TYPES.NewsScraperManager) private _newsScraperManager: NewsScraperManager,
     @inject(TYPES.RabbitMQService) private _rabbitMQService: RabbitMQService
@@ -19,9 +21,11 @@ export class NewsScraperScheduler {
 
     const scrapers = await this._newsScraperManager.getAll();
 
-    setInterval(async () => {
-      await this._scheduleRecentArticlesScrape(scrapers);
-    }, 15000);
+    this._scheduleRecentArticlesScrape(scrapers);
+
+    setInterval(() => {
+      this._scheduleRecentArticlesScrape(scrapers);
+    }, this._scrapeInterval);
 
     return new Promise(() => {
       // Together forever and never apart ...
@@ -34,10 +38,13 @@ export class NewsScraperScheduler {
     for (const scraper of scrapers) {
       logger.debug(`Scheduling events for ${scraper.key} ...`);
 
-      await this._rabbitMQService.send<NewsMessageBrokerChannelsDataType>(
+      this._rabbitMQService.send<NewsMessageBrokerChannelsDataType>(
         NewsMessageBrokerChannelsEnum.NEWS_RECENT_ARTICLES_SCRAPE,
         {
           newsSite: scraper.key,
+        },
+        {
+          expiration: this._scrapeInterval,
         }
       );
     }

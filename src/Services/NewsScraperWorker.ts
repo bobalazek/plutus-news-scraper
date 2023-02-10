@@ -30,11 +30,40 @@ export class NewsScraperWorker {
     return this._rabbitMQService.consume<NewsMessageBrokerChannelsDataType>(
       NewsMessageBrokerChannelsEnum.NEWS_RECENT_ARTICLES_SCRAPE,
       async (data, message, channel) => {
-        logger.debug(`[Worker ${id}] Consuming recent articles scrape job. Data ${JSON.stringify(data)}`);
+        logger.debug(`[Worker ${id}] Processing recent articles scrape job. Data ${JSON.stringify(data)}`);
 
-        // TODO
+        const newsScraperKey = (data as any).newsScraper; // TODO: fix infer on RabbitMQService side
+        const newsScraper = await this._newsScraperManager.get(newsScraperKey);
+        if (!newsScraper) {
+          logger.error(`[Worker ${id}] News scraper "${newsScraperKey}" not found. Skipping ...`);
 
-        channel.ack(message);
+          // TODO: should we acknowledge it or put back into the queue?
+
+          return;
+        }
+
+        try {
+          const basicArticles = await newsScraper.scrapeRecentArticles();
+
+          for (const basicArticle of basicArticles) {
+            this._rabbitMQService.send<NewsMessageBrokerChannelsDataType>(
+              NewsMessageBrokerChannelsEnum.NEWS_ARTICLE_SCRAPE,
+              {
+                url: basicArticle.url,
+              },
+              {
+                expiration: 60000, // TODO: think about how long we want to keep this
+              }
+            );
+          }
+
+          channel.ack(message);
+        } catch (err) {
+          logger.error(`[Worker ${id}] Error: ${err.message}`);
+
+          // TODO: figure out what we should do in this case. Should we acknowledge it or put back to the queue?
+          channel.ack(message);
+        }
       },
       false
     );
@@ -46,7 +75,7 @@ export class NewsScraperWorker {
     return this._rabbitMQService.consume<NewsMessageBrokerChannelsDataType>(
       NewsMessageBrokerChannelsEnum.NEWS_ARTICLE_SCRAPE,
       async (data, message, channel) => {
-        logger.debug(`[Worker ${id}] Consuming article scrape job. Data ${JSON.stringify(data)}`);
+        logger.debug(`[Worker ${id}] Processing article scrape job. Data ${JSON.stringify(data)}`);
 
         // TODO
 

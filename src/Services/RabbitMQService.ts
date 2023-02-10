@@ -57,10 +57,14 @@ export class RabbitMQService {
   }
 
   // TODO: typescript is not yet fully inferring it correcly when we are calling that
-  async send<T extends Record<string, Record<string, string>>>(channelName: keyof T, value: T[keyof T]) {
+  async send<T extends Record<string, Record<string, string>>>(
+    channelName: keyof T,
+    value: T[keyof T],
+    options?: amqplib.Options.Publish
+  ) {
     const channel = await this.getChannel(channelName as string);
 
-    return channel.sendToQueue(channelName as string, Buffer.from(superjson.stringify(value)));
+    return channel.sendToQueue(channelName as string, Buffer.from(superjson.stringify(value)), options);
   }
 
   async close() {
