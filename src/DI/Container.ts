@@ -1,6 +1,7 @@
 import { Container } from 'inversify';
 import 'reflect-metadata';
 
+import { NewsScraperDatabaseManager } from '../Services/NewsScraperDatabaseManager';
 import { NewsScraperManager } from '../Services/NewsScraperManager';
 import { NewsScraperScheduler } from '../Services/NewsScraperScheduler';
 import { NewsScraperWorker } from '../Services/NewsScraperWorker';
@@ -13,10 +14,11 @@ const container = new Container({
   autoBindInjectable: true,
 });
 
+container.bind<RedisService>(TYPES.RedisService).to(RedisService);
+container.bind<RabbitMQService>(TYPES.RabbitMQService).to(RabbitMQService);
 container.bind<NewsScraperManager>(TYPES.NewsScraperManager).to(NewsScraperManager);
 container.bind<NewsScraperScheduler>(TYPES.NewsScraperScheduler).to(NewsScraperScheduler);
 container.bind<NewsScraperWorker>(TYPES.NewsScraperWorker).to(NewsScraperWorker);
-container.bind<RedisService>(TYPES.RedisService).to(RedisService);
-container.bind<RabbitMQService>(TYPES.RabbitMQService).to(RabbitMQService);
+container.bind<NewsScraperDatabaseManager>(TYPES.NewsScraperDatabaseManager).to(NewsScraperDatabaseManager);
 
 export { container };
