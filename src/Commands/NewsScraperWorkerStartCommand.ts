@@ -6,9 +6,9 @@ import { logger } from '../Services/Logger';
 import { NewsScraperWorker } from '../Services/NewsScraperWorker';
 import { randomString } from '../Utils/Helpers';
 
-export const addNewsWorkerStartCommand = (program: Command) => {
+export const addNewsScraperWorkerStartCommand = (program: Command) => {
   const command = program
-    .command('news:worker:start')
+    .command('news-scraper:worker:start')
     .option('-i, --id', 'What is the ID for the worker? If left empty it will be assigned automatically')
     .action(async (option) => {
       const NewsScraperWorker = container.get<NewsScraperWorker>(TYPES.NewsScraperWorker);

@@ -1,17 +1,17 @@
 import { Command } from 'commander';
 
-import { addNewsArchivedArticlesScrapeCommand } from './Commands/NewsArchivedArticlesScrapeCommand';
-import { addNewsArticleScrapeCommand } from './Commands/NewsArticleScrapeCommand';
-import { addNewsRecentArticlesScrapeCommand } from './Commands/NewsRecentArticlesScrapeCommand';
-import { addNewsSchedulerStartCommand } from './Commands/NewsSchedulerStartCommand';
-import { addNewsWorkerStartCommand } from './Commands/NewsWorkerStartCommand';
+import { addNewsScraperArchivedArticlesScrapeCommand } from './Commands/NewsScraperArchivedArticlesScrapeCommand';
+import { addNewsScraperArticleScrapeCommand } from './Commands/NewsScraperArticleScrapeCommand';
+import { addNewsScraperRecentArticlesScrapeCommand } from './Commands/NewsScraperRecentArticlesScrapeCommand';
+import { addNewsScraperSchedulerStartCommand } from './Commands/NewsScraperSchedulerStartCommand';
+import { addNewsScraperWorkerStartCommand } from './Commands/NewsScraperWorkerStartCommand';
 
 const program = new Command();
 
-addNewsArticleScrapeCommand(program);
-addNewsRecentArticlesScrapeCommand(program);
-addNewsArchivedArticlesScrapeCommand(program);
-addNewsSchedulerStartCommand(program);
-addNewsWorkerStartCommand(program);
+addNewsScraperArticleScrapeCommand(program);
+addNewsScraperRecentArticlesScrapeCommand(program);
+addNewsScraperArchivedArticlesScrapeCommand(program);
+addNewsScraperSchedulerStartCommand(program);
+addNewsScraperWorkerStartCommand(program);
 
 program.parse(process.argv);

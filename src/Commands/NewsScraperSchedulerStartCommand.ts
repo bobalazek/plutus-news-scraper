@@ -5,8 +5,8 @@ import { TYPES } from '../DI/ContainerTypes';
 import { logger } from '../Services/Logger';
 import { NewsScraperScheduler } from '../Services/NewsScraperScheduler';
 
-export const addNewsSchedulerStartCommand = (program: Command) => {
-  const command = program.command('news:scheduler:start').action(async () => {
+export const addNewsScraperSchedulerStartCommand = (program: Command) => {
+  const command = program.command('news-scraper:scheduler:start').action(async () => {
     const newsScraperScheduler = container.get<NewsScraperScheduler>(TYPES.NewsScraperScheduler);
 
     try {

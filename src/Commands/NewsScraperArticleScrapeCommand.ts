@@ -5,9 +5,9 @@ import { TYPES } from '../DI/ContainerTypes';
 import { logger } from '../Services/Logger';
 import { NewsScraperManager } from '../Services/NewsScraperManager';
 
-export const addNewsArticleScrapeCommand = (program: Command) => {
+export const addNewsScraperArticleScrapeCommand = (program: Command) => {
   const command = program
-    .command('news:article:scrape')
+    .command('news-scraper:article:scrape')
     .requiredOption('-u, --url <url>', 'Which URL do we want to scrape?')
     .option('-h, --headful', 'If this option is passed, then it will open an actual browser window')
     .option('-p, --prevent-close', 'Should we prevent closing the scraper at the end?')
