@@ -8,18 +8,13 @@ import { NewsBasicArticleInterface } from '../Types/NewsBasicArticleInterface';
 import { NewsScraperInterface } from '../Types/NewsScraperInterface';
 import { AbstractNewsScraper } from './AbstractNewsScraper';
 
-export default class TheEconomicTimesNewsScraper extends AbstractNewsScraper implements NewsScraperInterface {
-  key: string = 'the_economic_times';
-  domain: string = 'economictimes.indiatimes.com';
+export default class CryptonewsNewsScraper extends AbstractNewsScraper implements NewsScraperInterface {
+  key: string = 'cryptonews';
+  domain: string = 'cryptonews.com';
   recentArticleListUrls: string[] = [
-    'https://economictimes.indiatimes.com/markets',
-    'https://economictimes.indiatimes.com/industry',
-    'https://economictimes.indiatimes.com/small-biz',
-    'https://economictimes.indiatimes.com/news/politics',
-    'https://economictimes.indiatimes.com/personal-finance',
-    'https://economictimes.indiatimes.com/mutual-funds',
-    'https://economictimes.indiatimes.com/tech',
-    'https://economictimes.indiatimes.com/jobs',
+    'https://cryptonews.com/',
+    'https://cryptonews.com/news/',
+    'https://cryptonews.com/exclusives/',
   ];
 
   async scrapeRecentArticles(urls?: string[]): Promise<NewsBasicArticleInterface[]> {
@@ -28,28 +23,21 @@ export default class TheEconomicTimesNewsScraper extends AbstractNewsScraper imp
 
     const page = await this.getPuppeteerPage();
 
-    logger.info(`Starting to scrape the recent articles on The Economic Times ...`);
+    logger.info(`Starting to scrape the recent articles on Cryptonews ...`);
 
     for (const recentArticleListUrl of recentArticleListUrls) {
       logger.info(`Going to URL ${recentArticleListUrl} ...`);
 
-      await page.goto(recentArticleListUrl, { waitUntil: 'domcontentloaded' });
+      await page.goto(recentArticleListUrl, {
+        waitUntil: 'domcontentloaded',
+      });
 
       const articleUrls = this.getUniqueArray(
         await page.evaluate(() => {
           // Get all the possible (anchor) elements that have the links to articles
           const querySelector = [
-            '.newsList li a',
-            '.topStories li a',
-            '.section_list .featured a',
-            '.top-news li a',
-            '.secBox ul li a',
-            '#bottomContent h3 a',
-            '#featuredNews .newslist a',
-            '.newslist a',
-            '#pageContent .mainStory a',
-            '.sideStories h4 a',
-            '#pageContent .eachStory h3 a',
+            '.category_contents_details a.article__title',
+            '#load_more_target article a.article__title',
           ].join(', ');
 
           // Fetch those with the .querySelectoAll() and convert it to an array
@@ -65,7 +53,7 @@ export default class TheEconomicTimesNewsScraper extends AbstractNewsScraper imp
           return href !== ''; // Now we want to filter out any links that are '', just in case
         })
         .map((uri) => {
-          return `https://economictimes.indiatimes.com${uri}`;
+          return `https:/cryptonews.com${uri}`;
         });
 
       logger.info(`Found ${articleUrls.length} articles on this page`);
@@ -100,9 +88,7 @@ export default class TheEconomicTimesNewsScraper extends AbstractNewsScraper imp
       waitUntil: 'domcontentloaded',
     });
 
-    const urlSplit = url.split('/');
-    const urlId = urlSplit[urlSplit.length - 1];
-    const newsSiteArticleId = urlId.replace('.cms', '');
+    const newsSiteArticleId = url;
 
     const linkedDataText = await page.evaluate(() => {
       return document.querySelectorAll('body script[type="application/ld+json"]')[1].innerHTML ?? '';
@@ -115,7 +101,7 @@ export default class TheEconomicTimesNewsScraper extends AbstractNewsScraper imp
 
     // Content
     const content = await page.evaluate(() => {
-      return Array.from(document.querySelectorAll('.article_wrap .pageContent'))
+      return Array.from(document.querySelectorAll('.article-single__content p'))
         .map((element) => {
           return element.innerHTML;
         })

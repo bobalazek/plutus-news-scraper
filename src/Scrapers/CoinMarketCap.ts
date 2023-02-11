@@ -45,7 +45,7 @@ export default class CoinMarketCapNewsScraper extends AbstractNewsScraper implem
         })
       )
         .filter((href) => {
-          return href !== ''; // Now we want to filter out any links that are '', just in case
+          return href !== '' && !href.includes('/browse/') && !href.endsWith('/articles/');
         })
         .map((uri) => {
           return `https://coinmarketcap.com${uri}`;
