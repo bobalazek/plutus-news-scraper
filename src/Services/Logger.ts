@@ -1,6 +1,6 @@
 import pino from 'pino';
 
-import { IS_DEVELOPMENT, LOKI_URL } from '../Utils/Constants';
+import { IS_DEVELOPMENT, LOKI_URL } from '../Utils/Environment';
 
 const targets: pino.TransportTargetOptions<pino.TransportBaseOptions>[] = [];
 if (IS_DEVELOPMENT) {

@@ -2,7 +2,7 @@ import * as amqplib from 'amqplib';
 import { injectable } from 'inversify';
 import superjson from 'superjson';
 
-import { RABBITMQ_URL } from '../Utils/Constants';
+import { RABBITMQ_URL } from '../Utils/Environment';
 
 @injectable()
 export class RabbitMQService {

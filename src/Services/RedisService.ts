@@ -2,7 +2,7 @@ import { injectable } from 'inversify';
 import { createClient } from 'redis';
 import superjson from 'superjson';
 
-import { REDIS_URL } from '../Utils/Constants';
+import { REDIS_URL } from '../Utils/Environment';
 
 @injectable()
 export class RedisService {

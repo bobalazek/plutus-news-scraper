@@ -1,6 +1,6 @@
 import puppeteer, { Browser, Page, PuppeteerLaunchOptions } from 'puppeteer';
 
-import { PUPPETEER_EXECUTABLE_PATH } from '../Utils/Constants';
+import { PUPPETEER_EXECUTABLE_PATH } from '../Utils/Environment';
 
 export abstract class AbstractNewsScraper {
   private _browser: Browser;

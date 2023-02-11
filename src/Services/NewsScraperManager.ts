@@ -10,7 +10,7 @@ import { NewsArticleExtendedInterface } from '../Types/NewsArticleInterface';
 import { NewsArticleTypeEnum } from '../Types/NewsArticleTypeEnum';
 import { NewsBasicArticleExtendedInterface } from '../Types/NewsBasicArticleInterface';
 import { NewsScraperInterface } from '../Types/NewsScraperInterface';
-import { ROOT_DIRECTORY } from '../Utils/Constants';
+import { ROOT_DIRECTORY } from '../Utils/Paths';
 
 @injectable()
 export class NewsScraperManager {
