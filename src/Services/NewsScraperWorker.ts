@@ -29,13 +29,17 @@ export class NewsScraperWorker {
 
     return this._rabbitMQService.consume<NewsMessageBrokerChannelsDataType>(
       NewsMessageBrokerChannelsEnum.NEWS_RECENT_ARTICLES_SCRAPE,
-      async (data, message, channel) => {
+      async (
+        data: NewsMessageBrokerChannelsDataType[NewsMessageBrokerChannelsEnum.NEWS_RECENT_ARTICLES_SCRAPE],
+        message,
+        channel
+      ) => {
         logger.debug(`[Worker ${id}] Processing recent articles scrape job. Data ${JSON.stringify(data)}`);
 
-        const newsScraperKey = (data as any).newsScraper; // TODO: fix infer on RabbitMQService side
-        const newsScraper = await this._newsScraperManager.get(newsScraperKey);
+        const newsSite = data.newsSite;
+        const newsScraper = await this._newsScraperManager.get(newsSite);
         if (!newsScraper) {
-          logger.error(`[Worker ${id}] News scraper "${newsScraperKey}" not found. Skipping ...`);
+          logger.error(`[Worker ${id}] News scraper "${newsSite}" not found. Skipping ...`);
 
           // TODO: should we acknowledge it or put back into the queue?
 
@@ -52,7 +56,7 @@ export class NewsScraperWorker {
               NewsMessageBrokerChannelsEnum.NEWS_ARTICLE_SCRAPE,
               {
                 url: basicArticle.url,
-              },
+              } as NewsMessageBrokerChannelsDataType[NewsMessageBrokerChannelsEnum.NEWS_RECENT_ARTICLES_SCRAPE],
               {
                 expiration: 60000, // TODO: think about how long we want to keep this
               }
@@ -76,7 +80,11 @@ export class NewsScraperWorker {
 
     return this._rabbitMQService.consume<NewsMessageBrokerChannelsDataType>(
       NewsMessageBrokerChannelsEnum.NEWS_ARTICLE_SCRAPE,
-      async (data, message, channel) => {
+      async (
+        data: NewsMessageBrokerChannelsDataType[NewsMessageBrokerChannelsEnum.NEWS_ARTICLE_SCRAPE],
+        message,
+        channel
+      ) => {
         logger.debug(`[Worker ${id}] Processing article scrape job. Data ${JSON.stringify(data)}`);
 
         // TODO
