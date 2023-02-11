@@ -39,6 +39,8 @@ export class NewsScraperWorker {
 
           // TODO: should we acknowledge it or put back into the queue?
 
+          channel.ack(message);
+
           return;
         }
 

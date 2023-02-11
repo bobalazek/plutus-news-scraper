@@ -9,18 +9,6 @@ export class RabbitMQService {
   private _connection?: amqplib.Connection;
   private _channelsMap: Map<string, amqplib.Channel> = new Map();
 
-  async connect() {
-    if (!this._connection) {
-      this._connection = await amqplib.connect(RABBITMQ_URL);
-    }
-
-    return this._connection;
-  }
-
-  async getConnection() {
-    return this.connect();
-  }
-
   async getChannel(channelName: string) {
     const connection = await this.getConnection();
 
@@ -65,6 +53,18 @@ export class RabbitMQService {
     const channel = await this.getChannel(channelName as string);
 
     return channel.sendToQueue(channelName as string, Buffer.from(superjson.stringify(value)), options);
+  }
+
+  async connect() {
+    if (!this._connection) {
+      this._connection = await amqplib.connect(RABBITMQ_URL);
+    }
+
+    return this._connection;
+  }
+
+  async getConnection() {
+    return this.connect();
   }
 
   async close() {

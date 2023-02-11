@@ -13,7 +13,7 @@ export abstract class AbstractNewsScraper {
       this._browser = await puppeteer.launch({
         defaultViewport: null,
         headless: !this._headful,
-        executablePath: PUPPETEER_EXECUTABLE_PATH,
+        executablePath: PUPPETEER_EXECUTABLE_PATH || undefined,
         ...options,
       });
     }

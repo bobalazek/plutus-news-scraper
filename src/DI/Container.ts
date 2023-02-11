@@ -1,6 +1,7 @@
 import { Container } from 'inversify';
 import 'reflect-metadata';
 
+import { MongoDBService } from '../Services/MongoDBService';
 import { NewsScraperDatabaseManager } from '../Services/NewsScraperDatabaseManager';
 import { NewsScraperManager } from '../Services/NewsScraperManager';
 import { NewsScraperScheduler } from '../Services/NewsScraperScheduler';
@@ -17,6 +18,7 @@ const container = new Container({
 
 container.bind<RedisService>(TYPES.RedisService).to(RedisService);
 container.bind<RabbitMQService>(TYPES.RabbitMQService).to(RabbitMQService);
+container.bind<MongoDBService>(TYPES.MongoDBService).to(MongoDBService);
 container.bind<PrometheusMetricsServer>(TYPES.PrometheusMetricsServer).to(PrometheusMetricsServer);
 container.bind<NewsScraperManager>(TYPES.NewsScraperManager).to(NewsScraperManager);
 container.bind<NewsScraperScheduler>(TYPES.NewsScraperScheduler).to(NewsScraperScheduler);
