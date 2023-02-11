@@ -25,7 +25,7 @@ export class RabbitMQService {
 
   // TODO: not really infered yet
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  async consume<T extends Record<string, any>>(
+  async consume<T extends Record<keyof T, any>>(
     channelName: keyof T,
     callback: (data: T[keyof T], message: amqplib.ConsumeMessage, channel: amqplib.Channel) => void,
     autoAcknowledge: boolean = true
@@ -47,7 +47,7 @@ export class RabbitMQService {
 
   // TODO: same here
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  async send<T extends Record<string, any>>(
+  async send<T extends Record<keyof T, any>>(
     channelName: keyof T,
     value: T[keyof T],
     options?: amqplib.Options.Publish

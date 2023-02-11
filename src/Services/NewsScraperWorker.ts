@@ -54,9 +54,9 @@ export class NewsScraperWorker {
           for (const basicArticle of basicArticles) {
             this._rabbitMQService.send<NewsMessageBrokerChannelsDataType>(
               NewsMessageBrokerChannelsEnum.NEWS_ARTICLE_SCRAPE,
-              {
+              <NewsMessageBrokerChannelsDataType[NewsMessageBrokerChannelsEnum.NEWS_RECENT_ARTICLES_SCRAPE]>{
                 url: basicArticle.url,
-              } as NewsMessageBrokerChannelsDataType[NewsMessageBrokerChannelsEnum.NEWS_RECENT_ARTICLES_SCRAPE],
+              },
               {
                 expiration: 60000, // TODO: think about how long we want to keep this
               }
