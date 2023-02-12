@@ -1,7 +1,6 @@
 import { inject, injectable } from 'inversify';
 
 import { TYPES } from '../DI/ContainerTypes';
-import { NewsMessageBrokerChannelsEnum } from '../Types/NewsMessageBrokerChannels';
 import { NewsScraperInterface } from '../Types/NewsScraperInterface';
 import { logger } from './Logger';
 import { NewsScraperManager } from './NewsScraperManager';
@@ -21,10 +20,10 @@ export class NewsScraperTaskDispatcher {
 
     const scrapers = await this._newsScraperManager.getAll();
 
-    this._scheduleRecentArticlesScrape(scrapers);
+    this._dispatchRecentArticlesScrape(scrapers);
 
     setInterval(() => {
-      this._scheduleRecentArticlesScrape(scrapers);
+      this._dispatchRecentArticlesScrape(scrapers);
     }, this._scrapeInterval);
 
     return new Promise(() => {
@@ -32,14 +31,13 @@ export class NewsScraperTaskDispatcher {
     });
   }
 
-  private async _scheduleRecentArticlesScrape(scrapers: NewsScraperInterface[]) {
-    logger.info(`Scheduling news article events for scrapers ...`);
+  private async _dispatchRecentArticlesScrape(scrapers: NewsScraperInterface[]) {
+    logger.info(`Dispatch news article events for scrapers ...`);
 
     for (const scraper of scrapers) {
-      logger.debug(`Scheduling events for ${scraper.key} ...`);
+      logger.debug(`Dispatching events for ${scraper.key} ...`);
 
-      this._newsScraperMessageBroker.sendToQueue(
-        NewsMessageBrokerChannelsEnum.NEWS_RECENT_ARTICLES_SCRAPE,
+      this._newsScraperMessageBroker.sendToRecentArticlesScrapeQueue(
         {
           newsSite: scraper.key,
         },

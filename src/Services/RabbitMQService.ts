@@ -43,7 +43,6 @@ export class RabbitMQService {
     queueName: string,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     callback: (data: any, message: amqplib.ConsumeMessage, channel: amqplib.Channel) => void,
-    autoAcknowledge: boolean = true,
     consumeOptions?: amqplib.Options.Consume,
     assertQueueOptions?: amqplib.Options.AssertQueue,
     channelName?: string
@@ -59,10 +58,6 @@ export class RabbitMQService {
         }
 
         callback(superjson.parse(message.content.toString()), message, channel);
-
-        if (autoAcknowledge) {
-          channel.ack(message);
-        }
       },
       consumeOptions
     );
