@@ -9,7 +9,7 @@ import { RabbitMQService } from './RabbitMQService';
 
 @injectable()
 export class NewsScraperScheduler {
-  private _scrapeInterval: number = 10000;
+  private _scrapeInterval: number = 30000;
 
   constructor(
     @inject(TYPES.NewsScraperManager) private _newsScraperManager: NewsScraperManager,
