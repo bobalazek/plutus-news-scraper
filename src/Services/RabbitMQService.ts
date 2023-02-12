@@ -98,6 +98,13 @@ export class RabbitMQService {
     return channel.sendToQueue(queueName, Buffer.from(superjson.stringify(data)), publishOptions);
   }
 
+  async getMessageCountInQueue(queueName: string, channelName?: string) {
+    const channel = await this.getChannel(channelName);
+    const queueData = await channel.checkQueue(queueName);
+
+    return queueData.messageCount ?? 0;
+  }
+
   async connect() {
     if (!this._connection) {
       this._connection = await amqplib.connect(RABBITMQ_URL);

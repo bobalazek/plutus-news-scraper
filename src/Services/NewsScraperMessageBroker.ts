@@ -62,6 +62,25 @@ export class NewsScraperMessageBroker {
     );
   }
 
+  async getMessageCountInQueue(queueName: NewsMessageBrokerQueuesEnum) {
+    return this._rabbitMQService.getMessageCountInQueue(queueName, this._channelName);
+  }
+
+  async getMessageCountInAllQueues() {
+    const data = {};
+
+    for (const queue of [
+      NewsMessageBrokerQueuesEnum.NEWS_RECENT_ARTICLES_SCRAPE,
+      NewsMessageBrokerQueuesEnum.NEWS_ARTICLE_SCRAPE,
+    ]) {
+      const count = await this.getMessageCountInQueue(queue);
+
+      data[queue] = count;
+    }
+
+    return data as Record<NewsMessageBrokerQueuesEnum, number>;
+  }
+
   /**
    * ========== Specific queues ==========
    */

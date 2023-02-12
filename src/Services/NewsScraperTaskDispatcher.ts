@@ -20,15 +20,28 @@ export class NewsScraperTaskDispatcher {
 
     const scrapers = await this._newsScraperManager.getAll();
 
+    this._startRecentArticlesScraping(scrapers);
+    this._startMessageQueuesMonitoring();
+
+    return new Promise(() => {
+      // Together forever and never apart ...
+    });
+  }
+
+  private _startRecentArticlesScraping(scrapers: NewsScraperInterface[]) {
     this._dispatchRecentArticlesScrape(scrapers);
 
     setInterval(() => {
       this._dispatchRecentArticlesScrape(scrapers);
     }, this._scrapeInterval);
+  }
 
-    return new Promise(() => {
-      // Together forever and never apart ...
-    });
+  private _startMessageQueuesMonitoring() {
+    setInterval(async () => {
+      const messagesCountMap = await this._newsScraperMessageBroker.getMessageCountInAllQueues();
+
+      logger.info(`Messages count map: ${JSON.stringify(messagesCountMap)}`);
+    }, this._scrapeInterval);
   }
 
   private async _dispatchRecentArticlesScrape(scrapers: NewsScraperInterface[]) {
