@@ -4,6 +4,7 @@ import 'reflect-metadata';
 import { MongoDBService } from '../Services/MongoDBService';
 import { NewsScraperDatabaseManager } from '../Services/NewsScraperDatabaseManager';
 import { NewsScraperManager } from '../Services/NewsScraperManager';
+import { NewsScraperMessageBroker } from '../Services/NewsScraperMessageBroker';
 import { NewsScraperScheduler } from '../Services/NewsScraperScheduler';
 import { NewsScraperWorker } from '../Services/NewsScraperWorker';
 import { PrometheusMetricsServer } from '../Services/PrometheusMetricsServer';
@@ -24,5 +25,6 @@ container.bind<NewsScraperManager>(TYPES.NewsScraperManager).to(NewsScraperManag
 container.bind<NewsScraperScheduler>(TYPES.NewsScraperScheduler).to(NewsScraperScheduler);
 container.bind<NewsScraperWorker>(TYPES.NewsScraperWorker).to(NewsScraperWorker);
 container.bind<NewsScraperDatabaseManager>(TYPES.NewsScraperDatabaseManager).to(NewsScraperDatabaseManager);
+container.bind<NewsScraperMessageBroker>(TYPES.NewsScraperMessageBroker).to(NewsScraperMessageBroker);
 
 export { container };

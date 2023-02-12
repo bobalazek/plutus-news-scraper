@@ -1,11 +1,11 @@
 import { inject, injectable } from 'inversify';
 
 import { TYPES } from '../DI/ContainerTypes';
-import { NewsMessageBrokerChannelsDataType, NewsMessageBrokerChannelsEnum } from '../Types/NewsMessageBrokerChannels';
+import { NewsMessageBrokerChannelsEnum } from '../Types/NewsMessageBrokerChannels';
 import { NewsScraperInterface } from '../Types/NewsScraperInterface';
 import { logger } from './Logger';
 import { NewsScraperManager } from './NewsScraperManager';
-import { RabbitMQService } from './RabbitMQService';
+import { NewsScraperMessageBroker } from './NewsScraperMessageBroker';
 
 @injectable()
 export class NewsScraperScheduler {
@@ -13,7 +13,7 @@ export class NewsScraperScheduler {
 
   constructor(
     @inject(TYPES.NewsScraperManager) private _newsScraperManager: NewsScraperManager,
-    @inject(TYPES.RabbitMQService) private _rabbitMQService: RabbitMQService
+    @inject(TYPES.NewsScraperMessageBroker) private _newsScraperMessageBroker: NewsScraperMessageBroker
   ) {}
 
   async start() {
@@ -38,14 +38,12 @@ export class NewsScraperScheduler {
     for (const scraper of scrapers) {
       logger.debug(`Scheduling events for ${scraper.key} ...`);
 
-      this._rabbitMQService.send<NewsMessageBrokerChannelsDataType>(
+      this._newsScraperMessageBroker.sendToQueue(
         NewsMessageBrokerChannelsEnum.NEWS_RECENT_ARTICLES_SCRAPE,
         {
           newsSite: scraper.key,
         },
-        {
-          expiration: this._scrapeInterval,
-        }
+        this._scrapeInterval
       );
     }
   }

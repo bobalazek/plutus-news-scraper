@@ -7,4 +7,5 @@ export const TYPES = {
   NewsScraperScheduler: Symbol.for('NewsScraperScheduler'),
   NewsScraperWorker: Symbol.for('NewsScraperWorker'),
   NewsScraperDatabaseManager: Symbol.for('NewsScraperDatabaseManager'),
+  NewsScraperMessageBroker: Symbol.for('NewsScraperMessageBroker'),
 };

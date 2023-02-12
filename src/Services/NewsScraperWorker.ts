@@ -1,16 +1,16 @@
 import { inject, injectable } from 'inversify';
 
 import { TYPES } from '../DI/ContainerTypes';
-import { NewsMessageBrokerChannelsDataType, NewsMessageBrokerChannelsEnum } from '../Types/NewsMessageBrokerChannels';
+import { NewsMessageBrokerChannelsEnum } from '../Types/NewsMessageBrokerChannels';
 import { logger } from './Logger';
 import { NewsScraperManager } from './NewsScraperManager';
-import { RabbitMQService } from './RabbitMQService';
+import { NewsScraperMessageBroker } from './NewsScraperMessageBroker';
 
 @injectable()
 export class NewsScraperWorker {
   constructor(
     @inject(TYPES.NewsScraperManager) private _newsScraperManager: NewsScraperManager,
-    @inject(TYPES.RabbitMQService) private _rabbitMQService: RabbitMQService
+    @inject(TYPES.NewsScraperMessageBroker) private _newsScraperMessageBroker: NewsScraperMessageBroker
   ) {}
 
   async start(id: string) {
@@ -27,13 +27,9 @@ export class NewsScraperWorker {
   private async _consumeRecentArticlesScrapeQueue(id: string) {
     logger.info(`[Worker ${id}] Starting to consume recent articles scrape ...`);
 
-    return this._rabbitMQService.consume<NewsMessageBrokerChannelsDataType>(
+    return this._newsScraperMessageBroker.consume(
       NewsMessageBrokerChannelsEnum.NEWS_RECENT_ARTICLES_SCRAPE,
-      async (
-        data: NewsMessageBrokerChannelsDataType[NewsMessageBrokerChannelsEnum.NEWS_RECENT_ARTICLES_SCRAPE],
-        message,
-        channel
-      ) => {
+      async (data, acknowledgeMessageCallback) => {
         logger.debug(`[Worker ${id}] Processing recent articles scrape job. Data ${JSON.stringify(data)}`);
 
         const newsSite = data.newsSite;
@@ -43,7 +39,7 @@ export class NewsScraperWorker {
 
           // TODO: should we acknowledge it or put back into the queue?
 
-          channel.ack(message);
+          acknowledgeMessageCallback();
 
           return;
         }
@@ -52,44 +48,37 @@ export class NewsScraperWorker {
           const basicArticles = await newsScraper.scrapeRecentArticles();
 
           for (const basicArticle of basicArticles) {
-            await this._rabbitMQService.send<NewsMessageBrokerChannelsDataType>(
+            await this._newsScraperMessageBroker.sendToQueue(
               NewsMessageBrokerChannelsEnum.NEWS_ARTICLE_SCRAPE,
               basicArticle,
-              {
-                expiration: 60000, // TODO: think about how long we want to keep this
-              }
+              60000 // TODO: think about how long we want to keep this
             );
           }
 
-          channel.ack(message);
+          acknowledgeMessageCallback();
         } catch (err) {
           logger.error(`[Worker ${id}] Error: ${err.message}`);
 
           // TODO: figure out what we should do in this case. Should we acknowledge it or put back to the queue?
-          channel.ack(message);
+
+          acknowledgeMessageCallback();
         }
-      },
-      false
+      }
     );
   }
 
   private async _consumeArticleScrapeQueue(id: string) {
     logger.info(`[Worker ${id}] Starting to consume article scrape ...`);
 
-    return this._rabbitMQService.consume<NewsMessageBrokerChannelsDataType>(
+    return this._newsScraperMessageBroker.consume(
       NewsMessageBrokerChannelsEnum.NEWS_ARTICLE_SCRAPE,
-      async (
-        data: NewsMessageBrokerChannelsDataType[NewsMessageBrokerChannelsEnum.NEWS_ARTICLE_SCRAPE],
-        message,
-        channel
-      ) => {
+      async (data, acknowledgeMessageCallback) => {
         logger.debug(`[Worker ${id}] Processing article scrape job. Data ${JSON.stringify(data)}`);
 
         // TODO
 
-        channel.ack(message);
-      },
-      false
+        acknowledgeMessageCallback();
+      }
     );
   }
 }

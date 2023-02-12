@@ -23,24 +23,23 @@ export class RabbitMQService {
     return channel;
   }
 
-  // TODO: not really infered yet
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  async consume<T extends Record<keyof T, any>>(
-    channelName: keyof T,
-    callback: (data: T[keyof T], message: amqplib.ConsumeMessage, channel: amqplib.Channel) => void,
+  async consume(
+    channelName: string,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    callback: (data: any, message: amqplib.ConsumeMessage, channel: amqplib.Channel) => void,
     autoAcknowledge: boolean = true,
     options?: amqplib.Options.Consume
   ) {
-    const channel = await this.getChannel(channelName as string);
+    const channel = await this.getChannel(channelName);
 
     return channel.consume(
-      channelName as string,
+      channelName,
       (message) => {
         if (message === null) {
           return;
         }
 
-        callback(superjson.parse<T[keyof T]>(message.content.toString()), message, channel);
+        callback(superjson.parse(message.content.toString()), message, channel);
 
         if (autoAcknowledge) {
           channel.ack(message);
@@ -50,33 +49,34 @@ export class RabbitMQService {
     );
   }
 
-  // TODO: not really infered yet
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  async get<T extends Record<keyof T, any>>(channelName: keyof T, options?: amqplib.Options.Consume) {
-    const channel = await this.getChannel(channelName as string);
+  async get(
+    channelName: string,
+    channelOptions?: amqplib.Options.AssertQueue,
+    messageOptions?: amqplib.Options.Consume
+  ) {
+    const channel = await this.getChannel(channelName, channelOptions);
 
-    const message = await channel.get(channelName as string, options);
+    const message = await channel.get(channelName, messageOptions);
     if (message === false) {
       return null;
     }
 
     return {
-      data: superjson.parse<T[keyof T]>(message.content.toString()),
+      data: superjson.parse(message.content.toString()),
       message,
       channel,
     };
   }
 
-  // TODO: same here
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  async send<T extends Record<keyof T, any>>(
-    channelName: keyof T,
-    value: T[keyof T],
+  async sendToQueue(
+    channelName: string,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    value: any,
     options?: amqplib.Options.Publish
   ) {
-    const channel = await this.getChannel(channelName as string);
+    const channel = await this.getChannel(channelName);
 
-    return channel.sendToQueue(channelName as string, Buffer.from(superjson.stringify(value)), options);
+    return channel.sendToQueue(channelName, Buffer.from(superjson.stringify(value)), options);
   }
 
   async connect() {
