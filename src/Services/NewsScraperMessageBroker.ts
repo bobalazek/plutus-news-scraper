@@ -41,7 +41,11 @@ export class NewsScraperMessageBroker {
 
   async consumeOneAtTime<T extends NewsMessageBrokerQueuesEnum>(
     queueName: T,
-    callback: (data: NewsMessageBrokerQueuesDataType[T], acknowledgeMessageCallback: () => void) => void
+    callback: (
+      data: NewsMessageBrokerQueuesDataType[T],
+      acknowledgeMessageCallback: () => void,
+      negativeAcknowledgeMessageCallback: () => void
+    ) => void
   ) {
     const channel = await this._rabbitMQService.getChannel();
     await this._rabbitMQService.addQueueToChannel(queueName, { durable: true }, this._channelName);
@@ -54,9 +58,17 @@ export class NewsScraperMessageBroker {
           return;
         }
 
-        callback(superjson.parse(message.content.toString()), () => {
-          channel.ack(message);
-        });
+        callback(
+          superjson.parse(message.content.toString()),
+          () => {
+            // acknowledgeMessageCallback()
+            channel.ack(message);
+          },
+          () => {
+            // negativeAcknowledgeMessageCallback()
+            channel.nack(message);
+          }
+        );
       },
       { noAck: false }
     );
@@ -99,7 +111,8 @@ export class NewsScraperMessageBroker {
   async consumeRecentArticlesScrapeQueue(
     callback: (
       data: NewsMessageBrokerQueuesDataType[NewsMessageBrokerQueuesEnum.NEWS_RECENT_ARTICLES_SCRAPE],
-      acknowledgeMessageCallback: () => void
+      acknowledgeMessageCallback: () => void,
+      negativeAcknowledgeMessageCallback: () => void
     ) => void
   ) {
     return this.consumeOneAtTime(NewsMessageBrokerQueuesEnum.NEWS_RECENT_ARTICLES_SCRAPE, callback);
@@ -120,7 +133,8 @@ export class NewsScraperMessageBroker {
   async consumeArticleScrapeQueue(
     callback: (
       data: NewsMessageBrokerQueuesDataType[NewsMessageBrokerQueuesEnum.NEWS_ARTICLE_SCRAPE],
-      acknowledgeMessageCallback: () => void
+      acknowledgeMessageCallback: () => void,
+      negativeAcknowledgeMessageCallback: () => void
     ) => void
   ) {
     return this.consumeOneAtTime(NewsMessageBrokerQueuesEnum.NEWS_ARTICLE_SCRAPE, callback);

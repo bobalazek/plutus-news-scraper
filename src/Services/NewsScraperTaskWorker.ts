@@ -1,6 +1,7 @@
 import { inject, injectable } from 'inversify';
 
 import { TYPES } from '../DI/ContainerTypes';
+import { NewsMessageBrokerQueuesEnum } from '../Types/NewsMessageBrokerQueues';
 import { logger } from './Logger';
 import { NewsScraperManager } from './NewsScraperManager';
 import { NewsScraperMessageBroker } from './NewsScraperMessageBroker';
@@ -16,7 +17,7 @@ export class NewsScraperTaskWorker {
     logger.info(`========== Starting the worker "${id}" ... ==========`);
 
     this._startRecentArticlesQueueConsumption(id);
-    this._startArticleQueuConsumption(id);
+    // TODO: article queue consumption
 
     return new Promise(() => {
       // Together forever and never apart ...
@@ -26,51 +27,58 @@ export class NewsScraperTaskWorker {
   private async _startRecentArticlesQueueConsumption(id: string) {
     logger.info(`[Worker ${id}] Starting to consume recent articles scrape ...`);
 
-    return this._newsScraperMessageBroker.consumeRecentArticlesScrapeQueue(async (data, acknowledgeMessageCallback) => {
-      logger.debug(`[Worker ${id}] Processing recent articles scrape job. Data ${JSON.stringify(data)}`);
+    return this._newsScraperMessageBroker.consumeRecentArticlesScrapeQueue(
+      async (data, acknowledgeMessageCallback, negativeAcknowledgeMessageCallback) => {
+        logger.debug(`[Worker ${id}] Processing recent articles scrape job. Data ${JSON.stringify(data)}`);
 
-      const newsSite = data.newsSite;
-      const newsScraper = await this._newsScraperManager.get(newsSite);
-      if (!newsScraper) {
-        logger.error(`[Worker ${id}] News scraper "${newsSite}" not found. Skipping ...`);
+        await this._newsScraperMessageBroker.sendToQueue(
+          NewsMessageBrokerQueuesEnum.NEWS_RECENT_ARTICLES_SCRAPE_STARTED,
+          data
+        );
 
-        // TODO: should we acknowledge it or put back into the queue?
+        const newsScraper = await this._newsScraperManager.get(data.newsSite);
+        if (!newsScraper) {
+          const errorMessage = `[Worker ${id}] News scraper "${data.newsSite}" not found. Skipping ...`;
 
-        acknowledgeMessageCallback();
+          logger.error(errorMessage);
 
-        return;
-      }
+          negativeAcknowledgeMessageCallback();
 
-      try {
-        const basicArticles = await newsScraper.scrapeRecentArticles();
-
-        for (const basicArticle of basicArticles) {
-          await this._newsScraperMessageBroker.sendToArticleScrapeQueue(
-            basicArticle,
-            60000 // TODO: think about how long we want to keep this
+          await this._newsScraperMessageBroker.sendToQueue(
+            NewsMessageBrokerQueuesEnum.NEWS_RECENT_ARTICLES_SCRAPE_FAILED,
+            { ...data, errorMessage }
           );
+
+          return;
         }
 
-        acknowledgeMessageCallback();
-      } catch (err) {
-        logger.error(`[Worker ${id}] Error: ${err.message}`);
+        try {
+          const basicArticles = await newsScraper.scrapeRecentArticles();
 
-        // TODO: figure out what we should do in this case. Should we acknowledge it or put back to the queue?
+          for (const basicArticle of basicArticles) {
+            await this._newsScraperMessageBroker.sendToArticleScrapeQueue(
+              basicArticle,
+              60000 // TODO: think about how long we want to keep this
+            );
+          }
 
-        acknowledgeMessageCallback();
+          acknowledgeMessageCallback();
+
+          await this._newsScraperMessageBroker.sendToQueue(
+            NewsMessageBrokerQueuesEnum.NEWS_RECENT_ARTICLES_SCRAPE_COMPLETED,
+            data
+          );
+        } catch (err) {
+          logger.error(`[Worker ${id}] Error: ${err.message}`);
+
+          negativeAcknowledgeMessageCallback();
+
+          await this._newsScraperMessageBroker.sendToQueue(
+            NewsMessageBrokerQueuesEnum.NEWS_RECENT_ARTICLES_SCRAPE_FAILED,
+            { ...data, errorMessage: err.message }
+          );
+        }
       }
-    });
-  }
-
-  private async _startArticleQueuConsumption(id: string) {
-    logger.info(`[Worker ${id}] Starting to consume article scrape ...`);
-
-    return this._newsScraperMessageBroker.consumeArticleScrapeQueue(async (data, acknowledgeMessageCallback) => {
-      logger.debug(`[Worker ${id}] Processing article scrape job. Data ${JSON.stringify(data)}`);
-
-      // TODO
-
-      acknowledgeMessageCallback();
-    });
+    );
   }
 }
