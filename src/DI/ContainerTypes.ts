@@ -4,8 +4,8 @@ export const TYPES = {
   MongoDBService: Symbol.for('MongoDBService'),
   PrometheusMetricsServer: Symbol.for('PrometheusMetricsServer'),
   NewsScraperManager: Symbol.for('NewsScraperManager'),
-  NewsScraperScheduler: Symbol.for('NewsScraperScheduler'),
-  NewsScraperWorker: Symbol.for('NewsScraperWorker'),
+  NewsScraperTaskDispatcher: Symbol.for('NewsScraperTaskDispatcher'),
+  NewsScraperTaskWorker: Symbol.for('NewsScraperTaskWorker'),
   NewsScraperDatabaseManager: Symbol.for('NewsScraperDatabaseManager'),
   NewsScraperMessageBroker: Symbol.for('NewsScraperMessageBroker'),
 };

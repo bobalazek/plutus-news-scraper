@@ -5,16 +5,16 @@ import { addNewsScraperArticleScrapeCommand } from './Commands/NewsScraperArticl
 import { addNewsScraperDatabaseInitCommand } from './Commands/NewsScraperDatabaseInitCommand';
 import { addNewsScraperDatabaseResetCommand } from './Commands/NewsScraperDatabaseResetCommand';
 import { addNewsScraperRecentArticlesScrapeCommand } from './Commands/NewsScraperRecentArticlesScrapeCommand';
-import { addNewsScraperSchedulerStartCommand } from './Commands/NewsScraperSchedulerStartCommand';
-import { addNewsScraperWorkerStartCommand } from './Commands/NewsScraperWorkerStartCommand';
+import { addNewsScraperTaskDispatcherStartCommand } from './Commands/NewsScraperTaskDispatcherStartCommand';
+import { addNewsScraperTaskWorkerStartCommand } from './Commands/NewsScraperTaskWorkerStartCommand';
 
 const program = new Command();
 
 addNewsScraperArticleScrapeCommand(program);
 addNewsScraperRecentArticlesScrapeCommand(program);
 addNewsScraperArchivedArticlesScrapeCommand(program);
-addNewsScraperSchedulerStartCommand(program);
-addNewsScraperWorkerStartCommand(program);
+addNewsScraperTaskDispatcherStartCommand(program);
+addNewsScraperTaskWorkerStartCommand(program);
 addNewsScraperDatabaseInitCommand(program);
 addNewsScraperDatabaseResetCommand(program);
 

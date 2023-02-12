@@ -8,7 +8,7 @@ import { NewsScraperManager } from './NewsScraperManager';
 import { NewsScraperMessageBroker } from './NewsScraperMessageBroker';
 
 @injectable()
-export class NewsScraperScheduler {
+export class NewsScraperTaskDispatcher {
   private _scrapeInterval: number = 30000;
 
   constructor(
@@ -17,7 +17,7 @@ export class NewsScraperScheduler {
   ) {}
 
   async start() {
-    logger.info(`========== Starting the scheduler ... ==========`);
+    logger.info(`========== Starting the task dispatcher ... ==========`);
 
     const scrapers = await this._newsScraperManager.getAll();
 
