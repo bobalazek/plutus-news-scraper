@@ -101,6 +101,10 @@ export default class BBCNewsScraper extends AbstractNewsScraper implements NewsS
 
     const newsSiteArticleId = urlId ?? urlSlashId ?? url;
 
+    const categoryName = await page.evaluate(() => {
+      return document.querySelector('head meta[property="article:section"]')?.getAttribute('content') ?? '';
+    });
+
     const linkedDataText = await page.evaluate(() => {
       return document.querySelector('head script[type="application/ld+json"]')?.innerHTML ?? '';
     });
@@ -131,6 +135,9 @@ export default class BBCNewsScraper extends AbstractNewsScraper implements NewsS
       newsSiteArticleId: newsSiteArticleId,
       publishedAt: new Date(linkedData.datePublished),
       modifiedAt: new Date(linkedData.dateModified),
+      authorName: linkedData.author[0].name,
+      imageUrl: linkedData.image.url,
+      categoryName: categoryName,
     };
 
     logger.debug(`Article data:`);

@@ -118,13 +118,7 @@ export default class BarronsNewsScraper extends AbstractNewsScraper implements N
 
     // Content
     const content = await page.evaluate(() => {
-      return Array.from(
-        document.querySelector('#js-article__body')
-          ? document.querySelectorAll('#js-article__body p, #js-article__body .paywall')
-          : document.querySelector('#article-contents .article__body')
-          ? document.querySelectorAll('#article-contents .article__body p')
-          : []
-      )
+      return Array.from(document.querySelectorAll('main .article-body p, #article_sector .snippet__body'))
         .map((element) => {
           return element.innerHTML;
         })
@@ -143,6 +137,9 @@ export default class BarronsNewsScraper extends AbstractNewsScraper implements N
       newsSiteArticleId: newsSiteArticleId,
       publishedAt: new Date(linkedData.datePublished),
       modifiedAt: new Date(linkedData.dateModified),
+      authorName: linkedData.author[0].name,
+      authorUrl: linkedData.author[0].sameAs,
+      imageUrl: linkedData.image[0],
     };
 
     logger.debug(`Article data:`);

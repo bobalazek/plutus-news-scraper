@@ -87,6 +87,16 @@ export default class BusinessInsiderNewsScraper extends AbstractNewsScraper impl
 
     const newsSiteArticleId = url;
 
+    const categoryName = await page.evaluate(() => {
+      return document.querySelector('head meta[name="tbi-vertical"]')?.getAttribute('content') ?? '';
+    });
+
+    const categoryLink = await page.evaluate(() => {
+      return document.querySelector('.post-meta .post-breadcrumbs a:last-child')?.getAttribute('href') ?? '';
+    });
+
+    const categoryUrl = 'https://www.businessinsider.com' + categoryLink;
+
     const linkedDataText = await page.evaluate(() => {
       return document.querySelector('head script[type="application/ld+json"]')?.innerHTML ?? '';
     });
@@ -106,6 +116,11 @@ export default class BusinessInsiderNewsScraper extends AbstractNewsScraper impl
       newsSiteArticleId: newsSiteArticleId,
       publishedAt: new Date(linkedData.datePublished),
       modifiedAt: new Date(linkedData.dateModified),
+      authorName: linkedData.author.name,
+      authorUrl: linkedData.author.sameAs,
+      imageUrl: linkedData.image.url,
+      categoryName: categoryName,
+      categoryUrl: categoryUrl,
     };
 
     logger.debug(`Article data:`);
