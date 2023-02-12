@@ -8,32 +8,51 @@ import { RABBITMQ_URL } from '../Utils/Environment';
 export class RabbitMQService {
   private _connection?: amqplib.Connection;
   private _channelsMap: Map<string, amqplib.Channel> = new Map();
+  private _channelQueuesMap: Map<string, Set<string>> = new Map();
 
-  async getChannel(channelName: string, options?: amqplib.Options.AssertQueue) {
+  async getChannel(channelName?: string) {
+    if (!channelName) {
+      channelName = '__default';
+    }
+
     const connection = await this.getConnection();
 
     let channel = this._channelsMap.get(channelName);
     if (!channel) {
       channel = await connection.createChannel();
-      await channel.assertQueue(channelName, options);
 
       this._channelsMap.set(channelName, channel);
+
+      this._channelQueuesMap.set(channelName, new Set());
+    }
+
+    return channel;
+  }
+
+  async addQueueToChannel(queueName: string, assertQueueOptions?: amqplib.Options.AssertQueue, channelName?: string) {
+    const channel = await this.getChannel(channelName);
+
+    if (!this._channelQueuesMap.get(channelName)?.has(queueName)) {
+      await channel.assertQueue(queueName, assertQueueOptions);
     }
 
     return channel;
   }
 
   async consume(
-    channelName: string,
+    queueName: string,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     callback: (data: any, message: amqplib.ConsumeMessage, channel: amqplib.Channel) => void,
     autoAcknowledge: boolean = true,
-    options?: amqplib.Options.Consume
+    consumeOptions?: amqplib.Options.Consume,
+    assertQueueOptions?: amqplib.Options.AssertQueue,
+    channelName?: string
   ) {
-    const channel = await this.getChannel(channelName);
+    const channel = await this.getChannel(queueName);
+    await this.addQueueToChannel(queueName, assertQueueOptions, channelName);
 
     return channel.consume(
-      channelName,
+      queueName,
       (message) => {
         if (message === null) {
           return;
@@ -45,18 +64,20 @@ export class RabbitMQService {
           channel.ack(message);
         }
       },
-      options
+      consumeOptions
     );
   }
 
   async get(
-    channelName: string,
-    channelOptions?: amqplib.Options.AssertQueue,
-    messageOptions?: amqplib.Options.Consume
+    queueName: string,
+    getOptions?: amqplib.Options.Consume,
+    assertQueueOptions?: amqplib.Options.AssertQueue,
+    channelName?: string
   ) {
-    const channel = await this.getChannel(channelName, channelOptions);
+    const channel = await this.getChannel(queueName);
+    await this.addQueueToChannel(queueName, assertQueueOptions, channelName);
 
-    const message = await channel.get(channelName, messageOptions);
+    const message = await channel.get(queueName, getOptions);
     if (message === false) {
       return null;
     }
@@ -69,14 +90,17 @@ export class RabbitMQService {
   }
 
   async sendToQueue(
-    channelName: string,
+    queueName: string,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    value: any,
-    options?: amqplib.Options.Publish
+    data: any,
+    publishOptions?: amqplib.Options.Publish,
+    assertQueueOptions?: amqplib.Options.AssertQueue,
+    channelName?: string
   ) {
     const channel = await this.getChannel(channelName);
+    await this.addQueueToChannel(queueName, assertQueueOptions, channelName);
 
-    return channel.sendToQueue(channelName, Buffer.from(superjson.stringify(value)), options);
+    return channel.sendToQueue(queueName, Buffer.from(superjson.stringify(data)), publishOptions);
   }
 
   async connect() {

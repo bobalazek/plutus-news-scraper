@@ -16,15 +16,15 @@ export class NewsScraperTaskWorker {
   async start(id: string) {
     logger.info(`========== Starting the worker "${id}" ... ==========`);
 
-    this._consumeRecentArticlesScrapeQueue(id);
-    this._consumeArticleScrapeQueue(id);
+    this._startRecentArticlesQueueConsumption(id);
+    this._startArticleQueuConsumption(id);
 
     return new Promise(() => {
       // Together forever and never apart ...
     });
   }
 
-  private async _consumeRecentArticlesScrapeQueue(id: string) {
+  private async _startRecentArticlesQueueConsumption(id: string) {
     logger.info(`[Worker ${id}] Starting to consume recent articles scrape ...`);
 
     return this._newsScraperMessageBroker.consume(
@@ -67,7 +67,7 @@ export class NewsScraperTaskWorker {
     );
   }
 
-  private async _consumeArticleScrapeQueue(id: string) {
+  private async _startArticleQueuConsumption(id: string) {
     logger.info(`[Worker ${id}] Starting to consume article scrape ...`);
 
     return this._newsScraperMessageBroker.consume(
