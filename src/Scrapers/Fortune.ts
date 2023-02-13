@@ -98,6 +98,15 @@ export default class FortuneNewsScraper extends AbstractNewsScraper implements N
 
     const newsSiteArticleId = linkedData.identifier + ''; // .identifier in this case is a number, so we convert it into a string
 
+    const nextDataText = await page.evaluate(() => {
+      return document.querySelector('body script#__NEXT_DATA__')?.innerHTML ?? '';
+    });
+    if (!nextDataText) {
+      throw new NewsArticleDataNotFoundError(`Next data not found for URL ${url}`);
+    }
+
+    const nextData = JSON.parse(nextDataText);
+
     // Content
     const content = await page.evaluate(() => {
       return Array.from(document.querySelectorAll('#content p'))
@@ -119,6 +128,11 @@ export default class FortuneNewsScraper extends AbstractNewsScraper implements N
       newsSiteArticleId: newsSiteArticleId,
       publishedAt: new Date(linkedData.datePublished),
       modifiedAt: new Date(linkedData.dateModified),
+      authorName: linkedData.author[0].name,
+      authorUrl: linkedData.author[0].url,
+      categoryName: nextData.props.pageProps.article.primarySection.name,
+      categoryUrl: nextData.props.pageProps.article.primarySection.link,
+      imageUrl: linkedData.image,
     };
 
     logger.debug(`Article data:`);

@@ -92,6 +92,10 @@ export default class InvestopediaNewsScraper extends AbstractNewsScraper impleme
     const urlId = urlSplit[urlSplit.length - 1];
     const newsSiteArticleId = urlId;
 
+    const imageUrl = await page.evaluate(() => {
+      return document.querySelector('head meta[property="og:image"]')?.getAttribute('content') ?? '';
+    });
+
     const linkedDataText = await page.evaluate(() => {
       return document.querySelector('head script[type="application/ld+json"]')?.innerHTML ?? '';
     });
@@ -122,6 +126,10 @@ export default class InvestopediaNewsScraper extends AbstractNewsScraper impleme
       newsSiteArticleId: newsSiteArticleId,
       publishedAt: new Date(linkedData[0].datePublished),
       modifiedAt: new Date(linkedData[0].dateModified),
+      authorName: linkedData[0].author[0].name,
+      authorUrl: linkedData[0].author[0].url,
+      categoryName: linkedData[0].articleSection,
+      imageUrl: imageUrl,
     };
 
     logger.debug(`Article data:`);
