@@ -96,8 +96,6 @@ export default class CNNNewsScraper extends AbstractNewsScraper implements NewsS
 
     const linkedData = JSON.parse(linkedDataText);
 
-    const newsSiteArticleId = linkedData.identifier[0].value;
-
     // Content
     const content = await page.evaluate(() => {
       return Array.from(document.querySelectorAll('.article__content-container p'))
@@ -116,9 +114,12 @@ export default class CNNNewsScraper extends AbstractNewsScraper implements NewsS
       content: convert(content, {
         wordwrap: false,
       }),
-      newsSiteArticleId: newsSiteArticleId,
+      newsSiteArticleId: linkedData.identifier[0].value,
       publishedAt: new Date(linkedData.datePublished),
       modifiedAt: new Date(linkedData.dateModified),
+      authorName: linkedData.author[0].name,
+      authorUrl: linkedData.author[0].url,
+      imageUrl: linkedData.image.url,
     };
 
     logger.debug(`Article data:`);

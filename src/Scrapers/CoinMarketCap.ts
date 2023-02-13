@@ -9,7 +9,7 @@ import { NewsScraperInterface } from '../Types/NewsScraperInterface';
 import { AbstractNewsScraper } from './AbstractNewsScraper';
 
 export default class CoinMarketCapNewsScraper extends AbstractNewsScraper implements NewsScraperInterface {
-  key: string = 'coincarketcap';
+  key: string = 'coinmarketcap';
   domain: string = 'coinmarketcap.com';
   recentArticleListUrls: string[] = [
     'https://coinmarketcap.com/community/articles/browse/?sort=-publishedOn&page=1&category=',
@@ -80,7 +80,7 @@ export default class CoinMarketCapNewsScraper extends AbstractNewsScraper implem
     logger.info(`Going to URL ${url} ...`);
 
     await page.goto(url, {
-      waitUntil: 'domcontentloaded',
+      waitUntil: 'networkidle2',
     });
 
     const urlSplit = url.split('/');
@@ -97,6 +97,20 @@ export default class CoinMarketCapNewsScraper extends AbstractNewsScraper implem
 
     const dateModified = await page.evaluate(() => {
       return document.querySelector('body')?.getAttribute('data-commit-time') ?? '';
+    });
+
+    const authorName = await page.evaluate(() => {
+      return document.querySelector('body .name')?.innerHTML ?? '';
+    });
+
+    const authorLink = await page.evaluate(() => {
+      return document.querySelector('body a.name')?.getAttribute('href') ?? '';
+    });
+
+    const authorUrl = 'https://coinmarketcap.com' + authorLink;
+
+    const imageUrl = await page.evaluate(() => {
+      return document.querySelector('head meta[property="og:image"]')?.getAttribute('content') ?? '';
     });
 
     // Content
@@ -120,6 +134,9 @@ export default class CoinMarketCapNewsScraper extends AbstractNewsScraper implem
       newsSiteArticleId: newsSiteArticleId,
       publishedAt: new Date(datePublished),
       modifiedAt: new Date(dateModified),
+      authorName: authorName,
+      authorUrl: authorUrl,
+      imageUrl: imageUrl,
     };
 
     logger.debug(`Article data:`);

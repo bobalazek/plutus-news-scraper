@@ -99,7 +99,11 @@ export default class CoindeskNewsScraper extends AbstractNewsScraper implements 
 
     const linkedData = JSON.parse(linkedDataText);
 
-    const newsSiteArticleId = linkedData.identifier;
+    const categoryLink = await page.evaluate(() => {
+      return document.querySelector('article .at-category a')?.getAttribute('href') ?? '';
+    });
+
+    const categoryUrl = 'https://www.coindesk.com/' + categoryLink;
 
     // Content
     const content = await page.evaluate(() => {
@@ -119,9 +123,14 @@ export default class CoindeskNewsScraper extends AbstractNewsScraper implements 
       content: convert(content, {
         wordwrap: false,
       }),
-      newsSiteArticleId: newsSiteArticleId,
+      newsSiteArticleId: linkedData.identifier,
       publishedAt: new Date(linkedData.datePublished),
       modifiedAt: new Date(linkedData.dateModified),
+      authorName: linkedData.author[0].name,
+      authorUrl: linkedData.author[0].url,
+      categoryName: linkedData.articleSection,
+      categoryUrl: categoryUrl,
+      imageUrl: linkedData.image.url,
     };
 
     logger.debug(`Article data:`);

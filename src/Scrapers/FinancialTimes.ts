@@ -117,7 +117,9 @@ export default class FinancialTimesNewsScraper extends AbstractNewsScraper imple
       newsSiteArticleId: newsSiteArticleId,
       publishedAt: new Date(linkedData.datePublished),
       modifiedAt: new Date(linkedData.dateModified),
+      imageUrl: linkedData.image.url,
     };
+    //TODO authors - multiple authors for one article
 
     logger.debug(`Article data:`);
     logger.debug(article);

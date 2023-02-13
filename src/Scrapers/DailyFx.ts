@@ -95,6 +95,18 @@ export default class DailyFxNewsScraper extends AbstractNewsScraper implements N
     const slugLastPart = slugSplit[slugSplit.length - 1];
     const newsSiteArticleId = slugLastPart.replace('.html', '');
 
+    const authorName = await page.evaluate(() => {
+      return document.querySelector('head meta[name="author"]')?.getAttribute('content') ?? '';
+    });
+
+    const authorUrl = await page.evaluate(() => {
+      return (
+        document
+          .querySelector('article .dfx-articleHead__authorInfo .dfx-articleHead__articleDetails a')
+          ?.getAttribute('href') ?? ''
+      );
+    });
+
     const linkedDataText = await page.evaluate(() => {
       return document.querySelector('head script[type="application/ld+json"]')?.innerHTML ?? '';
     });
@@ -125,6 +137,11 @@ export default class DailyFxNewsScraper extends AbstractNewsScraper implements N
       newsSiteArticleId: newsSiteArticleId,
       publishedAt: new Date(linkedData[1].datePublished),
       modifiedAt: new Date(linkedData[1].dateModified),
+      authorName: authorName,
+      authorUrl: authorUrl,
+      /*categoryName: string,
+      categoryUrl: string,*/
+      imageUrl: linkedData[1].image.url,
     };
 
     logger.debug(`Article data:`);

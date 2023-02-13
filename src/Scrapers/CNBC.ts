@@ -94,6 +94,29 @@ export default class CNBCNewsScraper extends AbstractNewsScraper implements News
     const title = await page.evaluate(() => {
       return document.querySelector('head meta[property="og:title"]')?.getAttribute('content') ?? '';
     });
+    const authorName = await page.evaluate(() => {
+      return document.querySelector('meta[name="author"]')?.getAttribute('content') ?? '';
+    });
+    const authorUrl = await page.evaluate(() => {
+      return (
+        document
+          .querySelector('.ArticleHeader-author .Author-authorNameAndSocial a.Author-authorName')
+          ?.getAttribute('href') ?? ''
+      );
+    });
+    const categoryName = await page.evaluate(() => {
+      return document.querySelector('meta[property="article:section"]')?.getAttribute('content') ?? '';
+    });
+    const categoryUrl = await page.evaluate(() => {
+      return (
+        document
+          .querySelector('.ArticleHeader-headerContentContainer .ArticleHeader-wrapper a:first-child')
+          ?.getAttribute('href') ?? ''
+      );
+    });
+    const imageUrl = await page.evaluate(() => {
+      return document.querySelector('head meta[property="og:image"]')?.getAttribute('content') ?? '';
+    });
 
     // Content
     const content = await page.evaluate(() => {
@@ -116,6 +139,11 @@ export default class CNBCNewsScraper extends AbstractNewsScraper implements News
       newsSiteArticleId: newsSiteArticleId,
       publishedAt: new Date(datePublished),
       modifiedAt: new Date(dateModified),
+      authorName: authorName,
+      authorUrl: authorUrl,
+      categoryName: categoryName,
+      categoryUrl: categoryUrl,
+      imageUrl: imageUrl,
     };
 
     logger.debug(`Article data:`);

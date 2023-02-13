@@ -90,6 +90,13 @@ export default class CryptonewsNewsScraper extends AbstractNewsScraper implement
 
     const newsSiteArticleId = url;
 
+    const categoryName = await page.evaluate(() => {
+      return document.querySelector('main .container .breadcrumbs a:nth-child(2)')?.innerHTML ?? '';
+    });
+
+    const categoryUrlSplit = url;
+    const categoryUrl = categoryUrlSplit.substring(0, url.lastIndexOf('/') + 1);
+
     const linkedDataText = await page.evaluate(() => {
       return document.querySelectorAll('body script[type="application/ld+json"]')[1].innerHTML ?? '';
     });
@@ -120,6 +127,11 @@ export default class CryptonewsNewsScraper extends AbstractNewsScraper implement
       newsSiteArticleId: newsSiteArticleId,
       publishedAt: new Date(linkedData.datePublished),
       modifiedAt: new Date(linkedData.dateModified),
+      authorName: linkedData.author[0].name,
+      authorUrl: linkedData.author[0].url,
+      categoryName: categoryName,
+      categoryUrl: categoryUrl,
+      imageUrl: linkedData.image[0],
     };
 
     logger.debug(`Article data:`);

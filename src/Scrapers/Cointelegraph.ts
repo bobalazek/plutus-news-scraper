@@ -122,6 +122,9 @@ export default class CointelegraphNewsScraper extends AbstractNewsScraper implem
       newsSiteArticleId: newsSiteArticleId,
       publishedAt: new Date(linkedData.datePublished),
       modifiedAt: new Date(linkedData.dateModified),
+      authorName: linkedData.author.name,
+      authorUrl: linkedData.author.url,
+      imageUrl: linkedData.image.url,
     };
 
     logger.debug(`Article data:`);
