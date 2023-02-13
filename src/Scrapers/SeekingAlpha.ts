@@ -101,7 +101,7 @@ export default class SeekingAlphaNewsScraper extends AbstractNewsScraper impleme
       return document.querySelector('body script[type="application/ld+json"]:nth-child(2)')?.innerHTML ?? '';
     });
     if (!linkedDataText) {
-      throw new NewsArticleDataNotFoundError(`No linked data found for URL ${url}`);
+      throw new NewsArticleDataNotFoundError(`Linked data not found for URL ${url}`);
     }
 
     const linkedData = JSON.parse(linkedDataText);

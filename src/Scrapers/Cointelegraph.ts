@@ -96,7 +96,7 @@ export default class CointelegraphNewsScraper extends AbstractNewsScraper implem
       return document.querySelector('head script[type="application/ld+json"]')?.innerHTML ?? '';
     });
     if (!linkedDataText) {
-      throw new NewsArticleDataNotFoundError(`No linked data found for URL ${url}`);
+      throw new NewsArticleDataNotFoundError(`Linked data not found for URL ${url}`);
     }
 
     const linkedData = JSON.parse(linkedDataText);

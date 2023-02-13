@@ -108,7 +108,7 @@ export default class TheEconomicTimesNewsScraper extends AbstractNewsScraper imp
       return document.querySelectorAll('body script[type="application/ld+json"]')[1].innerHTML ?? '';
     });
     if (!linkedDataText) {
-      throw new NewsArticleDataNotFoundError(`No linked data found for URL ${url}`);
+      throw new NewsArticleDataNotFoundError(`Linked data not found for URL ${url}`);
     }
 
     const linkedData = JSON.parse(linkedDataText);
