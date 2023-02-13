@@ -1,13 +1,15 @@
 import * as express from 'express';
 import { injectable } from 'inversify';
-import * as prometheusClient from 'prom-client';
+import * as promClient from 'prom-client';
 
+import { PROMETHEUS_PUSHGATEWAY_URL } from '../Utils/Environment';
 import { checkIfPortIsInUse } from '../Utils/Helpers';
 import { logger } from './Logger';
 
 @injectable()
 export class PrometheusMetricsServer {
   private _httpServer?: express.Express;
+  private _prometheusPushgateway?: promClient.Pushgateway;
 
   async start(
     httpServerPort: number,
@@ -22,6 +24,7 @@ export class PrometheusMetricsServer {
       throw new Error(`Port ${httpServerPort} is already in use`);
     }
 
+    const prometheusClient = this.getPrometheusClient();
     prometheusClient.collectDefaultMetrics({
       prefix: prometheusClientPrefix,
       labels: prometheusClientLabels,
@@ -49,6 +52,19 @@ export class PrometheusMetricsServer {
   }
 
   getPrometheusClient() {
-    return prometheusClient;
+    return promClient;
+  }
+
+  getPrometheusPushgateway() {
+    if (!PROMETHEUS_PUSHGATEWAY_URL) {
+      throw new Error(`Prometheus pushgateway URL not set`);
+    }
+
+    const prometheusClient = this.getPrometheusClient();
+    if (!this._prometheusPushgateway) {
+      this._prometheusPushgateway = new prometheusClient.Pushgateway(PROMETHEUS_PUSHGATEWAY_URL);
+    }
+
+    return this._prometheusPushgateway;
   }
 }

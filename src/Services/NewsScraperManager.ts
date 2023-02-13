@@ -175,8 +175,8 @@ export class NewsScraperManager {
   /**
    * ========== Private ==========
    */
-  private async _init() {
-    if (this._initialized) {
+  private async _init(forceReinitialize: boolean = false) {
+    if (this._initialized && !forceReinitialize) {
       return;
     }
 

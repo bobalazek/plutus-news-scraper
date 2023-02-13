@@ -3,7 +3,7 @@ import { inject, injectable } from 'inversify';
 import superjson from 'superjson';
 
 import { TYPES } from '../DI/ContainerTypes';
-import { NewsMessageBrokerQueuesDataType, NewsMessageBrokerQueuesEnum } from '../Types/NewsMessageBrokerQueues';
+import { NewsMessageBrokerQueuesDataType, NewsScraperMessageBrokerQueuesEnum } from '../Types/NewsMessageBrokerQueues';
 import { RabbitMQService } from './RabbitMQService';
 
 @injectable()
@@ -12,7 +12,7 @@ export class NewsScraperMessageBroker {
 
   constructor(@inject(TYPES.RabbitMQService) private _rabbitMQService: RabbitMQService) {}
 
-  async sendToQueue<T extends NewsMessageBrokerQueuesEnum>(
+  async sendToQueue<T extends NewsScraperMessageBrokerQueuesEnum>(
     queueName: T,
     data: NewsMessageBrokerQueuesDataType[T],
     publishOptions?: amqplib.Options.Publish,
@@ -21,7 +21,7 @@ export class NewsScraperMessageBroker {
     return this._rabbitMQService.sendToQueue(queueName, data, publishOptions, assertOptions, this._channelName);
   }
 
-  async consume<T extends NewsMessageBrokerQueuesEnum>(
+  async consume<T extends NewsScraperMessageBrokerQueuesEnum>(
     queueName: T,
     callback: (data: NewsMessageBrokerQueuesDataType[T], acknowledgeMessageCallback: () => void) => void,
     consumeOptions?: amqplib.Options.Consume
@@ -39,7 +39,7 @@ export class NewsScraperMessageBroker {
     );
   }
 
-  async consumeOneAtTime<T extends NewsMessageBrokerQueuesEnum>(
+  async consumeOneAtTime<T extends NewsScraperMessageBrokerQueuesEnum>(
     queueName: T,
     callback: (
       data: NewsMessageBrokerQueuesDataType[T],
@@ -74,7 +74,7 @@ export class NewsScraperMessageBroker {
     );
   }
 
-  async getMessageCountInQueue(queueName: NewsMessageBrokerQueuesEnum) {
+  async getMessageCountInQueue(queueName: NewsScraperMessageBrokerQueuesEnum) {
     return this._rabbitMQService.getMessageCountInQueue(queueName, this._channelName);
   }
 
@@ -82,26 +82,26 @@ export class NewsScraperMessageBroker {
     const data = {};
 
     for (const queue of [
-      NewsMessageBrokerQueuesEnum.NEWS_RECENT_ARTICLES_SCRAPE,
-      NewsMessageBrokerQueuesEnum.NEWS_ARTICLE_SCRAPE,
+      NewsScraperMessageBrokerQueuesEnum.NEWS_SCRAPER_RECENT_ARTICLES_SCRAPE_QUEUE,
+      NewsScraperMessageBrokerQueuesEnum.NEWS_SCRAPER_ARTICLE_SCRAPE_QUEUE,
     ]) {
       const count = await this.getMessageCountInQueue(queue);
 
       data[queue] = count;
     }
 
-    return data as Record<NewsMessageBrokerQueuesEnum, number>;
+    return data as Record<NewsScraperMessageBrokerQueuesEnum, number>;
   }
 
   /**
    * ========== Specific queues ==========
    */
   async sendToRecentArticlesScrapeQueue(
-    data: NewsMessageBrokerQueuesDataType[NewsMessageBrokerQueuesEnum.NEWS_RECENT_ARTICLES_SCRAPE],
+    data: NewsMessageBrokerQueuesDataType[NewsScraperMessageBrokerQueuesEnum.NEWS_SCRAPER_RECENT_ARTICLES_SCRAPE_QUEUE],
     expiration?: number
   ) {
     return this.sendToQueue(
-      NewsMessageBrokerQueuesEnum.NEWS_RECENT_ARTICLES_SCRAPE,
+      NewsScraperMessageBrokerQueuesEnum.NEWS_SCRAPER_RECENT_ARTICLES_SCRAPE_QUEUE,
       data,
       { expiration, persistent: true },
       { durable: true }
@@ -110,20 +110,23 @@ export class NewsScraperMessageBroker {
 
   async consumeRecentArticlesScrapeQueue(
     callback: (
-      data: NewsMessageBrokerQueuesDataType[NewsMessageBrokerQueuesEnum.NEWS_RECENT_ARTICLES_SCRAPE],
+      data: NewsMessageBrokerQueuesDataType[NewsScraperMessageBrokerQueuesEnum.NEWS_SCRAPER_RECENT_ARTICLES_SCRAPE_QUEUE],
       acknowledgeMessageCallback: () => void,
       negativeAcknowledgeMessageCallback: () => void
     ) => void
   ) {
-    return this.consumeOneAtTime(NewsMessageBrokerQueuesEnum.NEWS_RECENT_ARTICLES_SCRAPE, callback);
+    return this.consumeOneAtTime(
+      NewsScraperMessageBrokerQueuesEnum.NEWS_SCRAPER_RECENT_ARTICLES_SCRAPE_QUEUE,
+      callback
+    );
   }
 
   async sendToArticleScrapeQueue(
-    data: NewsMessageBrokerQueuesDataType[NewsMessageBrokerQueuesEnum.NEWS_ARTICLE_SCRAPE],
+    data: NewsMessageBrokerQueuesDataType[NewsScraperMessageBrokerQueuesEnum.NEWS_SCRAPER_ARTICLE_SCRAPE_QUEUE],
     expiration?: number
   ) {
     return this.sendToQueue(
-      NewsMessageBrokerQueuesEnum.NEWS_ARTICLE_SCRAPE,
+      NewsScraperMessageBrokerQueuesEnum.NEWS_SCRAPER_ARTICLE_SCRAPE_QUEUE,
       data,
       { expiration, persistent: true },
       { durable: true }
@@ -132,11 +135,11 @@ export class NewsScraperMessageBroker {
 
   async consumeArticleScrapeQueue(
     callback: (
-      data: NewsMessageBrokerQueuesDataType[NewsMessageBrokerQueuesEnum.NEWS_ARTICLE_SCRAPE],
+      data: NewsMessageBrokerQueuesDataType[NewsScraperMessageBrokerQueuesEnum.NEWS_SCRAPER_ARTICLE_SCRAPE_QUEUE],
       acknowledgeMessageCallback: () => void,
       negativeAcknowledgeMessageCallback: () => void
     ) => void
   ) {
-    return this.consumeOneAtTime(NewsMessageBrokerQueuesEnum.NEWS_ARTICLE_SCRAPE, callback);
+    return this.consumeOneAtTime(NewsScraperMessageBrokerQueuesEnum.NEWS_SCRAPER_ARTICLE_SCRAPE_QUEUE, callback);
   }
 }

@@ -1,42 +1,48 @@
-export enum NewsMessageBrokerQueuesEnum {
-  NEWS_RECENT_ARTICLES_SCRAPE = 'news.recent_articles.scrape',
-  NEWS_RECENT_ARTICLES_SCRAPE_STARTED = 'news.recent_articles.scrape.started',
-  NEWS_RECENT_ARTICLES_SCRAPE_COMPLETED = 'news.recent_articles.scrape.completed',
-  NEWS_RECENT_ARTICLES_SCRAPE_FAILED = 'news.recent_articles.scrape.failed',
-  NEWS_ARTICLE_SCRAPE = 'news.article.scrape',
-  NEWS_ARTICLE_SCRAPE_STARTED = 'news.article.scrape.started',
-  NEWS_ARTICLE_SCRAPE_COMPLETED = 'news.article.scrape.completed',
-  NEWS_ARTICLE_SCRAPE_FAILED = 'news.article.scrape.failed',
+import { LifecycleStatusEnum } from './LifecycleStatusEnum';
+import { ProcessingStatusEnum } from './ProcessingStatusEnum';
+
+export enum NewsScraperMessageBrokerQueuesEnum {
+  /* ---------- Task ---------- */
+  NEWS_SCRAPER_TASK_DISPATCHER_STATUS_UPDATE_QUEUE = 'news_scraper.task_dispatcher.status_update',
+  NEWS_SCRAPER_TASK_WORKER_STATUS_UPDATE_QUEUE = 'news_scraper.task_worker.status_update',
+  /* ---------- Recent articles ---------- */
+  NEWS_SCRAPER_RECENT_ARTICLES_SCRAPE_QUEUE = 'news_scraper.recent_articles.scrape',
+  NEWS_SCRAPER_RECENT_ARTICLES_SCRAPE_STATUS_UPDATE_QUEUE = 'news_scraper.recent_articles.scrape.status_update',
+  /* ---------- Recent articles ---------- */
+  NEWS_SCRAPER_ARTICLE_SCRAPE_QUEUE = 'news_scraper.article.scrape',
+  NEWS_SCRAPER_ARTICLE_SCRAPE_STATUS_UPDATE_QUEUE = 'news_scraper.article.scrape.status_update',
 }
 
 export type NewsMessageBrokerQueuesDataType = {
-  [NewsMessageBrokerQueuesEnum.NEWS_RECENT_ARTICLES_SCRAPE]: {
+  /* ---------- Task ---------- */
+  [NewsScraperMessageBrokerQueuesEnum.NEWS_SCRAPER_TASK_DISPATCHER_STATUS_UPDATE_QUEUE]: {
+    status: LifecycleStatusEnum;
+    prometheusMetricsServerPort?: number;
+    errorMessage?: string;
+  };
+  [NewsScraperMessageBrokerQueuesEnum.NEWS_SCRAPER_TASK_WORKER_STATUS_UPDATE_QUEUE]: {
+    status: LifecycleStatusEnum;
+    id: string;
+    prometheusMetricsServerPort?: number;
+    errorMessage?: string;
+  };
+  /* ---------- Recent articles ---------- */
+  [NewsScraperMessageBrokerQueuesEnum.NEWS_SCRAPER_RECENT_ARTICLES_SCRAPE_QUEUE]: {
     newsSite: string;
     url?: string;
   };
-  [NewsMessageBrokerQueuesEnum.NEWS_RECENT_ARTICLES_SCRAPE_STARTED]: {
-    newsSite: string;
-    url?: string;
-  };
-  [NewsMessageBrokerQueuesEnum.NEWS_RECENT_ARTICLES_SCRAPE_COMPLETED]: {
-    newsSite: string;
-    url?: string;
-  };
-  [NewsMessageBrokerQueuesEnum.NEWS_RECENT_ARTICLES_SCRAPE_FAILED]: {
+  [NewsScraperMessageBrokerQueuesEnum.NEWS_SCRAPER_RECENT_ARTICLES_SCRAPE_STATUS_UPDATE_QUEUE]: {
+    status: ProcessingStatusEnum;
     newsSite: string;
     url?: string;
     errorMessage?: string;
   };
-  [NewsMessageBrokerQueuesEnum.NEWS_ARTICLE_SCRAPE]: {
+  /* ---------- Recent articles ---------- */
+  [NewsScraperMessageBrokerQueuesEnum.NEWS_SCRAPER_ARTICLE_SCRAPE_QUEUE]: {
     url: string;
   };
-  [NewsMessageBrokerQueuesEnum.NEWS_ARTICLE_SCRAPE_STARTED]: {
-    url: string;
-  };
-  [NewsMessageBrokerQueuesEnum.NEWS_ARTICLE_SCRAPE_COMPLETED]: {
-    url: string;
-  };
-  [NewsMessageBrokerQueuesEnum.NEWS_ARTICLE_SCRAPE_FAILED]: {
+  [NewsScraperMessageBrokerQueuesEnum.NEWS_SCRAPER_ARTICLE_SCRAPE_STATUS_UPDATE_QUEUE]: {
+    status: ProcessingStatusEnum;
     url: string;
     errorMessage?: string;
   };
