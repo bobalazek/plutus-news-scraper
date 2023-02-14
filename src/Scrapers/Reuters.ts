@@ -93,6 +93,10 @@ export default class ReutersNewsScraper extends AbstractNewsScraper implements N
       return document.querySelector('body header[article_id]')?.getAttribute('article_id') ?? '';
     });
 
+    const authorUrl = await page.evaluate(() => {
+      return document.querySelector('')?.getAttribute('') ?? '';
+    });
+
     const linkedDataText = await page.evaluate(() => {
       return document.querySelector('head script[type="application/ld+json"]')?.innerHTML ?? '';
     });
@@ -123,6 +127,7 @@ export default class ReutersNewsScraper extends AbstractNewsScraper implements N
       newsSiteArticleId: newsSiteArticleId,
       publishedAt: new Date(linkedData.datePublished),
       modifiedAt: new Date(linkedData.dateModified),
+      authors: [{ name: linkedData.author.byline, url: authorUrl }],
     };
 
     logger.debug(`Article data:`);

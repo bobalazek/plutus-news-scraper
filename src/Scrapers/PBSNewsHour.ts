@@ -117,6 +117,29 @@ export default class PbsNewsHourNewsScraper extends AbstractNewsScraper implemen
       return document.querySelector('head meta[property="og:title"]')?.getAttribute('content') ?? '';
     });
 
+    const authors = await page.evaluate(() => {
+      return Array.from(
+        document.querySelectorAll(
+          ['.post__byline.post__byline--side .post__byline-address a[itemprop="author"]'].join(', ')
+        )
+      ).map(($a) => {
+        return {
+          name: $a.querySelector('span[itemprop="name"]').innerHTML,
+          url: $a.getAttribute('href'),
+        };
+      });
+    });
+
+    const categoryName = await page.evaluate(() => {
+      return document.querySelector('.post__article a.post__category')?.innerHTML ?? '';
+    });
+    const categoryUrl = await page.evaluate(() => {
+      return document.querySelector('.post__article a.post__category')?.getAttribute('href') ?? '';
+    });
+    const imageUrl = await page.evaluate(() => {
+      return document.querySelector('head meta[property="og:image"]')?.getAttribute('content') ?? '';
+    });
+
     // Content
     const content = await page.evaluate(() => {
       return Array.from(document.querySelectorAll('article .body-text p'))
@@ -138,6 +161,9 @@ export default class PbsNewsHourNewsScraper extends AbstractNewsScraper implemen
       newsSiteArticleId: newsSiteArticleId,
       publishedAt: new Date(datePublished),
       modifiedAt: new Date(dateModified),
+      authors: authors,
+      categories: [{ name: categoryName, url: categoryUrl }],
+      imageUrl: imageUrl,
     };
 
     logger.debug(`Article data:`);

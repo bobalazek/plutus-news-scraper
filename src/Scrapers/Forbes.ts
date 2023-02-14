@@ -124,7 +124,7 @@ export default class ForbesNewsScraper extends AbstractNewsScraper implements Ne
       newsSiteArticleId: newsSiteArticleId,
       publishedAt: new Date(linkedData.datePublished),
       modifiedAt: new Date(linkedData.dateModified),
-      authors: [{ name: linkedData.author.name, url: linkedData.author.url }],
+      authors: [linkedData.author],
       categories: [{ name: linkedData.articleSection, url: categoryUrl }],
       imageUrl: linkedData.image.url,
     };

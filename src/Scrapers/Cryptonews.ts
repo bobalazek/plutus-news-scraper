@@ -95,7 +95,7 @@ export default class CryptonewsNewsScraper extends AbstractNewsScraper implement
     });
 
     const categoryUrlSplit = url;
-    const categoryUrl = categoryUrlSplit.substring(0, url.lastIndexOf('/') + 1);
+    const categoryUrl = categoryUrlSplit.substring(0, url.lastIndexOf('/'));
 
     const linkedDataText = await page.evaluate(() => {
       return document.querySelectorAll('body script[type="application/ld+json"]')[1].innerHTML ?? '';
@@ -105,7 +105,7 @@ export default class CryptonewsNewsScraper extends AbstractNewsScraper implement
     }
 
     const linkedData = JSON.parse(linkedDataText);
-
+    console.log(linkedData);
     // Content
     const content = await page.evaluate(() => {
       return Array.from(document.querySelectorAll('.article-single__content p'))

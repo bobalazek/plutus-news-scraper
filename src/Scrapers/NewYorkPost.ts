@@ -92,6 +92,10 @@ export default class NewYorkPostNewsScraper extends AbstractNewsScraper implemen
 
     const newsSiteArticleId = parsleyMetadata.post_id.replace('nypost-', '');
 
+    const categoryUrl = await page.evaluate(() => {
+      return document.querySelector('.article-header a')?.getAttribute('href') ?? '';
+    });
+
     const linkedDataText = await page.evaluate(() => {
       return document.querySelector('head script[type="application/ld+json"]')?.innerHTML ?? '';
     });
@@ -122,6 +126,9 @@ export default class NewYorkPostNewsScraper extends AbstractNewsScraper implemen
       newsSiteArticleId: newsSiteArticleId,
       publishedAt: new Date(linkedData.datePublished),
       modifiedAt: new Date(linkedData.dateModified),
+      authors: linkedData.author,
+      categories: [{ name: linkedData.articleSection, url: categoryUrl }],
+      imageUrl: linkedData.image.url,
     };
 
     logger.debug(`Article data:`);

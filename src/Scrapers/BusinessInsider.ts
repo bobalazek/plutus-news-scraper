@@ -116,7 +116,7 @@ export default class BusinessInsiderNewsScraper extends AbstractNewsScraper impl
       newsSiteArticleId: newsSiteArticleId,
       publishedAt: new Date(linkedData.datePublished),
       modifiedAt: new Date(linkedData.dateModified),
-      authors: [{ name: linkedData.author.name, url: linkedData.author.sameAs }],
+      authors: linkedData.author,
       categories: [{ name: categoryName, url: categoryUrl }],
       imageUrl: linkedData.image.url,
     };

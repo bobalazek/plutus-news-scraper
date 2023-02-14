@@ -96,6 +96,16 @@ export default class MarketsInsiderNewsScraper extends AbstractNewsScraper imple
       return document.querySelector('head meta[name="viking-id"]')?.getAttribute('value') ?? '';
     });
 
+    const categoryName = await page.evaluate(() => {
+      return document.querySelector('.post-meta .post-breadcrumbs a:last-child')?.innerHTML ?? '';
+    });
+
+    const categoryLink = await page.evaluate(() => {
+      return document.querySelector('.post-meta .post-breadcrumbs a:last-child')?.getAttribute('href') ?? '';
+    });
+
+    const categoryUrl = 'https://www.businessinsider.com' + categoryLink;
+
     const linkedDataText = await page.evaluate(() => {
       return document.querySelector('head script[type="application/ld+json"]')?.innerHTML ?? '';
     });
@@ -115,6 +125,9 @@ export default class MarketsInsiderNewsScraper extends AbstractNewsScraper imple
       newsSiteArticleId: newsSiteArticleId,
       publishedAt: new Date(linkedData.datePublished),
       modifiedAt: new Date(linkedData.dateModified),
+      authors: [linkedData.author],
+      categories: [{ name: categoryName, url: categoryUrl }],
+      imageUrl: linkedData.image.url,
     };
 
     logger.debug(`Article data:`);

@@ -95,19 +95,46 @@ export default class MorningstarNewsScraper extends AbstractNewsScraper implemen
     const urlId = urlSplit[urlSplit.length - 2];
     const newsSiteArticleId = urlId;
 
+    const title = await page.evaluate(() => {
+      return document.querySelector('head meta[property="og:title"]')?.getAttribute('content') ?? '';
+    });
     const datePublished = await page.evaluate(() => {
       return document.querySelector('head meta[property="og:article:published_time"]')?.getAttribute('content') ?? '';
     });
     const dateModified = await page.evaluate(() => {
       return document.querySelector('head meta[property="og:article:modified_time"]')?.getAttribute('content') ?? '';
     });
-    const title = await page.evaluate(() => {
-      return document.querySelector('head meta[property="og:title"]')?.getAttribute('content') ?? '';
+    const authorName = await page.evaluate(() => {
+      return (
+        document
+          .querySelector('.article__article-info .article__author meta[itemprop="name"]')
+          ?.getAttribute('content') ?? ''
+      );
+    });
+
+    const authorLink = await page.evaluate(() => {
+      return document.querySelector('.article__article-info .article__author a')?.getAttribute('href') ?? '';
+    });
+
+    const authorUrl = 'https://www.morningstar.com/' + authorLink;
+
+    const categoryName = await page.evaluate(() => {
+      return document.querySelector('head meta[property="og:article:section"]')?.getAttribute('content') ?? '';
+    });
+
+    const categoryLink = await page.evaluate(() => {
+      return document.querySelector('.article__container a')?.getAttribute('href') ?? '';
+    });
+
+    const categoryUrl = 'https://www.morningstar.com/' + categoryLink;
+
+    const imageUrl = await page.evaluate(() => {
+      return document.querySelector('head meta[property="og:image"]')?.getAttribute('content') ?? '';
     });
 
     // Content
     const content = await page.evaluate(() => {
-      return Array.from(document.querySelectorAll('.article__container .article__body p'))
+      return Array.from(document.querySelectorAll('.article__container .article__body'))
         .map((element) => {
           return element.innerHTML;
         })
@@ -126,6 +153,9 @@ export default class MorningstarNewsScraper extends AbstractNewsScraper implemen
       newsSiteArticleId: newsSiteArticleId,
       publishedAt: new Date(datePublished),
       modifiedAt: new Date(dateModified),
+      authors: [{ name: authorName, url: authorUrl }],
+      categories: [{ name: categoryName, url: categoryUrl }],
+      imageUrl: imageUrl,
     };
 
     logger.debug(`Article data:`);
