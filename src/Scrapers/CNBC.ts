@@ -15,7 +15,6 @@ export default class CNBCNewsScraper extends AbstractNewsScraper implements News
     'https://www.cnbc.com/investing/',
     'https://www.cnbc.com/technology/',
     'https://www.cnbc.com/politics/',
-    // 'https://www.cnbc.com/tv/',
   ];
 
   async scrapeRecentArticles(urls?: string[]): Promise<NewsBasicArticleInterface[]> {
@@ -139,10 +138,8 @@ export default class CNBCNewsScraper extends AbstractNewsScraper implements News
       newsSiteArticleId: newsSiteArticleId,
       publishedAt: new Date(datePublished),
       modifiedAt: new Date(dateModified),
-      authorName: authorName,
-      authorUrl: authorUrl,
-      categoryName: categoryName,
-      categoryUrl: categoryUrl,
+      authors: [{ name: authorName, url: authorUrl }],
+      categories: [{ name: categoryName, url: categoryUrl }],
       imageUrl: imageUrl,
     };
 

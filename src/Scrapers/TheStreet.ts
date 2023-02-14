@@ -1,5 +1,3 @@
-import { convert } from 'html-to-text';
-
 import { NewsArticleDataNotFoundError } from '../Errors/NewsArticleDataNotFoundError';
 import { logger } from '../Services/Logger';
 import { NewsArticleInterface } from '../Types/NewsArticleInterface';

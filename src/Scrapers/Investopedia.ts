@@ -103,7 +103,7 @@ export default class InvestopediaNewsScraper extends AbstractNewsScraper impleme
       throw new NewsArticleDataNotFoundError(`Linked data not found for URL ${url}`);
     }
 
-    const linkedData = JSON.parse(linkedDataText);
+    const linkedData = JSON.parse(linkedDataText)[0];
 
     // Content
     const content = await page.evaluate(() => {
@@ -124,11 +124,10 @@ export default class InvestopediaNewsScraper extends AbstractNewsScraper impleme
         wordwrap: false,
       }),
       newsSiteArticleId: newsSiteArticleId,
-      publishedAt: new Date(linkedData[0].datePublished),
-      modifiedAt: new Date(linkedData[0].dateModified),
-      authorName: linkedData[0].author[0].name,
-      authorUrl: linkedData[0].author[0].url,
-      categoryName: linkedData[0].articleSection,
+      publishedAt: new Date(linkedData.datePublished),
+      modifiedAt: new Date(linkedData.dateModified),
+      authors: linkedData.author,
+      categories: [{ name: linkedData.articleSection }],
       imageUrl: imageUrl,
     };
 

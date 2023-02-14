@@ -117,8 +117,7 @@ export default class CNNNewsScraper extends AbstractNewsScraper implements NewsS
       newsSiteArticleId: linkedData.identifier[0].value,
       publishedAt: new Date(linkedData.datePublished),
       modifiedAt: new Date(linkedData.dateModified),
-      authorName: linkedData.author[0].name,
-      authorUrl: linkedData.author[0].url,
+      authors: linkedData.author,
       imageUrl: linkedData.image.url,
     };
 

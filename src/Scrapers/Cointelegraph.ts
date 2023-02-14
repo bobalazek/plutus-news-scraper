@@ -1,4 +1,3 @@
-import { link } from 'fs';
 import { convert } from 'html-to-text';
 
 import { NewsArticleDataNotFoundError } from '../Errors/NewsArticleDataNotFoundError';
@@ -122,8 +121,7 @@ export default class CointelegraphNewsScraper extends AbstractNewsScraper implem
       newsSiteArticleId: newsSiteArticleId,
       publishedAt: new Date(linkedData.datePublished),
       modifiedAt: new Date(linkedData.dateModified),
-      authorName: linkedData.author.name,
-      authorUrl: linkedData.author.url,
+      authors: [{ name: linkedData.author.name, url: linkedData.author.url }],
       imageUrl: linkedData.image.url,
     };
 

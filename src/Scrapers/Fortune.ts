@@ -128,10 +128,13 @@ export default class FortuneNewsScraper extends AbstractNewsScraper implements N
       newsSiteArticleId: newsSiteArticleId,
       publishedAt: new Date(linkedData.datePublished),
       modifiedAt: new Date(linkedData.dateModified),
-      authorName: linkedData.author[0].name,
-      authorUrl: linkedData.author[0].url,
-      categoryName: nextData.props.pageProps.article.primarySection.name,
-      categoryUrl: nextData.props.pageProps.article.primarySection.link,
+      authors: linkedData.author,
+      categories: [
+        {
+          name: nextData.props.pageProps.article.primarySection.name,
+          url: nextData.props.pageProps.article.primarySection.link,
+        },
+      ],
       imageUrl: linkedData.image,
     };
 

@@ -137,10 +137,7 @@ export default class DailyFxNewsScraper extends AbstractNewsScraper implements N
       newsSiteArticleId: newsSiteArticleId,
       publishedAt: new Date(linkedData[1].datePublished),
       modifiedAt: new Date(linkedData[1].dateModified),
-      authorName: authorName,
-      authorUrl: authorUrl,
-      /*categoryName: string,
-      categoryUrl: string,*/
+      authors: [{ name: authorName, url: authorUrl }],
       imageUrl: linkedData[1].image.url,
     };
 

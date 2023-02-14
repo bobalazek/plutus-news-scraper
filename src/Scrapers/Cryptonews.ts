@@ -127,10 +127,8 @@ export default class CryptonewsNewsScraper extends AbstractNewsScraper implement
       newsSiteArticleId: newsSiteArticleId,
       publishedAt: new Date(linkedData.datePublished),
       modifiedAt: new Date(linkedData.dateModified),
-      authorName: linkedData.author[0].name,
-      authorUrl: linkedData.author[0].url,
-      categoryName: categoryName,
-      categoryUrl: categoryUrl,
+      authors: linkedData.author,
+      categories: [{ name: categoryName, url: categoryUrl }],
       imageUrl: linkedData.image[0],
     };
 

@@ -105,10 +105,6 @@ export default class BloombergNewsScraper extends AbstractNewsScraper implements
 
     const newsSiteArticleId = url;
 
-    const authorUrl = await page.evaluate(() => {
-      return document.querySelector('article p[class^="author__"] a')?.getAttribute('href') ?? '';
-    });
-
     const linkedDataText = await page.evaluate(() => {
       return document.querySelector('head script[type="application/ld+json"]')?.innerHTML ?? '';
     });
@@ -139,11 +135,9 @@ export default class BloombergNewsScraper extends AbstractNewsScraper implements
       newsSiteArticleId: newsSiteArticleId,
       publishedAt: new Date(linkedData.datePublished),
       modifiedAt: new Date(linkedData.dateModified),
-      authorName: linkedData.author[0].name,
-      authorUrl: authorUrl,
+      authors: linkedData.author,
+      categories: linkedData.mentions,
       imageUrl: linkedData.image[0],
-      categoryName: linkedData.mentions[0].name,
-      categoryUrl: linkedData.mentions[0].url,
     };
 
     logger.debug(`Article data:`);

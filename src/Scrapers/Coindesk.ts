@@ -126,10 +126,8 @@ export default class CoindeskNewsScraper extends AbstractNewsScraper implements 
       newsSiteArticleId: linkedData.identifier,
       publishedAt: new Date(linkedData.datePublished),
       modifiedAt: new Date(linkedData.dateModified),
-      authorName: linkedData.author[0].name,
-      authorUrl: linkedData.author[0].url,
-      categoryName: linkedData.articleSection,
-      categoryUrl: categoryUrl,
+      authors: linkedData.author,
+      categories: [{ name: linkedData.articleSection, url: categoryUrl }],
       imageUrl: linkedData.image.url,
     };
 

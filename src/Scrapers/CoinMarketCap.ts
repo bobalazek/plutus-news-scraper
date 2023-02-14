@@ -1,6 +1,5 @@
 import { convert } from 'html-to-text';
 
-import { NewsArticleDataNotFoundError } from '../Errors/NewsArticleDataNotFoundError';
 import { logger } from '../Services/Logger';
 import { NewsArticleInterface } from '../Types/NewsArticleInterface';
 import { NewsArticleMultimediaTypeEnum } from '../Types/NewsArticleMultimediaTypeEnum';
@@ -100,14 +99,12 @@ export default class CoinMarketCapNewsScraper extends AbstractNewsScraper implem
     });
 
     const authorName = await page.evaluate(() => {
-      return document.querySelector('body .name')?.innerHTML ?? '';
+      return document.querySelector('body a.name')?.innerHTML ?? '';
     });
 
-    const authorLink = await page.evaluate(() => {
-      return document.querySelector('body a.name')?.getAttribute('href') ?? '';
+    const authorUrl = await page.evaluate(() => {
+      return 'https://coinmarketcap.com' + document.querySelector('body a.name')?.getAttribute('href') ?? '';
     });
-
-    const authorUrl = 'https://coinmarketcap.com' + authorLink;
 
     const imageUrl = await page.evaluate(() => {
       return document.querySelector('head meta[property="og:image"]')?.getAttribute('content') ?? '';
@@ -134,8 +131,7 @@ export default class CoinMarketCapNewsScraper extends AbstractNewsScraper implem
       newsSiteArticleId: newsSiteArticleId,
       publishedAt: new Date(datePublished),
       modifiedAt: new Date(dateModified),
-      authorName: authorName,
-      authorUrl: authorUrl,
+      authors: [{ name: authorName, url: authorUrl }],
       imageUrl: imageUrl,
     };
 

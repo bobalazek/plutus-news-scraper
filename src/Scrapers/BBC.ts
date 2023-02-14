@@ -135,9 +135,9 @@ export default class BBCNewsScraper extends AbstractNewsScraper implements NewsS
       newsSiteArticleId: newsSiteArticleId,
       publishedAt: new Date(linkedData.datePublished),
       modifiedAt: new Date(linkedData.dateModified),
-      authorName: linkedData.author[0].name,
+      authors: linkedData.author,
+      categories: [{ name: categoryName }],
       imageUrl: linkedData.image.url,
-      categoryName: categoryName,
     };
 
     logger.debug(`Article data:`);

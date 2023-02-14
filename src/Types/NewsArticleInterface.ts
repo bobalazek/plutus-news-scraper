@@ -3,6 +3,22 @@ import { NewsArticleTypeEnum } from './NewsArticleTypeEnum';
 import { NewsBasicArticleInterface } from './NewsBasicArticleInterface';
 import { ProcessingStatusEnum } from './ProcessingStatusEnum';
 
+export interface NewsArticleAuthorInterface {
+  name: string;
+  url?: string;
+}
+
+export interface NewsArticleCategoryInterface {
+  name: string;
+  url?: string;
+}
+
+export interface NewsArticleEntityInterface {
+  type: 'stock' | 'company' | 'currency' | 'cryptocurrency' | 'person'; // TODO: get all the possible. Look at NER (Named Entity Recognition) - maybe we'll rather just have one value like "stock:APPL@NASDAQ"
+  value: string; // APPL@NASDAQ, Apple Inc., USD, BTC
+  sentiment?: number; // What is the sentiment towards this entity in this article?
+}
+
 /**
  * This is the interface for our news scraper.
  */
@@ -11,14 +27,11 @@ export interface NewsArticleInterface extends NewsBasicArticleInterface {
   multimediaType: NewsArticleMultimediaTypeEnum;
   content: string;
   newsSiteArticleId: string;
-  authorName?: string;
-  authorUrl?: string;
-  categoryName?: string;
-  categoryUrl?: string;
+  authors?: NewsArticleAuthorInterface[];
+  categories?: NewsArticleCategoryInterface[];
   imageUrl?: string;
-  languageCode?: string; // ISO 639-1 (2 characters)
-  countryCode?: string; // ISO 3166 (2 characters)
-  localeCode?: string; // Locale ID (LCID); ex.: en-us, en-gb, ...
+  languageCode?: string; // Which language is the article written? In ISO 639-1 (2 characters)
+  countryCode?: string; // The country of the publisher in ISO 3166 (2 characters)
   publishedAt: Date;
   modifiedAt: Date;
 }
@@ -30,9 +43,8 @@ export interface NewsArticleInterface extends NewsBasicArticleInterface {
 export interface NewsArticleExtendedInterface extends NewsArticleInterface {
   type: NewsArticleTypeEnum;
   newsSiteKey: string;
-  relatedEntities?: string[]; // [ { type: "stock", value: "APPL@NASDAQ" }, { type: "company", value: "Apple Inc." }, { type: "currency", value: "USD" }, { type: "cryptocurrency", value: "BTC" } ]
+  entities?: NewsArticleEntityInterface[];
   tags?: string[];
-  metadata?: Record<string, string>; // { locale: "en_US", countryCode: "global" (or ISO 3166 countryCode) }
   processingStatus?: ProcessingStatusEnum;
   processingFailedMessage?: string;
   processingStartedAt?: Date;
