@@ -16,8 +16,11 @@ export interface NewsArticleInterface extends NewsBasicArticleInterface {
   categoryName?: string;
   categoryUrl?: string;
   imageUrl?: string;
+  languageCode?: string; // ISO 639-1 (2 characters)
+  countryCode?: string; // ISO 3166 (2 characters)
+  localeCode?: string; // Locale ID (LCID); ex.: en-us, en-gb, ...
   publishedAt: Date;
-  modifiedAt?: Date;
+  modifiedAt: Date;
 }
 
 /**
