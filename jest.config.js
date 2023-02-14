@@ -1,4 +1,7 @@
 /* eslint-disable */
 module.exports = {
-  coverageProvider: 'v8',
+  testEnvironment: 'node',
+  transform: {
+    '^.+\\.[tj]s$': 'ts-jest',
+  },
 };

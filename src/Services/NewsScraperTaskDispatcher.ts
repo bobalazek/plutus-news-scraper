@@ -10,23 +10,25 @@ import { NewsScraperManager } from './NewsScraperManager';
 import { NewsScraperMessageBroker } from './NewsScraperMessageBroker';
 import { PrometheusMetricsServer } from './PrometheusMetricsServer';
 
+interface ScraperStatusEntry {
+  status: ProcessingStatusEnum;
+  lastUpdate: Date | null;
+  lastStarted: Date | null;
+  lastProcessed: Date | null;
+  lastFailed: Date | null;
+  lastFailedErrorMessage: string | null;
+}
+
 @injectable()
 export class NewsScraperTaskDispatcher {
   private _prometheusMetricsServerPort?: number;
 
+  private _scrapers: NewsScraperInterface[];
   private _scrapeInterval: number = 30000;
   private _messagesCountMonitoringInterval: number = 5000;
   private _scrapeRecentArticlesExpirationTime: number = 30000; // After how long do we want to expire this message?
 
-  private _scraperStatusMap: Record<
-    string,
-    {
-      status: ProcessingStatusEnum;
-      lastStarted: Date | null;
-      lastProcessed: Date | null;
-      lastFailed: Date | null;
-    }
-  >;
+  private _scraperStatusMap: Record<string, ScraperStatusEntry> = {};
 
   constructor(
     @inject(TYPES.NewsScraperManager) private _newsScraperManager: NewsScraperManager,
@@ -48,9 +50,9 @@ export class NewsScraperTaskDispatcher {
       await this._prometheusMetricsServer.start(prometheusMetricsServerPort, `news_scraper_task_dispatcher_`);
     }
 
-    const scrapers = await this._setupScrapers();
+    await this.setupScrapers();
 
-    this._startRecentArticlesScraping(scrapers);
+    this._startRecentArticlesScraping();
     this._startMessageQueuesMonitoring();
 
     await this._newsScraperMessageBroker.sendToQueue(
@@ -74,38 +76,66 @@ export class NewsScraperTaskDispatcher {
     );
   }
 
-  async _setupScrapers() {
-    const scrapers = await this._newsScraperManager.getAll();
+  /* Technically all of the methods below should be private, but we use them in our tests, so ... */
+  async setupScrapers() {
+    this._scrapers = await this._newsScraperManager.getAll();
 
-    for (const scraper of scrapers) {
+    for (const scraper of this._scrapers) {
       this._scraperStatusMap[scraper.key] = {
         status: ProcessingStatusEnum.PENDING,
+        lastUpdate: null,
         lastStarted: null,
         lastProcessed: null,
         lastFailed: null,
+        lastFailedErrorMessage: null,
       };
+    }
+  }
+
+  getOrderedScrapers() {
+    const scrapers = [];
+
+    // TODO: implement the logic
+
+    for (const scraper of this._scrapers) {
+      const scraperStatusData = this._scraperStatusMap[scraper.key];
+      if (!scraperStatusData) {
+        continue;
+      }
+
+      if (
+        scraperStatusData.lastUpdate !== null &&
+        (scraperStatusData.status === ProcessingStatusEnum.PENDING ||
+          scraperStatusData.status === ProcessingStatusEnum.PROCESSING)
+      ) {
+        continue;
+      }
+
+      scrapers.push(scraper);
     }
 
     return scrapers;
   }
 
-  private _startRecentArticlesScraping(scrapers: NewsScraperInterface[]) {
-    this._dispatchRecentArticlesScrape(scrapers);
+  setScraperStatusMap(key: string, value: ScraperStatusEntry) {
+    this._scraperStatusMap[key] = value;
 
-    setInterval(async () => {
-      await this._dispatchRecentArticlesScrape(scrapers);
-    }, this._scrapeInterval);
-
-    // TODO: listen to the started, completed and failed queues to see which queue was successfully processed
-    // so we can use that to prepare a map of newsSites that need to be scraped before any other
+    return this;
   }
 
-  private _startMessageQueuesMonitoring() {
-    setInterval(async () => {
-      const messagesCountMap = await this._newsScraperMessageBroker.getMessageCountInAllQueues();
+  private _startRecentArticlesScraping() {
+    this._dispatchRecentArticlesScrape();
 
-      logger.info(`Messages count map: ${JSON.stringify(messagesCountMap)}`);
-    }, this._messagesCountMonitoringInterval);
+    setInterval(async () => {
+      await this._dispatchRecentArticlesScrape();
+    }, this._scrapeInterval);
+
+    this._newsScraperMessageBroker.consume(
+      NewsScraperMessageBrokerQueuesEnum.NEWS_SCRAPER_RECENT_ARTICLES_SCRAPE_STATUS_UPDATE_QUEUE,
+      (data) => {
+        console.log(data);
+      }
+    );
 
     this._newsScraperMessageBroker.consume(
       NewsScraperMessageBrokerQueuesEnum.NEWS_SCRAPER_RECENT_ARTICLES_SCRAPE_STATUS_UPDATE_QUEUE,
@@ -114,21 +144,34 @@ export class NewsScraperTaskDispatcher {
           return;
         }
 
+        const now = new Date();
+
+        this._scraperStatusMap[data.newsSite].lastUpdate = now;
+
         if (data.status === ProcessingStatusEnum.PROCESSING) {
-          this._scraperStatusMap[data.newsSite].lastStarted = new Date();
+          this._scraperStatusMap[data.newsSite].lastStarted = now;
         } else if (data.status === ProcessingStatusEnum.PROCESSED) {
-          this._scraperStatusMap[data.newsSite].lastProcessed = new Date();
+          this._scraperStatusMap[data.newsSite].lastProcessed = now;
         } else if (data.status === ProcessingStatusEnum.FAILED) {
-          this._scraperStatusMap[data.newsSite].lastFailed = new Date();
+          this._scraperStatusMap[data.newsSite].lastFailed = now;
+          this._scraperStatusMap[data.newsSite].lastFailedErrorMessage = data.errorMessage;
         }
       }
     );
   }
 
-  private async _dispatchRecentArticlesScrape(scrapers: NewsScraperInterface[]) {
+  private _startMessageQueuesMonitoring() {
+    setInterval(async () => {
+      const messagesCountMap = await this._newsScraperMessageBroker.getMessageCountInAllQueues();
+
+      logger.info(`Messages count map: ${JSON.stringify(messagesCountMap)}`);
+    }, this._messagesCountMonitoringInterval);
+  }
+
+  private async _dispatchRecentArticlesScrape() {
     logger.info(`Dispatch news article events for scrapers ...`);
 
-    // TODO: order those we need to schedule first, depending on the this._scraperStatusMap
+    const scrapers = this.getOrderedScrapers();
 
     for (const scraper of scrapers) {
       logger.debug(`Dispatching events for ${scraper.key} ...`);
