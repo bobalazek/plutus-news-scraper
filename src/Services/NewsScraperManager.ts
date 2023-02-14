@@ -56,17 +56,7 @@ export class NewsScraperManager {
 
     this._currentScraper = this._prepareScraper(scraper);
 
-    // TODO: implement IP change after each retry?
-    const newsArticle = await retry(
-      async () => {
-        return scraper.scrapeArticle({ url });
-      },
-      {
-        delay: 500,
-        factor: 2,
-        maxAttempts: 3,
-      }
-    );
+    const newsArticle = await scraper.scrapeArticle({ url });
     if (!newsArticle) {
       throw new NewsArticleNotFoundError(`Article data not found.`);
     }
@@ -86,17 +76,7 @@ export class NewsScraperManager {
       throw new Error(`This scraper (${newsSiteKey}) does not have the .scrapeRecentArticles() method implemented`);
     }
 
-    // TODO: implement IP change after each retry?
-    const recentArticles = await retry(
-      async () => {
-        return scraper.scrapeRecentArticles(urls);
-      },
-      {
-        delay: 500,
-        factor: 2,
-        maxAttempts: 3,
-      }
-    );
+    const recentArticles = await scraper.scrapeRecentArticles(urls);
     if (recentArticles.length === 0) {
       throw new NewsArticlesNotFoundError(`No recent articles found for this news site`);
     }
@@ -124,17 +104,7 @@ export class NewsScraperManager {
       throw new Error(`This scraper (${newsSiteKey}) does not have the .scrapeArchivedArticles() method implemented`);
     }
 
-    // TODO: implement IP change after each retry?
-    const archivedArticles = await retry(
-      async () => {
-        return scraper.scrapeArchivedArticles(options);
-      },
-      {
-        delay: 500,
-        factor: 2,
-        maxAttempts: 3,
-      }
-    );
+    const archivedArticles = await scraper.scrapeArchivedArticles(options);
     if (archivedArticles.length === 0) {
       throw new NewsArticlesNotFoundError(`No archived articles found for this news site`);
     }

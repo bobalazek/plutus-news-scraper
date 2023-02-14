@@ -13,8 +13,19 @@ export interface NewsArticleCategoryInterface {
   url?: string;
 }
 
+/**
+ * We will need to use a Named Entity Recognition library like:
+ * https://spacy.io
+ * https://huggingface.co/flair/ner-english-ontonotes-large
+ * https://huggingface.co/dslim/bert-base-NER
+ *
+ * Or we could use a GPT for that (https://nlpcloud.com/effectively-using-gpt-j-gpt-neo-gpt-3-alternatives-few-shot-learning.html) like:
+ * GPT-3
+ * GPT-J
+ * GPT-NeoX
+ **/
 export interface NewsArticleEntityInterface {
-  type: 'stock' | 'company' | 'currency' | 'cryptocurrency' | 'person'; // TODO: get all the possible. Look at NER (Named Entity Recognition) - maybe we'll rather just have one value like "stock:APPL@NASDAQ"
+  type: string;
   value: string; // APPL@NASDAQ, Apple Inc., USD, BTC
   sentiment?: number; // What is the sentiment towards this entity in this article?
 }
