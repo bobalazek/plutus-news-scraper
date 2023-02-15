@@ -10,7 +10,7 @@ import { NewsScraperManager } from './NewsScraperManager';
 import { NewsScraperMessageBroker } from './NewsScraperMessageBroker';
 import { PrometheusMetricsServer } from './PrometheusMetricsServer';
 
-interface ScraperStatusEntry {
+export interface ScraperStatusEntry {
   status: ProcessingStatusEnum;
   lastUpdate: Date | null;
   lastStarted: Date | null;
@@ -93,9 +93,8 @@ export class NewsScraperTaskDispatcher {
   }
 
   getOrderedScrapers() {
-    const scrapers = [];
-
-    // TODO: implement the logic
+    const scrapers: NewsScraperInterface[] = [];
+    const scrapersAppendAtEnd: NewsScraperInterface[] = [];
 
     for (const scraper of this._scrapers) {
       const scraperStatusData = this._scraperStatusMap[scraper.key];
@@ -111,8 +110,38 @@ export class NewsScraperTaskDispatcher {
         continue;
       }
 
+      if (scraperStatusData.status === ProcessingStatusEnum.PROCESSED) {
+        scrapersAppendAtEnd.push(scraper);
+
+        continue;
+      }
+
       scrapers.push(scraper);
     }
+
+    if (scrapersAppendAtEnd.length > 0) {
+      for (const scraperAppendAtEnd of scrapersAppendAtEnd) {
+        scrapers.push(scraperAppendAtEnd);
+      }
+    }
+
+    scrapers.sort((a, b) => {
+      const scraperAStatusData = this._scraperStatusMap[a.key];
+      const scraperBStatusData = this._scraperStatusMap[b.key];
+
+      const timeA =
+        scraperAStatusData?.lastProcessed?.getTime() ??
+        scraperAStatusData?.lastFailed?.getTime() ??
+        scraperAStatusData?.lastStarted?.getTime() ??
+        0;
+      const timeB =
+        scraperBStatusData?.lastProcessed?.getTime() ??
+        scraperBStatusData?.lastFailed?.getTime() ??
+        scraperBStatusData?.lastStarted?.getTime() ??
+        0;
+
+      return timeA - timeB;
+    });
 
     return scrapers;
   }
