@@ -205,11 +205,13 @@ export class NewsScraperTaskDispatcher {
     for (const scraper of scrapers) {
       logger.debug(`Dispatching events for ${scraper.key} ...`);
 
-      await this._newsScraperMessageBroker.sendToRecentArticlesScrapeQueue(
+      await this._newsScraperMessageBroker.sendToQueue(
+        NewsScraperMessageBrokerQueuesEnum.NEWS_SCRAPER_RECENT_ARTICLES_SCRAPE_QUEUE,
         {
           newsSite: scraper.key,
         },
-        this._scrapeRecentArticlesExpirationTime
+        { expiration: this._scrapeRecentArticlesExpirationTime, persistent: true },
+        { durable: true }
       );
     }
   }

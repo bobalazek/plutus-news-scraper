@@ -65,7 +65,8 @@ export class NewsScraperTaskWorker {
   private async _startRecentArticlesQueueConsumption(id: string) {
     logger.info(`[Worker ${id}] Starting to consume recent articles scrape ...`);
 
-    return this._newsScraperMessageBroker.consumeRecentArticlesScrapeQueue(
+    return this._newsScraperMessageBroker.consumeOneAtTime(
+      NewsScraperMessageBrokerQueuesEnum.NEWS_SCRAPER_RECENT_ARTICLES_SCRAPE_QUEUE,
       async (data, acknowledgeMessageCallback, negativeAcknowledgeMessageCallback) => {
         logger.debug(`[Worker ${id}] Processing recent articles scrape job. Data ${JSON.stringify(data)}`);
 
@@ -94,9 +95,12 @@ export class NewsScraperTaskWorker {
           const basicArticles = await newsScraper.scrapeRecentArticles();
 
           for (const basicArticle of basicArticles) {
-            await this._newsScraperMessageBroker.sendToArticleScrapeQueue(
+            await this._newsScraperMessageBroker.sendToQueue(
+              NewsScraperMessageBrokerQueuesEnum.NEWS_SCRAPER_ARTICLE_SCRAPE_QUEUE,
               basicArticle,
-              this._articleScrapeExpirationTime
+
+              { expiration: this._articleScrapeExpirationTime, persistent: true },
+              { durable: true }
             );
           }
 
