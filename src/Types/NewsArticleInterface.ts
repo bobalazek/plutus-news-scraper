@@ -42,7 +42,6 @@ export interface NewsArticleInterface extends NewsBasicArticleInterface {
   categories?: NewsArticleCategoryInterface[];
   imageUrl?: string;
   languageCode?: string; // Which language is the article written? In ISO 639-1 (2 characters)
-  countryCode?: string; // The country of the publisher in ISO 3166 (2 characters)
   publishedAt: Date;
   modifiedAt: Date;
 }

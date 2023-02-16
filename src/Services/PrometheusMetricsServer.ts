@@ -8,7 +8,7 @@ import { logger } from './Logger';
 
 @injectable()
 export class PrometheusMetricsServer {
-  private _httpServer?: express.Express;
+  private _httpServer!: express.Express;
   private _prometheusPushgateway?: promClient.Pushgateway;
 
   async start(

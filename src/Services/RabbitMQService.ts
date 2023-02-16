@@ -6,13 +6,15 @@ import { RABBITMQ_URL } from '../Utils/Environment';
 
 @injectable()
 export class RabbitMQService {
+  DEFAULT_CHANNEL_NAME: string = '__DEFAULT';
+
   private _connection?: amqplib.Connection;
   private _channelsMap: Map<string, amqplib.Channel> = new Map();
   private _channelQueuesMap: Map<string, Set<string>> = new Map();
 
   async getChannel(channelName?: string) {
     if (!channelName) {
-      channelName = '__default';
+      channelName = this.DEFAULT_CHANNEL_NAME;
     }
 
     const connection = await this.getConnection();
@@ -32,7 +34,7 @@ export class RabbitMQService {
   async addQueueToChannel(queueName: string, assertQueueOptions?: amqplib.Options.AssertQueue, channelName?: string) {
     const channel = await this.getChannel(channelName);
 
-    if (!this._channelQueuesMap.get(channelName)?.has(queueName)) {
+    if (!this._channelQueuesMap.get(channelName ?? this.DEFAULT_CHANNEL_NAME)?.has(queueName)) {
       await channel.assertQueue(queueName, assertQueueOptions);
     }
 

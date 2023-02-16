@@ -11,7 +11,7 @@ import { PrometheusMetricsServer } from './PrometheusMetricsServer';
 
 @injectable()
 export class NewsScraperTaskWorker {
-  private _id?: string;
+  private _id!: string;
   private _prometheusMetricsServerPort?: number;
 
   private _articleScrapeExpirationTime: number = 60000; // How long should the article URL stay in the queue until it expires?

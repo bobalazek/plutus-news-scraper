@@ -23,7 +23,7 @@ export interface ScraperStatusEntry {
 export class NewsScraperTaskDispatcher {
   private _prometheusMetricsServerPort?: number;
 
-  private _scrapers: NewsScraperInterface[];
+  private _scrapers: NewsScraperInterface[] = [];
   private _scrapeInterval: number = 30000;
   private _messagesCountMonitoringInterval: number = 5000;
   private _scrapeRecentArticlesExpirationTime: number = 30000; // After how long do we want to expire this message?
@@ -183,7 +183,7 @@ export class NewsScraperTaskDispatcher {
           this._scraperStatusMap[data.newsSite].lastProcessed = now;
         } else if (data.status === ProcessingStatusEnum.FAILED) {
           this._scraperStatusMap[data.newsSite].lastFailed = now;
-          this._scraperStatusMap[data.newsSite].lastFailedErrorMessage = data.errorMessage;
+          this._scraperStatusMap[data.newsSite].lastFailedErrorMessage = data.errorMessage ?? null;
         }
       }
     );

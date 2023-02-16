@@ -63,7 +63,7 @@ export class RedisService {
   async getJson<T>(key: string, fallbackValue: T): Promise<T> {
     const value = await this.get(key);
 
-    return superjson.parse<T>(value) ?? fallbackValue;
+    return superjson.parse<T>(value ?? '') ?? fallbackValue;
   }
 
   async setJson<T>(key: string, value: T, publishChannel?: string): Promise<T> {

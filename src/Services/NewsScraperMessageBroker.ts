@@ -79,7 +79,7 @@ export class NewsScraperMessageBroker {
   }
 
   async getMessageCountInAllQueues() {
-    const data = {};
+    const data = {} as Record<NewsScraperMessageBrokerQueuesEnum, number>;
 
     for (const queue of [
       NewsScraperMessageBrokerQueuesEnum.NEWS_SCRAPER_RECENT_ARTICLES_SCRAPE_QUEUE,
@@ -90,6 +90,6 @@ export class NewsScraperMessageBroker {
       data[queue] = count;
     }
 
-    return data as Record<NewsScraperMessageBrokerQueuesEnum, number>;
+    return data;
   }
 }

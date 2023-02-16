@@ -124,8 +124,8 @@ export default class PbsNewsHourNewsScraper extends AbstractNewsScraper implemen
         )
       ).map(($a) => {
         return {
-          name: $a.querySelector('span[itemprop="name"]').innerHTML,
-          url: $a.getAttribute('href'),
+          name: $a.querySelector('span[itemprop="name"]')?.innerHTML ?? '',
+          url: $a.getAttribute('href') ?? undefined,
         };
       });
     });
