@@ -3,7 +3,6 @@ import { z } from 'zod';
 import { NewsArticleMultimediaTypeEnum } from '../Types/NewsArticleMultimediaTypeEnum';
 import { NewsArticleTypeEnum } from '../Types/NewsArticleTypeEnum';
 import { ProcessingStatusEnum } from '../Types/ProcessingStatusEnum';
-import { NewsBasicArticleSchema } from './NewsBasicArticleSchema';
 
 export const NewsArticleAuthorSchema = z.object({
   name: z.string(),
@@ -38,7 +37,8 @@ export type NewsArticleEntityType = z.infer<typeof NewsArticleEntitySchema>;
 /**
  * This is the schema for our news scraper.
  */
-export const NewsArticleSchema = NewsBasicArticleSchema.extend({
+export const NewsArticleSchema = z.object({
+  url: z.string().url(),
   title: z.string(),
   multimediaType: z.nativeEnum(NewsArticleMultimediaTypeEnum),
   content: z.string(),

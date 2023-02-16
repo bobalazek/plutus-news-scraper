@@ -62,7 +62,6 @@ export class NewsScraperManager {
 
     return NewsArticleExtendedSchema.parse({
       ...newsArticle,
-      url,
       newsSiteKey: scraper.key,
       type: NewsArticleTypeEnum.NEWS_ARTICLE,
     });
