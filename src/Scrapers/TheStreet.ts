@@ -93,6 +93,15 @@ export default class TheStreetNewsScraper extends AbstractNewsScraper implements
 
     const newsSiteArticleId = slugSplit[slugSplit.length - 1];
 
+    const authorUrl = await page.evaluate(() => {
+      return (
+        document.querySelector('.article-author-rail a.article-author-rail__author-link')?.getAttribute('href') ?? ''
+      );
+    });
+
+    const categoryUrlSplit = url;
+    const categoryUrl = categoryUrlSplit.substring(0, url.lastIndexOf('/'));
+
     const linkedDataText = await page.evaluate(() => {
       return document.querySelector('head script[type="application/ld+json"]')?.innerHTML ?? '';
     });
@@ -112,6 +121,9 @@ export default class TheStreetNewsScraper extends AbstractNewsScraper implements
       newsSiteArticleId: newsSiteArticleId,
       publishedAt: new Date(linkedData[0].datePublished),
       modifiedAt: new Date(linkedData[0].dateModified),
+      authors: [{ name: linkedData[0].author, url: authorUrl }],
+      categories: [{ name: linkedData[0].articleSection, url: categoryUrl }],
+      imageUrl: linkedData[0].image.url,
     };
 
     logger.debug(`Article data:`);

@@ -150,6 +150,8 @@ export default class YahooFinanceNewsScraper extends AbstractNewsScraper impleme
       newsSiteArticleId: newsSiteArticleId,
       publishedAt: new Date(linkedData.datePublished),
       modifiedAt: new Date(linkedData.dateModified),
+      authors: [linkedData.author],
+      imageUrl: linkedData.image.url,
     };
 
     logger.debug(`Article data:`);

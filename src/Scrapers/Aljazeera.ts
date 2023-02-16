@@ -8,17 +8,19 @@ import { NewsBasicArticleInterface } from '../Types/NewsBasicArticleInterface';
 import { NewsScraperInterface } from '../Types/NewsScraperInterface';
 import { AbstractNewsScraper } from './AbstractNewsScraper';
 
-export default class TheNewYorkTimesNewsScraper extends AbstractNewsScraper implements NewsScraperInterface {
-  key: string = 'the_new_york_times';
-  domain: string = 'www.nytimes.com';
+export default class AljazeeraNewsScraper extends AbstractNewsScraper implements NewsScraperInterface {
+  key: string = 'aljazeera';
+  domain: string = 'www.aljazeera.com';
   recentArticleListUrls: string[] = [
-    'https://www.nytimes.com/international/',
-    'https://www.nytimes.com/international/section/world',
-    'https://www.nytimes.com/international/section/us',
-    'https://www.nytimes.com/international/section/politics',
-    'https://www.nytimes.com/international/section/business',
-    'https://www.nytimes.com/international/section/science',
-    'https://www.nytimes.com/international/section/health',
+    'https://www.aljazeera.com/',
+    'https://www.aljazeera.com/news/',
+    'https://www.aljazeera.com/tag/ukraine-russia-crisis/',
+    'https://www.aljazeera.com/features/',
+    'https://www.aljazeera.com/economy/',
+    'https://www.aljazeera.com/tag/coronavirus-pandemic/',
+    'https://www.aljazeera.com/climate-crisis',
+    'https://www.aljazeera.com/investigations/',
+    'https://www.aljazeera.com/tag/science-and-technology/',
   ];
 
   async scrapeRecentArticles(urls?: string[]): Promise<NewsBasicArticleInterface[]> {
@@ -27,7 +29,7 @@ export default class TheNewYorkTimesNewsScraper extends AbstractNewsScraper impl
 
     const page = await this.getPuppeteerPage();
 
-    logger.info(`Starting to scrape the recent articles on The New York Times ...`);
+    logger.info(`Starting to scrape the recent articles on Aljazeera ...`);
 
     for (const recentArticleListUrl of recentArticleListUrls) {
       logger.info(`Going to URL ${recentArticleListUrl} ...`);
@@ -39,11 +41,7 @@ export default class TheNewYorkTimesNewsScraper extends AbstractNewsScraper impl
       const articleUrls = this.getUniqueArray(
         await page.evaluate(() => {
           // Get all the possible (anchor) elements that have the links to articles
-          const querySelector = [
-            '#site-content .story-wrapper a',
-            '#site-content article a',
-            '#stream-panel li a',
-          ].join(', ');
+          const querySelector = ['#featured-news-container article a', '#news-feed-container article a'].join(', ');
 
           // Fetch those with the .querySelectoAll() and convert it to an array
           const $elements = Array.from(document.querySelectorAll(querySelector));
@@ -58,7 +56,7 @@ export default class TheNewYorkTimesNewsScraper extends AbstractNewsScraper impl
           return href !== ''; // Now we want to filter out any links that are '', just in case
         })
         .map((uri) => {
-          return `https://www.nytimes.com${uri}`;
+          return `https://www.aljazeera.com${uri}`;
         });
 
       logger.info(`Found ${articleUrls.length} articles on this page`);
@@ -94,11 +92,18 @@ export default class TheNewYorkTimesNewsScraper extends AbstractNewsScraper impl
     });
 
     const newsSiteArticleId = await page.evaluate(() => {
-      return document.querySelector('head meta[name="articleid"]')?.getAttribute('content') ?? '';
+      return document.querySelector('head meta[name="postID"]')?.getAttribute('content') ?? '';
     });
 
-    const categoryName = await page.evaluate(() => {
-      return document.querySelector('head meta[property="article:section"]')?.getAttribute('content') ?? '';
+    const categories = await page.evaluate(() => {
+      return Array.from(document.querySelectorAll(['#main-content-area .article-header .topics a'].join(', '))).map(
+        ($a) => {
+          return {
+            name: $a.innerHTML,
+            url: 'https://www.aljazeera.com' + $a.getAttribute('href') ?? undefined,
+          };
+        }
+      );
     });
 
     const linkedDataText = await page.evaluate(() => {
@@ -112,7 +117,7 @@ export default class TheNewYorkTimesNewsScraper extends AbstractNewsScraper impl
 
     // Content
     const content = await page.evaluate(() => {
-      return Array.from(document.querySelectorAll('article p'))
+      return Array.from(document.querySelectorAll('#main-content-area p'))
         .map((element) => {
           return element.innerHTML;
         })
@@ -131,9 +136,9 @@ export default class TheNewYorkTimesNewsScraper extends AbstractNewsScraper impl
       newsSiteArticleId: newsSiteArticleId,
       publishedAt: new Date(linkedData.datePublished),
       modifiedAt: new Date(linkedData.dateModified),
-      authors: linkedData.author,
-      categories: [{ name: categoryName }],
-      imageUrl: linkedData.image.url,
+      authors: [linkedData.author],
+      categories: categories,
+      imageUrl: linkedData.image[0].url,
     };
 
     logger.debug(`Article data:`);

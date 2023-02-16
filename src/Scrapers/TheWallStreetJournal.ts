@@ -97,6 +97,17 @@ export default class TheWallStreetJournalNewsScraper extends AbstractNewsScraper
 
     const newsSiteArticleId = slugSplit[slugSplit.length - 1];
 
+    const categories = await page.evaluate(() => {
+      return Array.from(
+        document.querySelectorAll(['.article_header .category li.article-breadCrumb a'].join(', '))
+      ).map(($a) => {
+        return {
+          name: $a.innerHTML,
+          url: $a.getAttribute('href') ?? undefined,
+        };
+      });
+    });
+
     const linkedDataText = await page.evaluate(() => {
       return document.querySelector('head script[type="application/ld+json"]')?.innerHTML ?? '';
     });
@@ -104,7 +115,7 @@ export default class TheWallStreetJournalNewsScraper extends AbstractNewsScraper
       throw new NewsArticleDataNotFoundError(`Linked data not found for URL ${url}`);
     }
 
-    const linkedData = JSON.parse(linkedDataText);
+    const linkedData = JSON.parse(linkedDataText)[0];
 
     // Content
     const content = await page.evaluate(() => {
@@ -119,14 +130,17 @@ export default class TheWallStreetJournalNewsScraper extends AbstractNewsScraper
 
     const article: NewsArticleInterface = {
       url: url,
-      title: linkedData[0].headline,
+      title: linkedData.headline,
       multimediaType: NewsArticleMultimediaTypeEnum.TEXT,
       content: convert(content, {
         wordwrap: false,
       }),
       newsSiteArticleId: newsSiteArticleId,
-      publishedAt: new Date(linkedData[0].datePublished),
-      modifiedAt: new Date(linkedData[0].dateModified),
+      publishedAt: new Date(linkedData.datePublished),
+      modifiedAt: new Date(linkedData.dateModified),
+      authors: linkedData.author,
+      categories: categories,
+      imageUrl: linkedData.image[0],
     };
 
     logger.debug(`Article data:`);
