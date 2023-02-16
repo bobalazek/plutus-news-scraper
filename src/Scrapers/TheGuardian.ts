@@ -90,6 +90,14 @@ export default class TheGuardianNewsScraper extends AbstractNewsScraper implemen
 
     const newsSiteArticleId = url;
 
+    const categoryName = await page.evaluate(() => {
+      return document.querySelector('head meta[property="article:section"]')?.getAttribute('content') ?? '';
+    });
+
+    const categoryUrl = await page.evaluate(() => {
+      return document.querySelector('main article a[data-component="section"]')?.getAttribute('href') ?? '';
+    });
+
     const linkedDataText = await page.evaluate(() => {
       return document.querySelector('head script[type="application/ld+json"]')?.innerHTML ?? '';
     });
@@ -120,6 +128,9 @@ export default class TheGuardianNewsScraper extends AbstractNewsScraper implemen
       newsSiteArticleId: newsSiteArticleId,
       publishedAt: new Date(linkedData[0].datePublished),
       modifiedAt: new Date(linkedData[0].dateModified),
+      authors: linkedData[0].author,
+      categories: [{ name: categoryName, url: categoryUrl }],
+      imageUrl: linkedData[0].image,
     };
 
     logger.debug(`Article data:`);

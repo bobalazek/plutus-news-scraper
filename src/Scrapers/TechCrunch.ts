@@ -116,6 +116,18 @@ export default class TechCrunchNewsScraper extends AbstractNewsScraper implement
 
     const newsSiteArticleId = shortlink.replace('https://techcrunch.com/?p=', '');
 
+    const category = await page.evaluate(() => {
+      const $a = document.querySelector('.article__header a');
+      if (!$a) {
+        return;
+      }
+
+      return {
+        name: $a.innerHTML,
+        url: 'https://techcrunch.com' + $a.getAttribute('href'),
+      };
+    });
+
     const linkedDataText = await page.evaluate(() => {
       return document.querySelector('head script[type="application/ld+json"]')?.innerHTML ?? '';
     });
@@ -135,11 +147,13 @@ export default class TechCrunchNewsScraper extends AbstractNewsScraper implement
         .join('');
     });
 
+    console.log(linkedData);
+
     await this.closePuppeteerBrowser();
 
     const article: NewsArticleInterface = {
       url: url,
-      title: linkedData.headline,
+      title: linkedData['@graph'].headline,
       multimediaType: NewsArticleMultimediaTypeEnum.TEXT,
       content: convert(content, {
         wordwrap: false,
@@ -147,6 +161,9 @@ export default class TechCrunchNewsScraper extends AbstractNewsScraper implement
       newsSiteArticleId: newsSiteArticleId,
       publishedAt: new Date(linkedData['@graph'][0].datePublished),
       modifiedAt: new Date(linkedData['@graph'][0].dateModified),
+      authors: [linkedData['@graph'][5]],
+      categories: category ? [category] : undefined,
+      imageUrl: linkedData['@graph'][0].image.url,
     };
 
     logger.debug(`Article data:`);

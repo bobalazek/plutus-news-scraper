@@ -36,8 +36,8 @@ export abstract class AbstractNewsScraper {
   /**
    * @param userAgent if set to null, it will set it to the default string provided
    */
-  async setUserAgent(userAgent?: string) {
-    if (userAgent) {
+  async setUserAgent(userAgent?: string | null) {
+    if (!userAgent) {
       userAgent =
         'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36';
     }

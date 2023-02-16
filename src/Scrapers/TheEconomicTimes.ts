@@ -1,3 +1,4 @@
+import { link } from 'fs';
 import { convert } from 'html-to-text';
 
 import { NewsArticleDataNotFoundError } from '../Errors/NewsArticleDataNotFoundError';
@@ -134,6 +135,8 @@ export default class TheEconomicTimesNewsScraper extends AbstractNewsScraper imp
       newsSiteArticleId: newsSiteArticleId,
       publishedAt: new Date(linkedData.datePublished),
       modifiedAt: new Date(linkedData.dateModified),
+      authors: [linkedData.author],
+      imageUrl: linkedData.image,
     };
 
     logger.debug(`Article data:`);

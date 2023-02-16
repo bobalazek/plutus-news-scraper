@@ -17,6 +17,10 @@ export default class SeekingAlphaNewsScraper extends AbstractNewsScraper impleme
     'https://seekingalpha.com/stock-ideas',
     'https://seekingalpha.com/dividends',
     'https://seekingalpha.com/etfs-and-funds',
+    'https://seekingalpha.com/market-news/technology',
+    'https://seekingalpha.com/market-news/energy',
+    'https://seekingalpha.com/market-news/healthcare',
+    'https://seekingalpha.com/market-news/crypto',
   ];
 
   async scrapeRecentArticles(urls?: string[]): Promise<NewsBasicArticleInterface[]> {
@@ -31,7 +35,7 @@ export default class SeekingAlphaNewsScraper extends AbstractNewsScraper impleme
       logger.info(`Going to URL ${recentArticleListUrl} ...`);
 
       await page.goto(recentArticleListUrl, {
-        waitUntil: 'domcontentloaded',
+        waitUntil: 'networkidle2',
       });
 
       const articleUrls = this.getUniqueArray(
@@ -40,7 +44,7 @@ export default class SeekingAlphaNewsScraper extends AbstractNewsScraper impleme
           const querySelector = [
             'div[data-test-id="trending-news-cards-body"] a[data-test-id="post-list-item-title"]',
             'div[data-test-id="post-list"] a[data-test-id="post-list-item-title"]',
-            'section[data-test-id="post-list"] a[data-test-id="post-list-item-title"]',
+            'section article a[data-test-id="post-list-item-title"]',
           ].join(', ');
 
           // Fetch those with the .querySelectoAll() and convert it to an array
@@ -53,7 +57,7 @@ export default class SeekingAlphaNewsScraper extends AbstractNewsScraper impleme
         })
       )
         .filter((href) => {
-          return href !== ''; // Now we want to filter out any links that are '', just in case
+          return href !== '' && !href.includes('/symbol/'); // Now we want to filter out any links that are '', just in case
         })
         .map((uri) => {
           return `https://seekingalpha.com${uri}`;

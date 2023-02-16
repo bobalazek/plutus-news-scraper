@@ -92,10 +92,21 @@ export default class ReutersNewsScraper extends AbstractNewsScraper implements N
     const newsSiteArticleId = await page.evaluate(() => {
       return document.querySelector('body header[article_id]')?.getAttribute('article_id') ?? '';
     });
-
-    const authorUrl = await page.evaluate(() => {
-      return document.querySelector('')?.getAttribute('') ?? '';
+    const authors = await page.evaluate(() => {
+      return Array.from(document.querySelectorAll(['main article header a[rel="author"]'].join(', '))).map(($a) => {
+        return {
+          name: $a.innerHTML,
+          url: 'https://www.reuters.com' + $a.getAttribute('href'),
+        };
+      });
     });
+    const categoryName = await page.evaluate(() => {
+      return document.querySelector('head meta[name="article:section"]')?.getAttribute('content') ?? '';
+    });
+    const categoryLink = await page.evaluate(() => {
+      return document.querySelector('main article header nav a')?.getAttribute('href') ?? '';
+    });
+    const categoryUrl = 'https://www.reuters.com' + categoryLink;
 
     const linkedDataText = await page.evaluate(() => {
       return document.querySelector('head script[type="application/ld+json"]')?.innerHTML ?? '';
@@ -127,7 +138,9 @@ export default class ReutersNewsScraper extends AbstractNewsScraper implements N
       newsSiteArticleId: newsSiteArticleId,
       publishedAt: new Date(linkedData.datePublished),
       modifiedAt: new Date(linkedData.dateModified),
-      authors: [{ name: linkedData.author.byline, url: authorUrl }],
+      authors: authors,
+      categories: [{ name: categoryName, url: categoryUrl }],
+      imageUrl: linkedData.image,
     };
 
     logger.debug(`Article data:`);
