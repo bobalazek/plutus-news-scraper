@@ -1,10 +1,10 @@
 import { convert } from 'html-to-text';
 
 import { NewsArticleDataNotFoundError } from '../Errors/NewsArticleDataNotFoundError';
+import { NewsArticleType } from '../Schemas/NewsArticleSchema';
+import { NewsBasicArticleType } from '../Schemas/NewsBasicArticleSchema';
 import { logger } from '../Services/Logger';
-import { NewsArticleInterface } from '../Types/NewsArticleInterface';
 import { NewsArticleMultimediaTypeEnum } from '../Types/NewsArticleMultimediaTypeEnum';
-import { NewsBasicArticleInterface } from '../Types/NewsBasicArticleInterface';
 import { NewsScraperInterface } from '../Types/NewsScraperInterface';
 import { AbstractNewsScraper } from './AbstractNewsScraper';
 
@@ -34,8 +34,8 @@ export default class BarronsNewsScraper extends AbstractNewsScraper implements N
     'https://www.barrons.com/news',
   ];
 
-  async scrapeRecentArticles(urls?: string[]): Promise<NewsBasicArticleInterface[]> {
-    const basicArticles: NewsBasicArticleInterface[] = [];
+  async scrapeRecentArticles(urls?: string[]): Promise<NewsBasicArticleType[]> {
+    const basicArticles: NewsBasicArticleType[] = [];
     const recentArticleListUrls = Array.isArray(urls) ? urls : this.recentArticleListUrls;
 
     const page = await this.getPuppeteerPage();
@@ -91,7 +91,7 @@ export default class BarronsNewsScraper extends AbstractNewsScraper implements N
     return Promise.resolve(this.getUniqueArray(basicArticles));
   }
 
-  async scrapeArticle(basicArticle: NewsBasicArticleInterface): Promise<NewsArticleInterface | null> {
+  async scrapeArticle(basicArticle: NewsBasicArticleType): Promise<NewsArticleType | null> {
     const page = await this.getPuppeteerPage();
 
     const url = this._preProcessUrl(basicArticle.url);
@@ -127,7 +127,7 @@ export default class BarronsNewsScraper extends AbstractNewsScraper implements N
 
     await this.closePuppeteerBrowser();
 
-    const article: NewsArticleInterface = {
+    const article: NewsArticleType = {
       url: url,
       title: linkedData.headline,
       multimediaType: NewsArticleMultimediaTypeEnum.TEXT,

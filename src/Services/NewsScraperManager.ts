@@ -4,10 +4,10 @@ import { join } from 'path';
 
 import { NewsArticleNotFoundError } from '../Errors/NewsArticleNotFoundError';
 import { NewsArticlesNotFoundError } from '../Errors/NewsArticlesNotFoundError';
+import { NewsArticleExtendedSchema, NewsArticleExtendedType } from '../Schemas/NewsArticleSchema';
+import { NewsBasicArticleExtendedSchema, NewsBasicArticleExtendedType } from '../Schemas/NewsBasicArticleSchema';
 import type { AbstractNewsScraper } from '../Scrapers/AbstractNewsScraper';
-import { NewsArticleExtendedInterface } from '../Types/NewsArticleInterface';
 import { NewsArticleTypeEnum } from '../Types/NewsArticleTypeEnum';
-import { NewsBasicArticleExtendedInterface } from '../Types/NewsBasicArticleInterface';
 import { NewsScraperInterface } from '../Types/NewsScraperInterface';
 import { ROOT_DIRECTORY } from '../Utils/Paths';
 
@@ -46,7 +46,7 @@ export class NewsScraperManager {
     return Object.values(this._scrapers);
   }
 
-  async scrapeArticle(url: string): Promise<NewsArticleExtendedInterface> {
+  async scrapeArticle(url: string): Promise<NewsArticleExtendedType> {
     const urlObject = new URL(url);
     const scraper = await this.getForDomain(urlObject.hostname);
     if (typeof scraper === 'undefined') {
@@ -60,10 +60,15 @@ export class NewsScraperManager {
       throw new NewsArticleNotFoundError(`Article data not found.`);
     }
 
-    return { ...newsArticle, url, newsSiteKey: scraper.key, type: NewsArticleTypeEnum.NEWS_ARTICLE };
+    return NewsArticleExtendedSchema.parse({
+      ...newsArticle,
+      url,
+      newsSiteKey: scraper.key,
+      type: NewsArticleTypeEnum.NEWS_ARTICLE,
+    });
   }
 
-  async scrapeRecentArticles(newsSiteKey: string, urls?: string[]): Promise<NewsBasicArticleExtendedInterface[]> {
+  async scrapeRecentArticles(newsSiteKey: string, urls?: string[]): Promise<NewsBasicArticleExtendedType[]> {
     const scraper = await this.get(newsSiteKey);
     if (typeof scraper === 'undefined') {
       throw new Error(`Scraper ${newsSiteKey} was not found`);
@@ -81,17 +86,17 @@ export class NewsScraperManager {
     }
 
     return recentArticles.map((recentArticle) => {
-      return {
+      return NewsBasicArticleExtendedSchema.parse({
         ...recentArticle,
         newsSiteKey: scraper.key,
-      };
+      });
     });
   }
 
   async scrapeArchivedArticles(
     newsSiteKey: string,
     options: Record<string, string>
-  ): Promise<NewsBasicArticleExtendedInterface[]> {
+  ): Promise<NewsBasicArticleExtendedType[]> {
     const scraper = await this.get(newsSiteKey);
     if (typeof scraper === 'undefined') {
       throw new Error(`Scraper ${newsSiteKey} was not found`);
@@ -109,10 +114,10 @@ export class NewsScraperManager {
     }
 
     return archivedArticles.map((recentArticle) => {
-      return {
+      return NewsBasicArticleExtendedSchema.parse({
         ...recentArticle,
         newsSiteKey: scraper.key,
-      };
+      });
     });
   }
 

@@ -46,7 +46,7 @@ export const NewsArticleSchema = NewsBasicArticleSchema.extend({
   authors: z.array(NewsArticleAuthorSchema).optional(),
   categories: z.array(NewsArticleCategorySchema).optional(),
   imageUrl: z.string().optional(),
-  languageCode: z.string(),
+  languageCode: z.string().optional(),
   publishedAt: z.date(),
   modifiedAt: z.date(),
 });
