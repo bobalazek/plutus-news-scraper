@@ -97,6 +97,10 @@ export default class TheNewYorkTimesNewsScraper extends AbstractNewsScraper impl
       return document.querySelector('head meta[name="articleid"]')?.getAttribute('content') ?? '';
     });
 
+    const categoryName = await page.evaluate(() => {
+      return document.querySelector('head meta[property="article:section"]')?.getAttribute('content') ?? '';
+    });
+
     const linkedDataText = await page.evaluate(() => {
       return document.querySelector('head script[type="application/ld+json"]')?.innerHTML ?? '';
     });
@@ -127,6 +131,9 @@ export default class TheNewYorkTimesNewsScraper extends AbstractNewsScraper impl
       newsSiteArticleId: newsSiteArticleId,
       publishedAt: new Date(linkedData.datePublished),
       modifiedAt: new Date(linkedData.dateModified),
+      authors: linkedData.author,
+      categories: [{ name: categoryName }],
+      imageUrl: linkedData.image.url,
     };
 
     logger.debug(`Article data:`);
