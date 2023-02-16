@@ -5,7 +5,7 @@ import { z } from 'zod';
  * The only required propery is the url, but you can also add the title or content if you want.
  */
 export const NewsBasicArticleSchema = z.object({
-  url: z.string(),
+  url: z.string().url(),
   title: z.string().optional(),
   content: z.string().optional(),
 });

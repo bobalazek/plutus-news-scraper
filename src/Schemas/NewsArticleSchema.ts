@@ -7,13 +7,13 @@ import { NewsBasicArticleSchema } from './NewsBasicArticleSchema';
 
 export const NewsArticleAuthorSchema = z.object({
   name: z.string(),
-  url: z.string().optional(),
+  url: z.string().url().optional(),
 });
 export type NewsArticleAuthorType = z.infer<typeof NewsArticleAuthorSchema>;
 
 export const NewsArticleCategorySchema = z.object({
   name: z.string(),
-  url: z.string().optional(),
+  url: z.string().url().optional(),
 });
 export type NewsArticleCategoryType = z.infer<typeof NewsArticleCategorySchema>;
 
@@ -45,7 +45,7 @@ export const NewsArticleSchema = NewsBasicArticleSchema.extend({
   newsSiteArticleId: z.string(),
   authors: z.array(NewsArticleAuthorSchema).optional(),
   categories: z.array(NewsArticleCategorySchema).optional(),
-  imageUrl: z.string().optional(),
+  imageUrl: z.string().url().optional(),
   languageCode: z.string().optional(),
   publishedAt: z.date(),
   modifiedAt: z.date(),
