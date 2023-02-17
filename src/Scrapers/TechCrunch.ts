@@ -166,9 +166,6 @@ export default class TechCrunchNewsScraper extends AbstractNewsScraper implement
       imageUrl: linkedData['@graph'][0].image.url,
     };
 
-    logger.debug(`Article data:`);
-    logger.debug(article);
-
     return Promise.resolve(article);
   }
 

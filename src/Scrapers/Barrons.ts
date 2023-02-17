@@ -141,9 +141,6 @@ export default class BarronsNewsScraper extends AbstractNewsScraper implements N
       imageUrl: linkedData.image[0],
     };
 
-    logger.debug(`Article data:`);
-    logger.debug(article);
-
     return Promise.resolve(article);
   }
 

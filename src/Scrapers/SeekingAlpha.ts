@@ -133,9 +133,6 @@ export default class SeekingAlphaNewsScraper extends AbstractNewsScraper impleme
       modifiedAt: new Date(linkedData.dateModified),
     };
 
-    logger.debug(`Article data:`);
-    logger.debug(article);
-
     return Promise.resolve(article);
   }
 

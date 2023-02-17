@@ -143,9 +143,6 @@ export default class CNBCNewsScraper extends AbstractNewsScraper implements News
       imageUrl: imageUrl,
     };
 
-    logger.debug(`Article data:`);
-    logger.debug(article);
-
     return Promise.resolve(article);
   }
 

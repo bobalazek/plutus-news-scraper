@@ -129,9 +129,6 @@ export default class ForbesNewsScraper extends AbstractNewsScraper implements Ne
       imageUrl: linkedData.image.url,
     };
 
-    logger.debug(`Article data:`);
-    logger.debug(article);
-
     return Promise.resolve(article);
   }
 

@@ -131,9 +131,6 @@ export default class CoindeskNewsScraper extends AbstractNewsScraper implements 
       imageUrl: linkedData.image.url,
     };
 
-    logger.debug(`Article data:`);
-    logger.debug(article);
-
     return Promise.resolve(article);
   }
 

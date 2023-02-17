@@ -166,9 +166,6 @@ export default class PbsNewsHourNewsScraper extends AbstractNewsScraper implemen
       imageUrl: imageUrl,
     };
 
-    logger.debug(`Article data:`);
-    logger.debug(article);
-
     return Promise.resolve(article);
   }
 

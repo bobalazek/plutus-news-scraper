@@ -125,9 +125,6 @@ export default class CointelegraphNewsScraper extends AbstractNewsScraper implem
       imageUrl: linkedData.image.url,
     };
 
-    logger.debug(`Article data:`);
-    logger.debug(article);
-
     return Promise.resolve(article);
   }
 

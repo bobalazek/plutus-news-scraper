@@ -133,9 +133,6 @@ export default class TheGuardianNewsScraper extends AbstractNewsScraper implemen
       imageUrl: linkedData[0].image,
     };
 
-    logger.debug(`Article data:`);
-    logger.debug(article);
-
     return Promise.resolve(article);
   }
 

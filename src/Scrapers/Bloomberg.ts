@@ -140,9 +140,6 @@ export default class BloombergNewsScraper extends AbstractNewsScraper implements
       imageUrl: linkedData.image[0],
     };
 
-    logger.debug(`Article data:`);
-    logger.debug(article);
-
     return Promise.resolve(article);
   }
 

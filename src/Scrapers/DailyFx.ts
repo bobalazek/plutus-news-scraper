@@ -141,9 +141,6 @@ export default class DailyFxNewsScraper extends AbstractNewsScraper implements N
       imageUrl: linkedData[1].image.url,
     };
 
-    logger.debug(`Article data:`);
-    logger.debug(article);
-
     return Promise.resolve(article);
   }
 

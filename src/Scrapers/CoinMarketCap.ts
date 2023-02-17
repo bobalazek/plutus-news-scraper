@@ -135,9 +135,6 @@ export default class CoinMarketCapNewsScraper extends AbstractNewsScraper implem
       imageUrl: imageUrl,
     };
 
-    logger.debug(`Article data:`);
-    logger.debug(article);
-
     return Promise.resolve(article);
   }
 

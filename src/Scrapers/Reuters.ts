@@ -143,9 +143,6 @@ export default class ReutersNewsScraper extends AbstractNewsScraper implements N
       imageUrl: linkedData.image,
     };
 
-    logger.debug(`Article data:`);
-    logger.debug(article);
-
     return Promise.resolve(article);
   }
 

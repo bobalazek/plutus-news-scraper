@@ -138,9 +138,6 @@ export default class FortuneNewsScraper extends AbstractNewsScraper implements N
       imageUrl: linkedData.image,
     };
 
-    logger.debug(`Article data:`);
-    logger.debug(article);
-
     return Promise.resolve(article);
   }
 

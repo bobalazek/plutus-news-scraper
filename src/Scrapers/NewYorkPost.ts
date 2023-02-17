@@ -131,9 +131,6 @@ export default class NewYorkPostNewsScraper extends AbstractNewsScraper implemen
       imageUrl: linkedData.image.url,
     };
 
-    logger.debug(`Article data:`);
-    logger.debug(article);
-
     return Promise.resolve(article);
   }
 

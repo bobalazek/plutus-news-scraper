@@ -138,9 +138,6 @@ export default class TheEconomicTimesNewsScraper extends AbstractNewsScraper imp
       imageUrl: linkedData.image,
     };
 
-    logger.debug(`Article data:`);
-    logger.debug(article);
-
     return Promise.resolve(article);
   }
 

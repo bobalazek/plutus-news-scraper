@@ -10,6 +10,7 @@ import type { AbstractNewsScraper } from '../Scrapers/AbstractNewsScraper';
 import { NewsArticleTypeEnum } from '../Types/NewsArticleTypeEnum';
 import { NewsScraperInterface } from '../Types/NewsScraperInterface';
 import { ROOT_DIRECTORY } from '../Utils/Paths';
+import { logger } from './Logger';
 
 @injectable()
 export class NewsScraperManager {
@@ -60,11 +61,16 @@ export class NewsScraperManager {
       throw new NewsArticleNotFoundError(`Article data not found.`);
     }
 
-    return NewsArticleExtendedSchema.parse({
+    const newsArticleParsed = NewsArticleExtendedSchema.parse({
       ...newsArticle,
       newsSiteKey: scraper.key,
       type: NewsArticleTypeEnum.NEWS_ARTICLE,
     });
+
+    logger.debug(`Article data:`);
+    logger.debug(newsArticleParsed);
+
+    return newsArticleParsed;
   }
 
   async scrapeRecentArticles(newsSiteKey: string, urls?: string[]): Promise<NewsBasicArticleExtendedType[]> {

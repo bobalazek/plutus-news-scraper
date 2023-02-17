@@ -132,9 +132,6 @@ export default class CryptonewsNewsScraper extends AbstractNewsScraper implement
       imageUrl: linkedData.image[0],
     };
 
-    logger.debug(`Article data:`);
-    logger.debug(article);
-
     return Promise.resolve(article);
   }
 

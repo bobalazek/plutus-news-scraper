@@ -126,9 +126,6 @@ export default class TheStreetNewsScraper extends AbstractNewsScraper implements
       imageUrl: linkedData[0].image.url,
     };
 
-    logger.debug(`Article data:`);
-    logger.debug(article);
-
     return Promise.resolve(article);
   }
 

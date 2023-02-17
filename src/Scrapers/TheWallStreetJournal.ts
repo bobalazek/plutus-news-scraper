@@ -143,9 +143,6 @@ export default class TheWallStreetJournalNewsScraper extends AbstractNewsScraper
       imageUrl: linkedData.image[0],
     };
 
-    logger.debug(`Article data:`);
-    logger.debug(article);
-
     return Promise.resolve(article);
   }
 

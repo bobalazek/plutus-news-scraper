@@ -131,9 +131,6 @@ export default class InvestopediaNewsScraper extends AbstractNewsScraper impleme
       imageUrl: imageUrl,
     };
 
-    logger.debug(`Article data:`);
-    logger.debug(article);
-
     return Promise.resolve(article);
   }
 

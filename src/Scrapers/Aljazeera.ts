@@ -141,9 +141,6 @@ export default class AljazeeraNewsScraper extends AbstractNewsScraper implements
       imageUrl: linkedData.image[0].url,
     };
 
-    logger.debug(`Article data:`);
-    logger.debug(article);
-
     return Promise.resolve(article);
   }
 
