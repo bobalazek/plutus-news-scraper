@@ -1,8 +1,7 @@
 import { Container } from 'inversify';
 import 'reflect-metadata';
 
-import { MongoDBService } from '../Services/MongoDBService';
-import { NewsScraperDatabaseManager } from '../Services/NewsScraperDatabaseManager';
+import { NewsScraperDatabase } from '../Services/NewsScraperDatabase';
 import { NewsScraperManager } from '../Services/NewsScraperManager';
 import { NewsScraperMessageBroker } from '../Services/NewsScraperMessageBroker';
 import { NewsScraperTaskDispatcher } from '../Services/NewsScraperTaskDispatcher';
@@ -19,12 +18,11 @@ const container = new Container({
 
 container.bind<RedisService>(TYPES.RedisService).to(RedisService);
 container.bind<RabbitMQService>(TYPES.RabbitMQService).to(RabbitMQService);
-container.bind<MongoDBService>(TYPES.MongoDBService).to(MongoDBService);
 container.bind<PrometheusMetricsServer>(TYPES.PrometheusMetricsServer).to(PrometheusMetricsServer);
 container.bind<NewsScraperManager>(TYPES.NewsScraperManager).to(NewsScraperManager);
 container.bind<NewsScraperTaskDispatcher>(TYPES.NewsScraperTaskDispatcher).to(NewsScraperTaskDispatcher);
 container.bind<NewsScraperTaskWorker>(TYPES.NewsScraperTaskWorker).to(NewsScraperTaskWorker);
-container.bind<NewsScraperDatabaseManager>(TYPES.NewsScraperDatabaseManager).to(NewsScraperDatabaseManager);
+container.bind<NewsScraperDatabase>(TYPES.NewsScraperDatabase).to(NewsScraperDatabase);
 container.bind<NewsScraperMessageBroker>(TYPES.NewsScraperMessageBroker).to(NewsScraperMessageBroker);
 
 export { container };

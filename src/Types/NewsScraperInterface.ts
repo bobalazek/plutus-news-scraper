@@ -1,5 +1,5 @@
-import { NewsArticleInterface } from './NewsArticleInterface';
-import { NewsBasicArticleInterface } from './NewsBasicArticleInterface';
+import { NewsArticleType } from '../Schemas/NewsArticleSchema';
+import { NewsBasicArticleType } from '../Schemas/NewsBasicArticleSchema';
 
 export interface NewsScraperInterface {
   /**
@@ -32,14 +32,14 @@ export interface NewsScraperInterface {
    *
    * @param url this can be one or more URLs that you can provide, if you want to scrape those, instead of the default ones specified in the method
    */
-  scrapeRecentArticles(url?: string | string[]): Promise<NewsBasicArticleInterface[]>;
+  scrapeRecentArticles(url?: string | string[]): Promise<NewsBasicArticleType[]>;
 
   /**
    * Scrape the article by providing the partial article object (can only be a URL)
    *
    * @param article NewsScraperPartialArticleInterface
    */
-  scrapeArticle(article: NewsBasicArticleInterface): Promise<NewsArticleInterface | null>;
+  scrapeArticle(article: NewsBasicArticleType): Promise<NewsArticleType | null>;
 
   /**
    * Getting all the old and archived articles for that news site.
@@ -48,9 +48,7 @@ export interface NewsScraperInterface {
    *
    * @param options NewsScraperGetArchivedArticlesOptionsInterface
    */
-  scrapeArchivedArticles?(
-    options: NewsScraperGetArchivedArticlesOptionsInterface
-  ): Promise<NewsBasicArticleInterface[]>;
+  scrapeArchivedArticles?(options: NewsScraperGetArchivedArticlesOptionsInterface): Promise<NewsBasicArticleType[]>;
 }
 
 export interface NewsScraperGetArchivedArticlesOptionsInterface {
