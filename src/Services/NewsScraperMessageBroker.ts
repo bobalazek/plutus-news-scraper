@@ -85,7 +85,7 @@ export class NewsScraperMessageBroker {
   }
 
   async getMessageCountInQueue(queueName: NewsScraperMessageBrokerQueuesEnum) {
-    return this._rabbitMQService.getMessageCountInQueue(queueName, this._channelName);
+    return this._rabbitMQService.getMessageCountInQueue(queueName, { durable: true }, this._channelName);
   }
 
   async getMessageCountInAllQueues() {

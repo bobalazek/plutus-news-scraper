@@ -161,14 +161,17 @@ export class NewsScraperTaskDispatcher {
 
     this._newsScraperMessageBroker.consume(
       NewsScraperMessageBrokerQueuesEnum.NEWS_SCRAPER_RECENT_ARTICLES_SCRAPE_STATUS_UPDATE_QUEUE,
-      (data) => {
+      (data, acknowledgeMessageCallback) => {
         const scraperStatus = this._scraperStatusMap.get(data.newsSite);
         if (!scraperStatus) {
+          acknowledgeMessageCallback();
+
           return;
         }
 
         const now = new Date();
 
+        scraperStatus.status = data.status;
         scraperStatus.lastUpdate = now;
 
         if (data.status === ProcessingStatusEnum.PROCESSING) {
@@ -179,6 +182,8 @@ export class NewsScraperTaskDispatcher {
           scraperStatus.lastFailed = now;
           scraperStatus.lastFailedErrorMessage = data.errorMessage ?? null;
         }
+
+        acknowledgeMessageCallback();
       }
     );
   }

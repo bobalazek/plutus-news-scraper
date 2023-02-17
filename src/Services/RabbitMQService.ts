@@ -113,17 +113,13 @@ export class RabbitMQService {
     return channel.sendToQueue(queueName, Buffer.from(superjson.stringify(data)), publishOptions);
   }
 
-  async getMessageCountInQueue(queueName: string, channelName?: string) {
+  async getMessageCountInQueue(
+    queueName: string,
+    assertQueueOptions?: amqplib.Options.AssertQueue,
+    channelName?: string
+  ) {
     const channel = await this.getChannel(channelName);
-
-    if (!channelName) {
-      channelName = this.DEFAULT_CHANNEL_NAME;
-    }
-
-    const channelQueues = this._channelQueuesMap.get(channelName);
-    if (!channelQueues || !channelQueues.has(queueName)) {
-      return 0;
-    }
+    await this.addQueueToChannel(queueName, assertQueueOptions, channelName);
 
     const queueData = await channel.checkQueue(queueName);
 
