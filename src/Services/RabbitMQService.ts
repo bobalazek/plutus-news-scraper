@@ -34,8 +34,21 @@ export class RabbitMQService {
   async addQueueToChannel(queueName: string, assertQueueOptions?: amqplib.Options.AssertQueue, channelName?: string) {
     const channel = await this.getChannel(channelName);
 
-    if (!this._channelQueuesMap.get(channelName ?? this.DEFAULT_CHANNEL_NAME)?.has(queueName)) {
+    if (!channelName) {
+      channelName = this.DEFAULT_CHANNEL_NAME;
+    }
+
+    let channelQueues = this._channelQueuesMap.get(channelName);
+    if (!channelQueues) {
+      channelQueues = new Set();
+
+      this._channelQueuesMap.set(channelName, channelQueues);
+    }
+
+    if (!channelQueues.has(queueName)) {
       await channel.assertQueue(queueName, assertQueueOptions);
+
+      channelQueues.add(queueName);
     }
 
     return channel;
@@ -102,9 +115,19 @@ export class RabbitMQService {
 
   async getMessageCountInQueue(queueName: string, channelName?: string) {
     const channel = await this.getChannel(channelName);
+
+    if (!channelName) {
+      channelName = this.DEFAULT_CHANNEL_NAME;
+    }
+
+    const channelQueues = this._channelQueuesMap.get(channelName);
+    if (!channelQueues || !channelQueues.has(queueName)) {
+      return 0;
+    }
+
     const queueData = await channel.checkQueue(queueName);
 
-    return queueData.messageCount ?? 0;
+    return queueData.messageCount;
   }
 
   async connect() {

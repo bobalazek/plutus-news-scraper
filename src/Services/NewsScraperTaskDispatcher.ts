@@ -28,7 +28,7 @@ export class NewsScraperTaskDispatcher {
   private _messagesCountMonitoringInterval: number = 5000;
   private _scrapeRecentArticlesExpirationTime: number = 30000; // After how long do we want to expire this message?
 
-  private _scraperStatusMap: Record<string, ScraperStatusEntry> = {};
+  private _scraperStatusMap: Map<string, ScraperStatusEntry> = new Map();
 
   constructor(
     @inject(TYPES.NewsScraperManager) private _newsScraperManager: NewsScraperManager,
@@ -81,14 +81,14 @@ export class NewsScraperTaskDispatcher {
     this._scrapers = await this._newsScraperManager.getAll();
 
     for (const scraper of this._scrapers) {
-      this._scraperStatusMap[scraper.key] = {
+      this._scraperStatusMap.set(scraper.key, {
         status: ProcessingStatusEnum.PENDING,
         lastUpdate: null,
         lastStarted: null,
         lastProcessed: null,
         lastFailed: null,
         lastFailedErrorMessage: null,
-      };
+      });
     }
   }
 
@@ -97,7 +97,7 @@ export class NewsScraperTaskDispatcher {
     const scrapersAppendAtEnd: NewsScraperInterface[] = [];
 
     for (const scraper of this._scrapers) {
-      const scraperStatusData = this._scraperStatusMap[scraper.key];
+      const scraperStatusData = this._scraperStatusMap.get(scraper.key);
       if (!scraperStatusData) {
         continue;
       }
@@ -126,8 +126,8 @@ export class NewsScraperTaskDispatcher {
     }
 
     scrapers.sort((a, b) => {
-      const scraperAStatusData = this._scraperStatusMap[a.key];
-      const scraperBStatusData = this._scraperStatusMap[b.key];
+      const scraperAStatusData = this._scraperStatusMap.get(a.key);
+      const scraperBStatusData = this._scraperStatusMap.get(b.key);
 
       const timeA =
         scraperAStatusData?.lastProcessed?.getTime() ??
@@ -147,7 +147,7 @@ export class NewsScraperTaskDispatcher {
   }
 
   setScraperStatusMap(key: string, value: ScraperStatusEntry) {
-    this._scraperStatusMap[key] = value;
+    this._scraperStatusMap.set(key, value);
 
     return this;
   }
@@ -155,35 +155,29 @@ export class NewsScraperTaskDispatcher {
   private _startRecentArticlesScraping() {
     this._dispatchRecentArticlesScrape();
 
-    setInterval(async () => {
-      await this._dispatchRecentArticlesScrape();
+    setInterval(() => {
+      this._dispatchRecentArticlesScrape();
     }, this._scrapeInterval);
 
     this._newsScraperMessageBroker.consume(
       NewsScraperMessageBrokerQueuesEnum.NEWS_SCRAPER_RECENT_ARTICLES_SCRAPE_STATUS_UPDATE_QUEUE,
       (data) => {
-        console.log(data);
-      }
-    );
-
-    this._newsScraperMessageBroker.consume(
-      NewsScraperMessageBrokerQueuesEnum.NEWS_SCRAPER_RECENT_ARTICLES_SCRAPE_STATUS_UPDATE_QUEUE,
-      (data) => {
-        if (typeof this._scraperStatusMap[data.newsSite] === 'undefined') {
+        const scraperStatus = this._scraperStatusMap.get(data.newsSite);
+        if (!scraperStatus) {
           return;
         }
 
         const now = new Date();
 
-        this._scraperStatusMap[data.newsSite].lastUpdate = now;
+        scraperStatus.lastUpdate = now;
 
         if (data.status === ProcessingStatusEnum.PROCESSING) {
-          this._scraperStatusMap[data.newsSite].lastStarted = now;
+          scraperStatus.lastStarted = now;
         } else if (data.status === ProcessingStatusEnum.PROCESSED) {
-          this._scraperStatusMap[data.newsSite].lastProcessed = now;
+          scraperStatus.lastProcessed = now;
         } else if (data.status === ProcessingStatusEnum.FAILED) {
-          this._scraperStatusMap[data.newsSite].lastFailed = now;
-          this._scraperStatusMap[data.newsSite].lastFailedErrorMessage = data.errorMessage ?? null;
+          scraperStatus.lastFailed = now;
+          scraperStatus.lastFailedErrorMessage = data.errorMessage ?? null;
         }
       }
     );

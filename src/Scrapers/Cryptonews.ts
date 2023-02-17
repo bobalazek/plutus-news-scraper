@@ -105,7 +105,7 @@ export default class CryptonewsNewsScraper extends AbstractNewsScraper implement
     }
 
     const linkedData = JSON.parse(linkedDataText);
-    console.log(linkedData);
+
     // Content
     const content = await page.evaluate(() => {
       return Array.from(document.querySelectorAll('.article-single__content p'))

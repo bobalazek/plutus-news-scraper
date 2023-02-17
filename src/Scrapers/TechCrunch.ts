@@ -147,8 +147,6 @@ export default class TechCrunchNewsScraper extends AbstractNewsScraper implement
         .join('');
     });
 
-    console.log(linkedData);
-
     await this.closePuppeteerBrowser();
 
     const article: NewsArticleType = {

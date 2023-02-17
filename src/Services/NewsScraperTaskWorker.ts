@@ -14,8 +14,6 @@ export class NewsScraperTaskWorker {
   private _id!: string;
   private _prometheusMetricsServerPort?: number;
 
-  private _articleScrapeExpirationTime: number = 60000; // How long should the article URL stay in the queue until it expires?
-
   constructor(
     @inject(TYPES.NewsScraperManager) private _newsScraperManager: NewsScraperManager,
     @inject(TYPES.NewsScraperMessageBroker) private _newsScraperMessageBroker: NewsScraperMessageBroker,
@@ -98,8 +96,7 @@ export class NewsScraperTaskWorker {
             await this._newsScraperMessageBroker.sendToQueue(
               NewsScraperMessageBrokerQueuesEnum.NEWS_SCRAPER_ARTICLE_SCRAPE_QUEUE,
               basicArticle,
-
-              { expiration: this._articleScrapeExpirationTime, persistent: true },
+              { persistent: true },
               { durable: true }
             );
           }

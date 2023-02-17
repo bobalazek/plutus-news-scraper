@@ -23,15 +23,25 @@ export class NewsScraperMessageBroker {
 
   async consume<T extends NewsScraperMessageBrokerQueuesEnum>(
     queueName: T,
-    callback: (data: NewsMessageBrokerQueuesDataType[T], acknowledgeMessageCallback: () => void) => void,
+    callback: (
+      data: NewsMessageBrokerQueuesDataType[T],
+      acknowledgeMessageCallback: () => void,
+      negativeAcknowledgeMessageCallback: () => void
+    ) => void,
     consumeOptions?: amqplib.Options.Consume
   ) {
     return this._rabbitMQService.consume(
       queueName,
       (data: NewsMessageBrokerQueuesDataType[T], message, channel) => {
-        callback(data, () => {
-          channel.ack(message);
-        });
+        callback(
+          data,
+          () => {
+            channel.ack(message);
+          },
+          () => {
+            channel.nack(message);
+          }
+        );
       },
       consumeOptions,
       undefined,
