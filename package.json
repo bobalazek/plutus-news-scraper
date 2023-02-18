@@ -11,7 +11,7 @@
     "postinstall": "npx husky install",
     "prepare": "npx husky install",
     "lint": "npx eslint .",
-    "test": "npx jest --passWithNoTests",
+    "test": "npx jest",
     "build": "rimraf ./dist && npx tsc",
     "cli": "npm run build && node dist/index.js"
   },

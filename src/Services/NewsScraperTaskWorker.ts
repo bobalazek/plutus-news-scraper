@@ -4,10 +4,11 @@ import { TYPES } from '../DI/ContainerTypes';
 import { LifecycleStatusEnum } from '../Types/LifecycleStatusEnum';
 import { NewsScraperMessageBrokerQueuesEnum } from '../Types/NewsMessageBrokerQueues';
 import { ProcessingStatusEnum } from '../Types/ProcessingStatusEnum';
-import { HTTPServer } from './HTTPServer';
+import { HTTPServerService } from './HTTPServerService';
 import { logger } from './Logger';
 import { NewsScraperManager } from './NewsScraperManager';
 import { NewsScraperMessageBroker } from './NewsScraperMessageBroker';
+import { PrometheusService } from './PrometheusService';
 
 @injectable()
 export class NewsScraperTaskWorker {
@@ -19,7 +20,8 @@ export class NewsScraperTaskWorker {
   constructor(
     @inject(TYPES.NewsScraperManager) private _newsScraperManager: NewsScraperManager,
     @inject(TYPES.NewsScraperMessageBroker) private _newsScraperMessageBroker: NewsScraperMessageBroker,
-    @inject(TYPES.HTTPServer) private _httpServer: HTTPServer
+    @inject(TYPES.HTTPServerService) private _httpServerService: HTTPServerService,
+    @inject(TYPES.PrometheusService) private _prometheusService: PrometheusService
   ) {}
 
   async start(id: string, httpServerPort?: number) {
@@ -34,7 +36,9 @@ export class NewsScraperTaskWorker {
     );
 
     if (httpServerPort) {
-      await this._httpServer.start(httpServerPort, undefined, { prefix: `news_scraper_task_worker_${id}_` });
+      await this._httpServerService.start(httpServerPort);
+      this._prometheusService.addDefaultMetrics({ prefix: `news_scraper_task_worker_${id}_` });
+      this._prometheusService.addMetricsEndpointToHttpServer(this._httpServerService.getHttpServer());
     }
 
     this._startRecentArticlesQueueConsumption(id);

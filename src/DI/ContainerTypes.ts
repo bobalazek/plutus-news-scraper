@@ -1,7 +1,8 @@
 export const TYPES = {
   RedisService: Symbol.for('RedisService'),
   RabbitMQService: Symbol.for('RabbitMQService'),
-  HTTPServer: Symbol.for('HTTPServer'),
+  PrometheusService: Symbol.for('PrometheusService'),
+  HTTPServerService: Symbol.for('HTTPServerService'),
   NewsScraperManager: Symbol.for('NewsScraperManager'),
   NewsScraperTaskDispatcher: Symbol.for('NewsScraperTaskDispatcher'),
   NewsScraperTaskWorker: Symbol.for('NewsScraperTaskWorker'),
