@@ -14,6 +14,8 @@ export class NewsScraperTaskWorker {
   private _id!: string;
   private _prometheusMetricsServerPort?: number;
 
+  private _scrapeArticleExpirationTime: number = 300000; // 5 minute
+
   constructor(
     @inject(TYPES.NewsScraperManager) private _newsScraperManager: NewsScraperManager,
     @inject(TYPES.NewsScraperMessageBroker) private _newsScraperMessageBroker: NewsScraperMessageBroker,
@@ -93,10 +95,12 @@ export class NewsScraperTaskWorker {
           const basicArticles = await newsScraper.scrapeRecentArticles();
 
           for (const basicArticle of basicArticles) {
+            // TODO: prevent deduplication
+
             await this._newsScraperMessageBroker.sendToQueue(
               NewsScraperMessageBrokerQueuesEnum.NEWS_SCRAPER_ARTICLE_SCRAPE_QUEUE,
               basicArticle,
-              { persistent: true },
+              { expiration: this._scrapeArticleExpirationTime, persistent: true },
               { durable: true }
             );
           }

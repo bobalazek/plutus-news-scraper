@@ -113,10 +113,29 @@ export class RabbitMQService {
     return channel.sendToQueue(queueName, Buffer.from(superjson.stringify(data)), publishOptions);
   }
 
-  async purgeQueue(queueName: string, channelName?: string) {
+  async purgeQueue(queueName: string, assertQueueOptions?: amqplib.Options.AssertQueue, channelName?: string) {
+    // TODO: maybe create a temporary throw-away channel and see if the queue exists,
+    // so it doesn't crash the main channel? In that case we won't need to be adding queues before
+    // and we also won't need the assertQueueOptions parameters.
+
     const channel = await this.getChannel(channelName);
+    await this.addQueueToChannel(queueName, assertQueueOptions, channelName);
 
     return channel.purgeQueue(queueName);
+  }
+
+  async deleteQueue(
+    queueName: string,
+    deleteQueueOptions?: amqplib.Options.DeleteQueue,
+    assertQueueOptions?: amqplib.Options.AssertQueue,
+    channelName?: string
+  ) {
+    // TODO: Same as with purging
+
+    const channel = await this.getChannel(channelName);
+    await this.addQueueToChannel(queueName, assertQueueOptions, channelName);
+
+    return channel.deleteQueue(queueName, deleteQueueOptions);
   }
 
   async getMessageCountInQueue(

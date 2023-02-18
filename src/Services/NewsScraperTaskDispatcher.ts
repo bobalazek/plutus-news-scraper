@@ -207,6 +207,11 @@ export class NewsScraperTaskDispatcher {
     logger.info(`Dispatch news article events for scrapers ...`);
 
     const scrapers = this.getOrderedScrapers();
+    if (scrapers.length === 0) {
+      logger.info(`Scrapers not found. Skipping ...`);
+
+      return;
+    }
 
     for (const scraper of scrapers) {
       logger.debug(`Dispatching events for ${scraper.key} ...`);

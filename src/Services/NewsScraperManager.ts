@@ -85,7 +85,7 @@ export class NewsScraperManager {
       throw new Error(`This scraper (${newsSiteKey}) does not have the .scrapeRecentArticles() method implemented`);
     }
 
-    // TODO: should we yield the urls for those articles?
+    // TODO: should we yield the URLs for those articles?
     const recentArticles = await scraper.scrapeRecentArticles(urls);
     if (recentArticles.length === 0) {
       throw new NewsArticlesNotFoundError(`No recent articles found for this news site`);
