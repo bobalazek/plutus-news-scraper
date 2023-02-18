@@ -24,7 +24,6 @@ export class RabbitMQService {
       channel = await connection.createChannel();
 
       this._channelsMap.set(channelName, channel);
-
       this._channelQueuesMap.set(channelName, new Set());
     }
 
@@ -76,27 +75,6 @@ export class RabbitMQService {
       },
       consumeOptions
     );
-  }
-
-  async get(
-    queueName: string,
-    getOptions?: amqplib.Options.Consume,
-    assertQueueOptions?: amqplib.Options.AssertQueue,
-    channelName?: string
-  ) {
-    const channel = await this.getChannel(queueName);
-    await this.addQueueToChannel(queueName, assertQueueOptions, channelName);
-
-    const message = await channel.get(queueName, getOptions);
-    if (message === false) {
-      return null;
-    }
-
-    return {
-      data: superjson.parse(message.content.toString()),
-      message,
-      channel,
-    };
   }
 
   async sendToQueue(
