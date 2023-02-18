@@ -41,6 +41,13 @@ export class NewsScraperTaskDispatcher {
 
     logger.info(`========== Starting the task dispatcher ... ==========`);
 
+    for (const queue of [
+      NewsScraperMessageBrokerQueuesEnum.NEWS_SCRAPER_TASK_DISPATCHER_STATUS_UPDATE_QUEUE,
+      NewsScraperMessageBrokerQueuesEnum.NEWS_SCRAPER_RECENT_ARTICLES_SCRAPE_STATUS_UPDATE_QUEUE,
+    ]) {
+      await this._newsScraperMessageBroker.purgeQueue(queue);
+    }
+
     await this._newsScraperMessageBroker.sendToQueue(
       NewsScraperMessageBrokerQueuesEnum.NEWS_SCRAPER_TASK_DISPATCHER_STATUS_UPDATE_QUEUE,
       { status: LifecycleStatusEnum.STARTING, prometheusMetricsServerPort }

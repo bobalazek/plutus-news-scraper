@@ -113,6 +113,12 @@ export class RabbitMQService {
     return channel.sendToQueue(queueName, Buffer.from(superjson.stringify(data)), publishOptions);
   }
 
+  async purgeQueue(queueName: string, channelName?: string) {
+    const channel = await this.getChannel(channelName);
+
+    return channel.purgeQueue(queueName);
+  }
+
   async getMessageCountInQueue(
     queueName: string,
     assertQueueOptions?: amqplib.Options.AssertQueue,

@@ -21,6 +21,10 @@ export class NewsScraperMessageBroker {
     return this._rabbitMQService.sendToQueue(queueName, data, publishOptions, assertOptions, this._channelName);
   }
 
+  async purgeQueue(queueName: NewsScraperMessageBrokerQueuesEnum) {
+    return this._rabbitMQService.purgeQueue(queueName, this._channelName);
+  }
+
   async consume<T extends NewsScraperMessageBrokerQueuesEnum>(
     queueName: T,
     callback: (

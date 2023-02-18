@@ -5,7 +5,7 @@ import { NewsArticleMultimediaTypeEnum } from '../Types/NewsArticleMultimediaTyp
 
 @Entity('news_articles')
 export class NewsArticle extends BaseEntity implements NewsArticleType {
-  @PrimaryGeneratedColumn()
+  @PrimaryGeneratedColumn('uuid')
   id!: number;
 
   @Column()
