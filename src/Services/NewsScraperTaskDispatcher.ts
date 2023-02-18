@@ -4,21 +4,13 @@ import { TYPES } from '../DI/ContainerTypes';
 import { LifecycleStatusEnum } from '../Types/LifecycleStatusEnum';
 import { NewsScraperMessageBrokerQueuesEnum } from '../Types/NewsMessageBrokerQueues';
 import { NewsScraperInterface } from '../Types/NewsScraperInterface';
+import { NewsScraperStatusEntry } from '../Types/NewsScraperStatusEntry';
 import { ProcessingStatusEnum } from '../Types/ProcessingStatusEnum';
 import { HTTPServerService } from './HTTPServerService';
 import { logger } from './Logger';
 import { NewsScraperManager } from './NewsScraperManager';
 import { NewsScraperMessageBroker } from './NewsScraperMessageBroker';
 import { PrometheusService } from './PrometheusService';
-
-export interface ScraperStatusEntry {
-  status: ProcessingStatusEnum;
-  lastUpdate: Date | null;
-  lastStarted: Date | null;
-  lastProcessed: Date | null;
-  lastFailed: Date | null;
-  lastFailedErrorMessage: string | null;
-}
 
 @injectable()
 export class NewsScraperTaskDispatcher {
@@ -29,7 +21,7 @@ export class NewsScraperTaskDispatcher {
   private _messagesCountMonitoringInterval: number = 5000;
   private _scrapeRecentArticlesExpirationTime: number = 30000; // After how long do we want to expire this message?
 
-  private _scraperStatusMap: Map<string, ScraperStatusEntry> = new Map();
+  private _scraperStatusMap: Map<string, NewsScraperStatusEntry> = new Map();
 
   constructor(
     @inject(TYPES.NewsScraperManager) private _newsScraperManager: NewsScraperManager,
@@ -43,17 +35,9 @@ export class NewsScraperTaskDispatcher {
 
     logger.info(`========== Starting the task dispatcher ... ==========`);
 
-    for (const queue of [
-      NewsScraperMessageBrokerQueuesEnum.NEWS_SCRAPER_TASK_DISPATCHER_STATUS_UPDATE_QUEUE,
-      NewsScraperMessageBrokerQueuesEnum.NEWS_SCRAPER_RECENT_ARTICLES_SCRAPE_STATUS_UPDATE_QUEUE,
-    ]) {
-      await this._newsScraperMessageBroker.purgeQueue(queue);
-    }
+    await this._purgeQueues();
 
-    await this._newsScraperMessageBroker.sendToQueue(
-      NewsScraperMessageBrokerQueuesEnum.NEWS_SCRAPER_TASK_DISPATCHER_STATUS_UPDATE_QUEUE,
-      { status: LifecycleStatusEnum.STARTING, httpServerPort: httpServerPort }
-    );
+    await this._sendStatusUpdate(LifecycleStatusEnum.STARTING);
 
     if (httpServerPort) {
       await this._httpServerService.start(httpServerPort);
@@ -66,10 +50,7 @@ export class NewsScraperTaskDispatcher {
     this._startRecentArticlesScraping();
     this._startMessageQueuesMonitoring();
 
-    await this._newsScraperMessageBroker.sendToQueue(
-      NewsScraperMessageBrokerQueuesEnum.NEWS_SCRAPER_TASK_DISPATCHER_STATUS_UPDATE_QUEUE,
-      { status: LifecycleStatusEnum.STARTED, httpServerPort: httpServerPort }
-    );
+    await this._sendStatusUpdate(LifecycleStatusEnum.STARTED);
 
     await new Promise(() => {
       // Together forever and never apart ...
@@ -157,7 +138,7 @@ export class NewsScraperTaskDispatcher {
     return scrapers;
   }
 
-  setScraperStatusMap(key: string, value: ScraperStatusEntry) {
+  setScraperStatusMap(key: string, value: NewsScraperStatusEntry) {
     this._scraperStatusMap.set(key, value);
 
     return this;
@@ -205,6 +186,22 @@ export class NewsScraperTaskDispatcher {
 
       logger.info(`Messages count map: ${JSON.stringify(messagesCountMap)}`);
     }, this._messagesCountMonitoringInterval);
+  }
+
+  private async _purgeQueues() {
+    for (const queue of [
+      NewsScraperMessageBrokerQueuesEnum.NEWS_SCRAPER_TASK_DISPATCHER_STATUS_UPDATE_QUEUE,
+      NewsScraperMessageBrokerQueuesEnum.NEWS_SCRAPER_RECENT_ARTICLES_SCRAPE_STATUS_UPDATE_QUEUE,
+    ]) {
+      await this._newsScraperMessageBroker.purgeQueue(queue);
+    }
+  }
+
+  private async _sendStatusUpdate(status: LifecycleStatusEnum) {
+    return this._newsScraperMessageBroker.sendToQueue(
+      NewsScraperMessageBrokerQueuesEnum.NEWS_SCRAPER_TASK_DISPATCHER_STATUS_UPDATE_QUEUE,
+      { status, httpServerPort: this._httpServerPort }
+    );
   }
 
   private async _dispatchRecentArticlesScrape() {

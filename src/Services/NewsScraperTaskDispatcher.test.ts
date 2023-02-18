@@ -4,9 +4,10 @@ import { injectable } from 'inversify';
 import { container } from '../DI/Container';
 import { TYPES } from '../DI/ContainerTypes';
 import { NewsScraperInterface } from '../Types/NewsScraperInterface';
+import { NewsScraperStatusEntry } from '../Types/NewsScraperStatusEntry';
 import { ProcessingStatusEnum } from '../Types/ProcessingStatusEnum';
 import { NewsScraperManager } from './NewsScraperManager';
-import { NewsScraperTaskDispatcher, ScraperStatusEntry } from './NewsScraperTaskDispatcher';
+import { NewsScraperTaskDispatcher } from './NewsScraperTaskDispatcher';
 
 // We need it so we can setup the scrapers in the task dispatcher
 const baseScraper = {
@@ -51,7 +52,7 @@ describe('Services/NewsScraperTaskDispatcher.ts', () => {
     newsScraperTaskDispatcher = container.get<NewsScraperTaskDispatcher>(TYPES.NewsScraperTaskDispatcher);
   });
 
-  it.each<{ testName: string; scraperStatusMapData: Record<string, ScraperStatusEntry>; result: string[] }>([
+  it.each<{ testName: string; scraperStatusMapData: Record<string, NewsScraperStatusEntry>; result: string[] }>([
     {
       testName: 'initial state',
       scraperStatusMapData: {},

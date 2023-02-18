@@ -10,6 +10,8 @@ import { NewsScraperManager } from './NewsScraperManager';
 import { NewsScraperMessageBroker } from './NewsScraperMessageBroker';
 import { PrometheusService } from './PrometheusService';
 
+type ConsumedQueues = '*' | 'scrape_article' | 'scrape_recent_articles';
+
 @injectable()
 export class NewsScraperTaskWorker {
   private _id!: string;
@@ -24,16 +26,13 @@ export class NewsScraperTaskWorker {
     @inject(TYPES.PrometheusService) private _prometheusService: PrometheusService
   ) {}
 
-  async start(id: string, httpServerPort?: number) {
+  async start(id: string, httpServerPort?: number, consumedQueues: ConsumedQueues[] = ['*']) {
     this._id = id;
     this._httpServerPort = httpServerPort;
 
     logger.info(`========== Starting the worker "${id}" ... ==========`);
 
-    await this._newsScraperMessageBroker.sendToQueue(
-      NewsScraperMessageBrokerQueuesEnum.NEWS_SCRAPER_TASK_WORKER_STATUS_UPDATE_QUEUE,
-      { status: LifecycleStatusEnum.STARTING, id, httpServerPort: httpServerPort }
-    );
+    await this._sendStatusUpdate(LifecycleStatusEnum.STARTING);
 
     if (httpServerPort) {
       await this._httpServerService.start(httpServerPort);
@@ -41,13 +40,15 @@ export class NewsScraperTaskWorker {
       this._prometheusService.addMetricsEndpointToHttpServer(this._httpServerService.getHttpServer());
     }
 
-    this._startRecentArticlesQueueConsumption(id);
-    // TODO: article queue consumption
+    if (consumedQueues.includes('*') || consumedQueues.includes('scrape_recent_articles')) {
+      this._startRecentArticlesQueueConsumption(id);
+    }
 
-    await this._newsScraperMessageBroker.sendToQueue(
-      NewsScraperMessageBrokerQueuesEnum.NEWS_SCRAPER_TASK_WORKER_STATUS_UPDATE_QUEUE,
-      { status: LifecycleStatusEnum.STARTED, id, httpServerPort: httpServerPort }
-    );
+    if (consumedQueues.includes('*') || consumedQueues.includes('scrape_article')) {
+      // TODO: article queue consumption
+    }
+
+    await this._sendStatusUpdate(LifecycleStatusEnum.STARTED);
 
     await new Promise(() => {
       // Together forever and never apart ...
@@ -126,6 +127,13 @@ export class NewsScraperTaskWorker {
           );
         }
       }
+    );
+  }
+
+  private async _sendStatusUpdate(status: LifecycleStatusEnum) {
+    return this._newsScraperMessageBroker.sendToQueue(
+      NewsScraperMessageBrokerQueuesEnum.NEWS_SCRAPER_TASK_WORKER_STATUS_UPDATE_QUEUE,
+      { status, id: this._id, httpServerPort: this._httpServerPort }
     );
   }
 }
