@@ -32,10 +32,13 @@ export class NewsScraperTaskWorker {
 
     await this._sendStatusUpdate(LifecycleStatusEnum.STARTING);
 
+    // Metrics
+    this._prometheusService.addDefaultMetrics({ prefix: `news_scraper_task_worker_${id}_` });
+
     if (httpServerPort) {
-      await this._httpServerService.start(httpServerPort);
-      this._prometheusService.addDefaultMetrics({ prefix: `news_scraper_task_worker_${id}_` });
-      this._prometheusService.addMetricsEndpointToHttpServer(this._httpServerService.getHttpServer());
+      await this._httpServerService.start(httpServerPort, (httpServer) => {
+        this._prometheusService.addMetricsEndpointToHttpServer(httpServer);
+      });
     }
 
     if (consumedQueues.includes('*') || consumedQueues.includes('scrape_recent_articles')) {

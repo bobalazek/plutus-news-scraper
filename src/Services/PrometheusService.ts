@@ -6,37 +6,40 @@ import { PROMETHEUS_PUSHGATEWAY_URL } from '../Utils/Environment';
 
 @injectable()
 export class PrometheusService {
-  private _prometheusPushgateway?: promClient.Pushgateway;
+  private _pushgateway?: promClient.Pushgateway;
 
-  getPrometheusClient() {
+  getClient() {
     return promClient;
   }
 
-  getPrometheusPushgateway() {
-    if (!PROMETHEUS_PUSHGATEWAY_URL) {
-      throw new Error(`Prometheus pushgateway URL not set`);
+  getPushgateway() {
+    if (!this._pushgateway) {
+      const client = this.getClient();
+
+      if (!PROMETHEUS_PUSHGATEWAY_URL) {
+        throw new Error(`Prometheus pushgateway URL not set`);
+      }
+
+      this._pushgateway = new client.Pushgateway(PROMETHEUS_PUSHGATEWAY_URL);
     }
 
-    if (!this._prometheusPushgateway) {
-      const prometheusClient = this.getPrometheusClient();
-
-      this._prometheusPushgateway = new prometheusClient.Pushgateway(PROMETHEUS_PUSHGATEWAY_URL);
-    }
-
-    return this._prometheusPushgateway;
+    return this._pushgateway;
   }
 
   addDefaultMetrics(config?: promClient.DefaultMetricsCollectorConfiguration) {
-    const prometheusClient = this.getPrometheusClient();
-    prometheusClient.collectDefaultMetrics(config);
+    const client = this.getClient();
+
+    client.collectDefaultMetrics(config);
   }
 
   addMetricsEndpointToHttpServer(httpServer: express.Express) {
     httpServer.get('/metrics', async (_, res) => {
-      const prometheusClient = this.getPrometheusClient();
-      const metrics = await prometheusClient.register.metrics();
+      const client = this.getClient();
 
-      res.set('Content-type', prometheusClient.register.contentType);
+      res.set('Content-type', client.register.contentType);
+
+      const metrics = await client.register.metrics();
+
       return res.send(metrics);
     });
   }
