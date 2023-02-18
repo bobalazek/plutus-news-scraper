@@ -10,8 +10,6 @@ import { NewsScraperManager } from './NewsScraperManager';
 import { NewsScraperMessageBroker } from './NewsScraperMessageBroker';
 import { PrometheusService } from './PrometheusService';
 
-type ConsumedQueues = '*' | 'scrape_article' | 'scrape_recent_articles';
-
 @injectable()
 export class NewsScraperTaskWorker {
   private _id!: string;
@@ -26,7 +24,7 @@ export class NewsScraperTaskWorker {
     @inject(TYPES.PrometheusService) private _prometheusService: PrometheusService
   ) {}
 
-  async start(id: string, httpServerPort?: number, consumedQueues: ConsumedQueues[] = ['*']) {
+  async start(id: string, httpServerPort?: number, consumedQueues: string[] = ['*']) {
     this._id = id;
     this._httpServerPort = httpServerPort;
 
