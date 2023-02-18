@@ -21,8 +21,12 @@ export class NewsScraperMessageBroker {
     return this._rabbitMQService.sendToQueue(queueName, data, publishOptions, assertOptions, this._channelName);
   }
 
-  async purgeQueue(queueName: NewsScraperMessageBrokerQueuesEnum, assertOptions?: amqplib.Options.AssertQueue) {
-    return this._rabbitMQService.purgeQueue(queueName, assertOptions, this._channelName);
+  async purgeQueue(queueName: NewsScraperMessageBrokerQueuesEnum) {
+    return this._rabbitMQService.purgeQueue(queueName);
+  }
+
+  async deleteQueue(queueName: NewsScraperMessageBrokerQueuesEnum, deleteQueueOptions?: amqplib.Options.DeleteQueue) {
+    return this._rabbitMQService.deleteQueue(queueName, deleteQueueOptions);
   }
 
   async consume<T extends NewsScraperMessageBrokerQueuesEnum>(
@@ -87,7 +91,7 @@ export class NewsScraperMessageBroker {
   }
 
   async getMessageCountInQueue(queueName: NewsScraperMessageBrokerQueuesEnum) {
-    return this._rabbitMQService.getMessageCountInQueue(queueName, { durable: true }, this._channelName);
+    return this._rabbitMQService.getMessageCountInQueue(queueName);
   }
 
   async getMessageCountInAllQueues() {

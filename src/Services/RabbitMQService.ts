@@ -113,42 +113,43 @@ export class RabbitMQService {
     return channel.sendToQueue(queueName, Buffer.from(superjson.stringify(data)), publishOptions);
   }
 
-  async purgeQueue(queueName: string, assertQueueOptions?: amqplib.Options.AssertQueue, channelName?: string) {
-    // TODO: maybe create a temporary throw-away channel and see if the queue exists,
-    // so it doesn't crash the main channel? In that case we won't need to be adding queues before
-    // and we also won't need the assertQueueOptions parameters.
+  async purgeQueue(queueName: string) {
+    try {
+      const connection = await this.getConnection();
+      const tmpChannel = await connection.createChannel();
+      const result = await tmpChannel.purgeQueue(queueName);
+      await tmpChannel.close();
 
-    const channel = await this.getChannel(channelName);
-    await this.addQueueToChannel(queueName, assertQueueOptions, channelName);
-
-    return channel.purgeQueue(queueName);
+      return result.messageCount;
+    } catch (err) {
+      return 0;
+    }
   }
 
-  async deleteQueue(
-    queueName: string,
-    deleteQueueOptions?: amqplib.Options.DeleteQueue,
-    assertQueueOptions?: amqplib.Options.AssertQueue,
-    channelName?: string
-  ) {
-    // TODO: Same as with purging
+  async deleteQueue(queueName: string, deleteQueueOptions?: amqplib.Options.DeleteQueue) {
+    try {
+      const connection = await this.getConnection();
+      const tmpChannel = await connection.createChannel();
+      const result = await tmpChannel.deleteQueue(queueName, deleteQueueOptions);
+      await tmpChannel.close();
 
-    const channel = await this.getChannel(channelName);
-    await this.addQueueToChannel(queueName, assertQueueOptions, channelName);
-
-    return channel.deleteQueue(queueName, deleteQueueOptions);
+      return result.messageCount;
+    } catch (err) {
+      return 0;
+    }
   }
 
-  async getMessageCountInQueue(
-    queueName: string,
-    assertQueueOptions?: amqplib.Options.AssertQueue,
-    channelName?: string
-  ) {
-    const channel = await this.getChannel(channelName);
-    await this.addQueueToChannel(queueName, assertQueueOptions, channelName);
+  async getMessageCountInQueue(queueName: string) {
+    try {
+      const connection = await this.getConnection();
+      const tmpChannel = await connection.createChannel();
+      const result = await tmpChannel.checkQueue(queueName);
+      await tmpChannel.close();
 
-    const queueData = await channel.checkQueue(queueName);
-
-    return queueData.messageCount;
+      return result.messageCount;
+    } catch (err) {
+      return 0;
+    }
   }
 
   async connect() {
