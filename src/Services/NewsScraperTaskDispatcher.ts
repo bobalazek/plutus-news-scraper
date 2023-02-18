@@ -170,7 +170,7 @@ export class NewsScraperTaskDispatcher {
       this._dispatchRecentArticlesScrape();
     }, this._scrapeInterval);
 
-    this._newsScraperMessageBroker.consume(
+    this._newsScraperMessageBroker.consumeFromQueue(
       NewsScraperMessageBrokerQueuesEnum.NEWS_SCRAPER_RECENT_ARTICLES_SCRAPE_STATUS_UPDATE_QUEUE,
       (data, acknowledgeMessageCallback) => {
         const scraperStatus = this._scraperStatusMap.get(data.newsSite);

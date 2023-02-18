@@ -29,7 +29,7 @@ export class NewsScraperMessageBroker {
     return this._rabbitMQService.deleteQueue(queueName, deleteQueueOptions);
   }
 
-  async consume<T extends NewsScraperMessageBrokerQueuesEnum>(
+  async consumeFromQueue<T extends NewsScraperMessageBrokerQueuesEnum>(
     queueName: T,
     callback: (
       data: NewsMessageBrokerQueuesDataType[T],
@@ -38,7 +38,7 @@ export class NewsScraperMessageBroker {
     ) => void,
     consumeOptions?: amqplib.Options.Consume
   ) {
-    return this._rabbitMQService.consume(
+    return this._rabbitMQService.consumeFromQueue(
       queueName,
       (data: NewsMessageBrokerQueuesDataType[T], message, channel) => {
         callback(
@@ -57,7 +57,7 @@ export class NewsScraperMessageBroker {
     );
   }
 
-  async consumeOneAtTime<T extends NewsScraperMessageBrokerQueuesEnum>(
+  async consumeFromQueueOneAtTime<T extends NewsScraperMessageBrokerQueuesEnum>(
     queueName: T,
     callback: (
       data: NewsMessageBrokerQueuesDataType[T],

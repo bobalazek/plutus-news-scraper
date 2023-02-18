@@ -53,7 +53,7 @@ export class RabbitMQService {
     return channel;
   }
 
-  async consume(
+  async consumeFromQueue(
     queueName: string,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     callback: (data: any, message: amqplib.ConsumeMessage, channel: amqplib.Channel) => void,

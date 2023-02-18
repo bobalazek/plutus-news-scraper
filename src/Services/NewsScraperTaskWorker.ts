@@ -69,7 +69,7 @@ export class NewsScraperTaskWorker {
   private async _startRecentArticlesQueueConsumption(id: string) {
     logger.info(`[Worker ${id}] Starting to consume recent articles scrape ...`);
 
-    return this._newsScraperMessageBroker.consumeOneAtTime(
+    return this._newsScraperMessageBroker.consumeFromQueueOneAtTime(
       NewsScraperMessageBrokerQueuesEnum.NEWS_SCRAPER_RECENT_ARTICLES_SCRAPE_QUEUE,
       async (data, acknowledgeMessageCallback, negativeAcknowledgeMessageCallback) => {
         logger.debug(`[Worker ${id}] Processing recent articles scrape job. Data ${JSON.stringify(data)}`);
