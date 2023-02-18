@@ -61,7 +61,7 @@ export class RabbitMQService {
     assertQueueOptions?: amqplib.Options.AssertQueue,
     channelName?: string
   ) {
-    const channel = await this.getChannel(queueName);
+    const channel = await this.getChannel(channelName);
     await this.addQueueToChannel(queueName, assertQueueOptions, channelName);
 
     return channel.consume(
