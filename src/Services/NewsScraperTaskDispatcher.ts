@@ -5,10 +5,10 @@ import { LifecycleStatusEnum } from '../Types/LifecycleStatusEnum';
 import { NewsScraperMessageBrokerQueuesEnum } from '../Types/NewsMessageBrokerQueues';
 import { NewsScraperInterface } from '../Types/NewsScraperInterface';
 import { ProcessingStatusEnum } from '../Types/ProcessingStatusEnum';
+import { HTTPServer } from './HTTPServer';
 import { logger } from './Logger';
 import { NewsScraperManager } from './NewsScraperManager';
 import { NewsScraperMessageBroker } from './NewsScraperMessageBroker';
-import { PrometheusMetricsServer } from './PrometheusMetricsServer';
 
 export interface ScraperStatusEntry {
   status: ProcessingStatusEnum;
@@ -21,7 +21,7 @@ export interface ScraperStatusEntry {
 
 @injectable()
 export class NewsScraperTaskDispatcher {
-  private _prometheusMetricsServerPort?: number;
+  private _httpServerPort?: number;
 
   private _scrapers: NewsScraperInterface[] = [];
   private _scrapeInterval: number = 30000;
@@ -33,11 +33,11 @@ export class NewsScraperTaskDispatcher {
   constructor(
     @inject(TYPES.NewsScraperManager) private _newsScraperManager: NewsScraperManager,
     @inject(TYPES.NewsScraperMessageBroker) private _newsScraperMessageBroker: NewsScraperMessageBroker,
-    @inject(TYPES.PrometheusMetricsServer) private _prometheusMetricsServer: PrometheusMetricsServer
+    @inject(TYPES.HTTPServer) private _httpServer: HTTPServer
   ) {}
 
-  async start(prometheusMetricsServerPort?: number) {
-    this._prometheusMetricsServerPort = prometheusMetricsServerPort;
+  async start(httpServerPort?: number) {
+    this._httpServerPort = httpServerPort;
 
     logger.info(`========== Starting the task dispatcher ... ==========`);
 
@@ -50,11 +50,11 @@ export class NewsScraperTaskDispatcher {
 
     await this._newsScraperMessageBroker.sendToQueue(
       NewsScraperMessageBrokerQueuesEnum.NEWS_SCRAPER_TASK_DISPATCHER_STATUS_UPDATE_QUEUE,
-      { status: LifecycleStatusEnum.STARTING, prometheusMetricsServerPort }
+      { status: LifecycleStatusEnum.STARTING, httpServerPort: httpServerPort }
     );
 
-    if (prometheusMetricsServerPort) {
-      await this._prometheusMetricsServer.start(prometheusMetricsServerPort, `news_scraper_task_dispatcher_`);
+    if (httpServerPort) {
+      await this._httpServer.start(httpServerPort, undefined, { prefix: `news_scraper_task_dispatcher_` });
     }
 
     await this.setupScrapers();
@@ -64,7 +64,7 @@ export class NewsScraperTaskDispatcher {
 
     await this._newsScraperMessageBroker.sendToQueue(
       NewsScraperMessageBrokerQueuesEnum.NEWS_SCRAPER_TASK_DISPATCHER_STATUS_UPDATE_QUEUE,
-      { status: LifecycleStatusEnum.STARTED, prometheusMetricsServerPort }
+      { status: LifecycleStatusEnum.STARTED, httpServerPort: httpServerPort }
     );
 
     await new Promise(() => {
@@ -77,7 +77,7 @@ export class NewsScraperTaskDispatcher {
       NewsScraperMessageBrokerQueuesEnum.NEWS_SCRAPER_TASK_DISPATCHER_STATUS_UPDATE_QUEUE,
       {
         status: errorMessage ? LifecycleStatusEnum.ERRORED : LifecycleStatusEnum.CLOSED,
-        prometheusMetricsServerPort: this._prometheusMetricsServerPort,
+        httpServerPort: this._httpServerPort,
         errorMessage,
       }
     );

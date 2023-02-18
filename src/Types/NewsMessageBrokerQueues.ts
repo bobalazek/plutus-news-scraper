@@ -17,13 +17,13 @@ export type NewsMessageBrokerQueuesDataType = {
   /* ---------- Task ---------- */
   [NewsScraperMessageBrokerQueuesEnum.NEWS_SCRAPER_TASK_DISPATCHER_STATUS_UPDATE_QUEUE]: {
     status: LifecycleStatusEnum;
-    prometheusMetricsServerPort?: number;
+    httpServerPort?: number;
     errorMessage?: string;
   };
   [NewsScraperMessageBrokerQueuesEnum.NEWS_SCRAPER_TASK_WORKER_STATUS_UPDATE_QUEUE]: {
     status: LifecycleStatusEnum;
     id: string;
-    prometheusMetricsServerPort?: number;
+    httpServerPort?: number;
     errorMessage?: string;
   };
   /* ---------- Recent articles ---------- */

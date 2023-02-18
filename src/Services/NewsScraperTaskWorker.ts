@@ -4,37 +4,37 @@ import { TYPES } from '../DI/ContainerTypes';
 import { LifecycleStatusEnum } from '../Types/LifecycleStatusEnum';
 import { NewsScraperMessageBrokerQueuesEnum } from '../Types/NewsMessageBrokerQueues';
 import { ProcessingStatusEnum } from '../Types/ProcessingStatusEnum';
+import { HTTPServer } from './HTTPServer';
 import { logger } from './Logger';
 import { NewsScraperManager } from './NewsScraperManager';
 import { NewsScraperMessageBroker } from './NewsScraperMessageBroker';
-import { PrometheusMetricsServer } from './PrometheusMetricsServer';
 
 @injectable()
 export class NewsScraperTaskWorker {
   private _id!: string;
-  private _prometheusMetricsServerPort?: number;
+  private _httpServerPort?: number;
 
   private _scrapeArticleExpirationTime: number = 300000; // 5 minute
 
   constructor(
     @inject(TYPES.NewsScraperManager) private _newsScraperManager: NewsScraperManager,
     @inject(TYPES.NewsScraperMessageBroker) private _newsScraperMessageBroker: NewsScraperMessageBroker,
-    @inject(TYPES.PrometheusMetricsServer) private _prometheusMetricsServer: PrometheusMetricsServer
+    @inject(TYPES.HTTPServer) private _httpServer: HTTPServer
   ) {}
 
-  async start(id: string, prometheusMetricsServerPort?: number) {
+  async start(id: string, httpServerPort?: number) {
     this._id = id;
-    this._prometheusMetricsServerPort = prometheusMetricsServerPort;
+    this._httpServerPort = httpServerPort;
 
     logger.info(`========== Starting the worker "${id}" ... ==========`);
 
     await this._newsScraperMessageBroker.sendToQueue(
       NewsScraperMessageBrokerQueuesEnum.NEWS_SCRAPER_TASK_WORKER_STATUS_UPDATE_QUEUE,
-      { status: LifecycleStatusEnum.STARTING, id, prometheusMetricsServerPort }
+      { status: LifecycleStatusEnum.STARTING, id, httpServerPort: httpServerPort }
     );
 
-    if (prometheusMetricsServerPort) {
-      await this._prometheusMetricsServer.start(prometheusMetricsServerPort, `news_scraper_task_worker_${id}_`);
+    if (httpServerPort) {
+      await this._httpServer.start(httpServerPort, undefined, { prefix: `news_scraper_task_worker_${id}_` });
     }
 
     this._startRecentArticlesQueueConsumption(id);
@@ -42,7 +42,7 @@ export class NewsScraperTaskWorker {
 
     await this._newsScraperMessageBroker.sendToQueue(
       NewsScraperMessageBrokerQueuesEnum.NEWS_SCRAPER_TASK_WORKER_STATUS_UPDATE_QUEUE,
-      { status: LifecycleStatusEnum.STARTED, id, prometheusMetricsServerPort }
+      { status: LifecycleStatusEnum.STARTED, id, httpServerPort: httpServerPort }
     );
 
     await new Promise(() => {
@@ -56,7 +56,7 @@ export class NewsScraperTaskWorker {
       {
         status: errorMessage ? LifecycleStatusEnum.ERRORED : LifecycleStatusEnum.CLOSED,
         id: this._id,
-        prometheusMetricsServerPort: this._prometheusMetricsServerPort,
+        httpServerPort: this._httpServerPort,
         errorMessage,
       }
     );
