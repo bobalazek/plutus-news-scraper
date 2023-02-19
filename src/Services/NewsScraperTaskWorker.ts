@@ -1,11 +1,13 @@
 import { inject, injectable } from 'inversify';
 
 import { TYPES } from '../DI/ContainerTypes';
+import { NewsArticle } from '../Entitites/NewsArticle';
 import { LifecycleStatusEnum } from '../Types/LifecycleStatusEnum';
 import { NewsScraperMessageBrokerQueuesEnum } from '../Types/NewsMessageBrokerQueues';
 import { ProcessingStatusEnum } from '../Types/ProcessingStatusEnum';
 import { HTTPServerService } from './HTTPServerService';
 import { logger } from './Logger';
+import { NewsScraperDatabase } from './NewsScraperDatabase';
 import { NewsScraperManager } from './NewsScraperManager';
 import { NewsScraperMessageBroker } from './NewsScraperMessageBroker';
 import { PrometheusService } from './PrometheusService';
@@ -20,6 +22,7 @@ export class NewsScraperTaskWorker {
   constructor(
     @inject(TYPES.NewsScraperManager) private _newsScraperManager: NewsScraperManager,
     @inject(TYPES.NewsScraperMessageBroker) private _newsScraperMessageBroker: NewsScraperMessageBroker,
+    @inject(TYPES.NewsScraperDatabase) private _newsScraperDatabase: NewsScraperDatabase,
     @inject(TYPES.HTTPServerService) private _httpServerService: HTTPServerService,
     @inject(TYPES.PrometheusService) private _prometheusService: PrometheusService
   ) {}
@@ -78,7 +81,7 @@ export class NewsScraperTaskWorker {
 
         await this._newsScraperMessageBroker.sendToQueue(
           NewsScraperMessageBrokerQueuesEnum.NEWS_SCRAPER_RECENT_ARTICLES_SCRAPE_STATUS_UPDATE_QUEUE,
-          { status: ProcessingStatusEnum.PROCESSING, ...data }
+          { ...data, status: ProcessingStatusEnum.PROCESSING }
         );
 
         const newsScraper = await this._newsScraperManager.get(data.newsSite);
@@ -91,7 +94,7 @@ export class NewsScraperTaskWorker {
 
           await this._newsScraperMessageBroker.sendToQueue(
             NewsScraperMessageBrokerQueuesEnum.NEWS_SCRAPER_RECENT_ARTICLES_SCRAPE_STATUS_UPDATE_QUEUE,
-            { status: ProcessingStatusEnum.FAILED, ...data, errorMessage }
+            { ...data, status: ProcessingStatusEnum.FAILED, errorMessage }
           );
 
           return;
@@ -115,7 +118,7 @@ export class NewsScraperTaskWorker {
 
           await this._newsScraperMessageBroker.sendToQueue(
             NewsScraperMessageBrokerQueuesEnum.NEWS_SCRAPER_RECENT_ARTICLES_SCRAPE_STATUS_UPDATE_QUEUE,
-            { status: ProcessingStatusEnum.PROCESSED, ...data }
+            { ...data, status: ProcessingStatusEnum.PROCESSED }
           );
         } catch (err) {
           logger.error(`[Worker ${this._id}] Error: ${err.message}`);
@@ -124,7 +127,7 @@ export class NewsScraperTaskWorker {
 
           await this._newsScraperMessageBroker.sendToQueue(
             NewsScraperMessageBrokerQueuesEnum.NEWS_SCRAPER_RECENT_ARTICLES_SCRAPE_STATUS_UPDATE_QUEUE,
-            { status: ProcessingStatusEnum.FAILED, ...data, errorMessage: err.message }
+            { ...data, status: ProcessingStatusEnum.FAILED, errorMessage: err.message }
           );
         }
       }
@@ -133,6 +136,61 @@ export class NewsScraperTaskWorker {
 
   private async _startArticleQueueConsumption() {
     logger.info(`[Worker ${this._id}] Starting to consume article scrape queue ...`);
+
+    const dataSource = await this._newsScraperDatabase.getDataSource();
+    const newsArticleRepository = dataSource.getRepository(NewsArticle);
+
+    return this._newsScraperMessageBroker.consumeFromQueueOneAtTime(
+      NewsScraperMessageBrokerQueuesEnum.NEWS_SCRAPER_ARTICLE_SCRAPE_QUEUE,
+      async (data, acknowledgeMessageCallback, negativeAcknowledgeMessageCallback) => {
+        logger.debug(`[Worker ${this._id}] Processing recent articles scrape job. Data ${JSON.stringify(data)}`);
+
+        await this._newsScraperMessageBroker.sendToQueue(
+          NewsScraperMessageBrokerQueuesEnum.NEWS_SCRAPER_ARTICLE_SCRAPE_STATUS_UPDATE_QUEUE,
+          { ...data, status: ProcessingStatusEnum.PROCESSING }
+        );
+
+        const newsScraper = await this._newsScraperManager.getForUrl(data.url);
+        if (!newsScraper) {
+          const errorMessage = `[Worker ${this._id}] News scraper for URL "${data.url}" not found. Skipping ...`;
+
+          logger.error(errorMessage);
+
+          negativeAcknowledgeMessageCallback();
+
+          await this._newsScraperMessageBroker.sendToQueue(
+            NewsScraperMessageBrokerQueuesEnum.NEWS_SCRAPER_ARTICLE_SCRAPE_STATUS_UPDATE_QUEUE,
+            { ...data, status: ProcessingStatusEnum.FAILED, errorMessage }
+          );
+
+          return;
+        }
+
+        try {
+          const article = await newsScraper.scrapeArticle(data);
+
+          const newsArticle = newsArticleRepository.create(article);
+
+          await newsArticleRepository.save(newsArticle);
+
+          acknowledgeMessageCallback();
+
+          await this._newsScraperMessageBroker.sendToQueue(
+            NewsScraperMessageBrokerQueuesEnum.NEWS_SCRAPER_ARTICLE_SCRAPE_STATUS_UPDATE_QUEUE,
+            { ...data, status: ProcessingStatusEnum.PROCESSED }
+          );
+        } catch (err) {
+          logger.error(`[Worker ${this._id}] Error: ${err.message}`);
+
+          negativeAcknowledgeMessageCallback();
+
+          await this._newsScraperMessageBroker.sendToQueue(
+            NewsScraperMessageBrokerQueuesEnum.NEWS_SCRAPER_ARTICLE_SCRAPE_STATUS_UPDATE_QUEUE,
+            { ...data, status: ProcessingStatusEnum.FAILED, errorMessage: err.message }
+          );
+        }
+      }
+    );
   }
 
   private async _sendStatusUpdate(status: LifecycleStatusEnum) {

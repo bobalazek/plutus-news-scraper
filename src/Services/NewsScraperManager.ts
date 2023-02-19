@@ -35,6 +35,14 @@ export class NewsScraperManager {
     return this._scrapers[newsSiteKey] ?? undefined;
   }
 
+  async getForUrl(url: string) {
+    await this._init();
+
+    const urlObject = new URL(url);
+
+    return this.getForDomain(urlObject.hostname);
+  }
+
   async getForDomain(domain: string) {
     await this._init();
 
@@ -48,10 +56,9 @@ export class NewsScraperManager {
   }
 
   async scrapeArticle(url: string): Promise<NewsArticleExtendedType> {
-    const urlObject = new URL(url);
-    const scraper = await this.getForDomain(urlObject.hostname);
+    const scraper = await this.getForUrl(url);
     if (typeof scraper === 'undefined') {
-      throw new Error(`No scraper for the domain "${urlObject.hostname}" was found`);
+      throw new Error(`No scraper for the URL "${url}" was found`);
     }
 
     this._currentScraper = this._prepareScraper(scraper);

@@ -1,10 +1,10 @@
-import { BaseEntity, Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
+import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
 
 import { NewsArticleAuthorType, NewsArticleCategoryType, NewsArticleType } from '../Schemas/NewsArticleSchema';
 import { NewsArticleMultimediaTypeEnum } from '../Types/NewsArticleMultimediaTypeEnum';
 
 @Entity('news_articles')
-export class NewsArticle extends BaseEntity implements NewsArticleType {
+export class NewsArticle implements NewsArticleType {
   @PrimaryGeneratedColumn('uuid')
   id!: number;
 
