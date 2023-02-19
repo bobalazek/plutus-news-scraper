@@ -115,6 +115,10 @@ export default class DWNewsScraper extends AbstractNewsScraper implements NewsSc
       });
     });
 
+    const languageCode = await page.evaluate(() => {
+      return document.querySelector('html')?.getAttribute('lang') ?? '';
+    });
+
     const linkedDataText = await page.evaluate(() => {
       return document.querySelector('head script[type="application/ld+json"]')?.innerHTML ?? '';
     });
@@ -148,6 +152,7 @@ export default class DWNewsScraper extends AbstractNewsScraper implements NewsSc
       authors: linkedData.author,
       categories: categories,
       imageUrl: linkedData.image[0],
+      languageCode: languageCode,
     };
 
     return Promise.resolve(article);

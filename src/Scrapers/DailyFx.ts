@@ -85,7 +85,7 @@ export default class DailyFxNewsScraper extends AbstractNewsScraper implements N
     logger.info(`Going to URL ${url} ...`);
 
     await page.goto(url, {
-      waitUntil: 'domcontentloaded',
+      waitUntil: 'networkidle2',
     });
 
     const urlSplit = url.split('/');
@@ -95,16 +95,8 @@ export default class DailyFxNewsScraper extends AbstractNewsScraper implements N
     const slugLastPart = slugSplit[slugSplit.length - 1];
     const newsSiteArticleId = slugLastPart.replace('.html', '');
 
-    const authorName = await page.evaluate(() => {
-      return document.querySelector('head meta[name="author"]')?.getAttribute('content') ?? '';
-    });
-
-    const authorUrl = await page.evaluate(() => {
-      return (
-        document
-          .querySelector('article .dfx-articleHead__authorInfo .dfx-articleHead__articleDetails a')
-          ?.getAttribute('href') ?? ''
-      );
+    const languageCode = await page.evaluate(() => {
+      return document.querySelector('html')?.getAttribute('lang') ?? '';
     });
 
     const linkedDataText = await page.evaluate(() => {
@@ -114,7 +106,7 @@ export default class DailyFxNewsScraper extends AbstractNewsScraper implements N
       throw new NewsArticleDataNotFoundError(`Linked data not found for URL ${url}`);
     }
 
-    const linkedData = JSON.parse(linkedDataText);
+    const linkedData = JSON.parse(linkedDataText)[1];
 
     // Content
     const content = await page.evaluate(() => {
@@ -129,16 +121,17 @@ export default class DailyFxNewsScraper extends AbstractNewsScraper implements N
 
     const article: NewsArticleType = {
       url: url,
-      title: linkedData[1].headline,
+      title: linkedData.headline,
       multimediaType: NewsArticleMultimediaTypeEnum.TEXT,
       content: convert(content, {
         wordwrap: false,
       }),
       newsSiteArticleId: newsSiteArticleId,
-      publishedAt: new Date(linkedData[1].datePublished),
-      modifiedAt: new Date(linkedData[1].dateModified),
-      authors: [{ name: authorName, url: authorUrl }],
-      imageUrl: linkedData[1].image.url,
+      publishedAt: new Date(linkedData.datePublished),
+      modifiedAt: new Date(linkedData.dateModified),
+      authors: linkedData.author,
+      imageUrl: linkedData.image.url,
+      languageCode: languageCode,
     };
 
     return Promise.resolve(article);

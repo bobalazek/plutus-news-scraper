@@ -90,15 +90,16 @@ export default class BusinessInsiderNewsScraper extends AbstractNewsScraper impl
 
     const newsSiteArticleId = url;
 
-    const categoryName = await page.evaluate(() => {
-      return document.querySelector('head meta[name="tbi-vertical"]')?.getAttribute('content') ?? '';
+    const categories = await page.evaluate(() => {
+      return Array.from(document.querySelectorAll(['.post-meta .post-breadcrumbs a:last-child'].join(', '))).map(
+        ($a) => {
+          return {
+            name: ($a.innerHTML ?? '').trim(),
+            url: 'https://www.businessinsider.com' + $a.getAttribute('href') ?? undefined,
+          };
+        }
+      );
     });
-
-    const categoryLink = await page.evaluate(() => {
-      return document.querySelector('.post-meta .post-breadcrumbs a:last-child')?.getAttribute('href') ?? '';
-    });
-
-    const categoryUrl = 'https://www.businessinsider.com' + categoryLink;
 
     const languageCode = await page.evaluate(() => {
       return document.querySelector('html')?.getAttribute('lang') ?? '';
@@ -112,6 +113,7 @@ export default class BusinessInsiderNewsScraper extends AbstractNewsScraper impl
     }
 
     const linkedData = JSON.parse(linkedDataText);
+
     await this.closePuppeteerBrowser();
 
     const article: NewsArticleType = {
@@ -122,8 +124,13 @@ export default class BusinessInsiderNewsScraper extends AbstractNewsScraper impl
       newsSiteArticleId: newsSiteArticleId,
       publishedAt: new Date(linkedData.datePublished),
       modifiedAt: new Date(linkedData.dateModified),
-      authors: [linkedData.author],
-      categories: [{ name: categoryName, url: categoryUrl }],
+      authors: [linkedData.author].map((author) => {
+        return {
+          ...author,
+          url: author.url ? author.url : author.sameAs,
+        };
+      }),
+      categories: categories,
       imageUrl: linkedData.image.url,
       languageCode: languageCode,
     };

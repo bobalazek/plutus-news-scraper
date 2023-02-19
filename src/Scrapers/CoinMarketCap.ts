@@ -98,16 +98,21 @@ export default class CoinMarketCapNewsScraper extends AbstractNewsScraper implem
       return document.querySelector('body')?.getAttribute('data-commit-time') ?? '';
     });
 
-    const authorName = await page.evaluate(() => {
-      return document.querySelector('body a.name')?.innerHTML ?? '';
-    });
-
-    const authorUrl = await page.evaluate(() => {
-      return 'https://coinmarketcap.com' + document.querySelector('body a.name')?.getAttribute('href') ?? '';
+    const authors = await page.evaluate(() => {
+      return Array.from(document.querySelectorAll(['body a > a.name'].join(', '))).map(($a) => {
+        return {
+          name: $a.innerHTML ?? '',
+          url: 'https://coinmarketcap.com' + $a.getAttribute('href') ?? undefined,
+        };
+      });
     });
 
     const imageUrl = await page.evaluate(() => {
       return document.querySelector('head meta[property="og:image"]')?.getAttribute('content') ?? '';
+    });
+
+    const languageCode = await page.evaluate(() => {
+      return document.querySelector('html')?.getAttribute('lang') ?? '';
     });
 
     // Content
@@ -131,8 +136,9 @@ export default class CoinMarketCapNewsScraper extends AbstractNewsScraper implem
       newsSiteArticleId: newsSiteArticleId,
       publishedAt: new Date(datePublished),
       modifiedAt: new Date(dateModified),
-      authors: [{ name: authorName, url: authorUrl }],
+      authors: authors,
       imageUrl: imageUrl,
+      languageCode: languageCode,
     };
 
     return Promise.resolve(article);

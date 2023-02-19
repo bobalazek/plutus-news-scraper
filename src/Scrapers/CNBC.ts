@@ -104,6 +104,7 @@ export default class CNBCNewsScraper extends AbstractNewsScraper implements News
       );
     });
 
+    //TODO categories appear empty
     const categories = await page.evaluate(() => {
       return Array.from(
         document.querySelectorAll(
@@ -118,6 +119,10 @@ export default class CNBCNewsScraper extends AbstractNewsScraper implements News
     });
     const imageUrl = await page.evaluate(() => {
       return document.querySelector('head meta[property="og:image"]')?.getAttribute('content') ?? '';
+    });
+
+    const languageCode = await page.evaluate(() => {
+      return document.querySelector('html')?.getAttribute('lang') ?? '';
     });
 
     // Content
@@ -144,6 +149,7 @@ export default class CNBCNewsScraper extends AbstractNewsScraper implements News
       authors: [{ name: authorName, url: authorUrl }],
       categories: categories,
       imageUrl: imageUrl,
+      languageCode: languageCode,
     };
 
     return Promise.resolve(article);

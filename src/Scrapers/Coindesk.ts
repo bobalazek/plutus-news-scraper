@@ -90,6 +90,10 @@ export default class CoindeskNewsScraper extends AbstractNewsScraper implements 
       waitUntil: 'domcontentloaded',
     });
 
+    const languageCode = await page.evaluate(() => {
+      return document.querySelector('html')?.getAttribute('lang') ?? '';
+    });
+
     const linkedDataText = await page.evaluate(() => {
       return document.querySelector('head script[type="application/ld+json"]')?.innerHTML ?? '';
     });
@@ -98,12 +102,6 @@ export default class CoindeskNewsScraper extends AbstractNewsScraper implements 
     }
 
     const linkedData = JSON.parse(linkedDataText);
-
-    const categoryLink = await page.evaluate(() => {
-      return document.querySelector('article .at-category a')?.getAttribute('href') ?? '';
-    });
-
-    const categoryUrl = 'https://www.coindesk.com/' + categoryLink;
 
     // Content
     const content = await page.evaluate(() => {
@@ -127,8 +125,9 @@ export default class CoindeskNewsScraper extends AbstractNewsScraper implements 
       publishedAt: new Date(linkedData.datePublished),
       modifiedAt: new Date(linkedData.dateModified),
       authors: linkedData.author,
-      categories: [{ name: linkedData.articleSection, url: categoryUrl }],
+      categories: [{ name: linkedData.articleSection }],
       imageUrl: linkedData.image.url,
+      languageCode: languageCode,
     };
 
     return Promise.resolve(article);

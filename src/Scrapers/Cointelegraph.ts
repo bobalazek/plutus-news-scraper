@@ -37,6 +37,7 @@ export default class CointelegraphNewsScraper extends AbstractNewsScraper implem
           const querySelector = [
             '.category-page li.posts-listing__item a.post-card-inline__title-link',
             '.markets-news li.market-news__item a.post-card-inline__title-link',
+            '.sidebar .sidebar__widget ul li.editors-choice-widget__item a',
           ].join(', ');
 
           // Fetch those with the .querySelectoAll() and convert it to an array
@@ -91,6 +92,10 @@ export default class CointelegraphNewsScraper extends AbstractNewsScraper implem
       return document.querySelector('article.post__article')?.getAttribute('id')?.replace('article-', '') ?? '';
     });
 
+    const languageCode = await page.evaluate(() => {
+      return document.querySelector('html')?.getAttribute('lang') ?? '';
+    });
+
     const linkedDataText = await page.evaluate(() => {
       return document.querySelector('head script[type="application/ld+json"]')?.innerHTML ?? '';
     });
@@ -123,6 +128,7 @@ export default class CointelegraphNewsScraper extends AbstractNewsScraper implem
       modifiedAt: new Date(linkedData.dateModified),
       authors: [linkedData.author],
       imageUrl: linkedData.image.url,
+      languageCode: languageCode,
     };
 
     return Promise.resolve(article);

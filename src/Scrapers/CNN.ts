@@ -84,7 +84,7 @@ export default class CNNNewsScraper extends AbstractNewsScraper implements NewsS
     logger.info(`Going to URL ${url} ...`);
 
     await page.goto(url, {
-      waitUntil: 'domcontentloaded',
+      waitUntil: 'networkidle2',
     });
 
     const linkedDataText = await page.evaluate(() => {
@@ -96,29 +96,19 @@ export default class CNNNewsScraper extends AbstractNewsScraper implements NewsS
 
     const linkedData = JSON.parse(linkedDataText);
 
-    // Content
-    const content = await page.evaluate(() => {
-      return Array.from(document.querySelectorAll('.article__content-container p'))
-        .map((element) => {
-          return element.innerHTML;
-        })
-        .join('');
-    });
-
     await this.closePuppeteerBrowser();
 
     const article: NewsArticleType = {
       url: url,
       title: linkedData.headline,
       multimediaType: NewsArticleMultimediaTypeEnum.TEXT,
-      content: convert(content, {
-        wordwrap: false,
-      }),
+      content: linkedData.articleBody,
       newsSiteArticleId: linkedData.identifier[0].value,
       publishedAt: new Date(linkedData.datePublished),
       modifiedAt: new Date(linkedData.dateModified),
       authors: linkedData.author,
       imageUrl: linkedData.image.url,
+      languageCode: linkedData.inLanguage,
     };
 
     return Promise.resolve(article);

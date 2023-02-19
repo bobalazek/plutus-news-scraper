@@ -43,6 +43,7 @@ export default class CNETNewsScraper extends AbstractNewsScraper implements News
             '.c-premiumList .c-premiumList_item h3 a',
             '.c-storiesListHorizontal_stories .c-storiesHighlightsCard a',
             '.c-storiesMeta .c-storiesHighlightsCard a',
+            'div[section^=news-] .c-tileList_desc a',
           ].join(', ');
 
           // Fetch those with the .querySelectoAll() and convert it to an array
@@ -90,11 +91,26 @@ export default class CNETNewsScraper extends AbstractNewsScraper implements News
     logger.info(`Going to URL ${url} ...`);
 
     await page.goto(url, {
-      waitUntil: 'domcontentloaded',
+      waitUntil: 'networkidle2',
     });
 
     const newsSiteArticleId = await page.evaluate(() => {
       return document.querySelector('head meta[property="postId"]')?.getAttribute('content') ?? '';
+    });
+
+    const categories = await page.evaluate(() => {
+      return Array.from(document.querySelectorAll(['#rbWrapper .contentWrap .c-head_breadcrumbs a'].join(', '))).map(
+        ($a) => {
+          return {
+            name: $a.innerHTML ?? '',
+            url: 'https://www.cnet.com' + $a.getAttribute('href') ?? undefined,
+          };
+        }
+      );
+    });
+
+    const languageCode = await page.evaluate(() => {
+      return document.querySelector('html')?.getAttribute('lang') ?? '';
     });
 
     const linkedDataText = await page.evaluate(() => {
@@ -128,7 +144,9 @@ export default class CNETNewsScraper extends AbstractNewsScraper implements News
       publishedAt: new Date(linkedData.datePublished),
       modifiedAt: new Date(linkedData.dateModified),
       authors: linkedData.author,
+      categories: categories,
       imageUrl: linkedData.image[0].url,
+      languageCode: languageCode,
     };
 
     return Promise.resolve(article);
