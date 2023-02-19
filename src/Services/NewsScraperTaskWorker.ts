@@ -42,11 +42,11 @@ export class NewsScraperTaskWorker {
     }
 
     if (consumedQueues.includes('*') || consumedQueues.includes('scrape_recent_articles')) {
-      this._startRecentArticlesQueueConsumption(id);
+      this._startRecentArticlesQueueConsumption();
     }
 
     if (consumedQueues.includes('*') || consumedQueues.includes('scrape_article')) {
-      // TODO: article queue consumption
+      this._startArticleQueueConsumption();
     }
 
     await this._sendStatusUpdate(LifecycleStatusEnum.STARTED);
@@ -68,13 +68,13 @@ export class NewsScraperTaskWorker {
     );
   }
 
-  private async _startRecentArticlesQueueConsumption(id: string) {
-    logger.info(`[Worker ${id}] Starting to consume recent articles scrape ...`);
+  private async _startRecentArticlesQueueConsumption() {
+    logger.info(`[Worker ${this._id}] Starting to consume recent articles scrape queue ...`);
 
     return this._newsScraperMessageBroker.consumeFromQueueOneAtTime(
       NewsScraperMessageBrokerQueuesEnum.NEWS_SCRAPER_RECENT_ARTICLES_SCRAPE_QUEUE,
       async (data, acknowledgeMessageCallback, negativeAcknowledgeMessageCallback) => {
-        logger.debug(`[Worker ${id}] Processing recent articles scrape job. Data ${JSON.stringify(data)}`);
+        logger.debug(`[Worker ${this._id}] Processing recent articles scrape job. Data ${JSON.stringify(data)}`);
 
         await this._newsScraperMessageBroker.sendToQueue(
           NewsScraperMessageBrokerQueuesEnum.NEWS_SCRAPER_RECENT_ARTICLES_SCRAPE_STATUS_UPDATE_QUEUE,
@@ -83,7 +83,7 @@ export class NewsScraperTaskWorker {
 
         const newsScraper = await this._newsScraperManager.get(data.newsSite);
         if (!newsScraper) {
-          const errorMessage = `[Worker ${id}] News scraper "${data.newsSite}" not found. Skipping ...`;
+          const errorMessage = `[Worker ${this._id}] News scraper "${data.newsSite}" not found. Skipping ...`;
 
           logger.error(errorMessage);
 
@@ -118,7 +118,7 @@ export class NewsScraperTaskWorker {
             { status: ProcessingStatusEnum.PROCESSED, ...data }
           );
         } catch (err) {
-          logger.error(`[Worker ${id}] Error: ${err.message}`);
+          logger.error(`[Worker ${this._id}] Error: ${err.message}`);
 
           negativeAcknowledgeMessageCallback();
 
@@ -129,6 +129,10 @@ export class NewsScraperTaskWorker {
         }
       }
     );
+  }
+
+  private async _startArticleQueueConsumption() {
+    logger.info(`[Worker ${this._id}] Starting to consume article scrape queue ...`);
   }
 
   private async _sendStatusUpdate(status: LifecycleStatusEnum) {

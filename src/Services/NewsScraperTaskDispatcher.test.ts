@@ -3,6 +3,7 @@ import { injectable } from 'inversify';
 
 import { container } from '../DI/Container';
 import { TYPES } from '../DI/ContainerTypes';
+import { NewsArticleMultimediaTypeEnum } from '../Types/NewsArticleMultimediaTypeEnum';
 import { NewsScraperInterface } from '../Types/NewsScraperInterface';
 import { NewsScraperStatusEntry } from '../Types/NewsScraperStatusEntry';
 import { ProcessingStatusEnum } from '../Types/ProcessingStatusEnum';
@@ -12,7 +13,17 @@ import { NewsScraperTaskDispatcher } from './NewsScraperTaskDispatcher';
 // We need it so we can setup the scrapers in the task dispatcher
 const baseScraper = {
   scrapeRecentArticles: async () => [],
-  scrapeArticle: async () => null,
+  scrapeArticle: async () => {
+    return {
+      url: 'http://test.com',
+      title: 'Headline',
+      multimediaType: NewsArticleMultimediaTypeEnum.TEXT,
+      content: '',
+      newsSiteArticleId: '',
+      publishedAt: new Date(),
+      modifiedAt: new Date(),
+    };
+  },
 };
 
 @injectable()
