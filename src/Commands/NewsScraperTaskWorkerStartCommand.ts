@@ -25,6 +25,7 @@ export const addNewsScraperTaskWorkerStartCommand = (program: Command) => {
           httpServerPort ?? undefined,
           consumedQueues.split(',')
         );
+        await newsScraperTaskWorker.terminate();
       } catch (err) {
         await newsScraperTaskWorker.terminate(err.message);
 

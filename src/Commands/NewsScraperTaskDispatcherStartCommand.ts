@@ -17,6 +17,7 @@ export const addNewsScraperTaskDispatcherStartCommand = (program: Command) => {
 
       try {
         await newsScraperTaskDispatcher.start(httpServerPort ?? undefined);
+        await newsScraperTaskDispatcher.terminate();
       } catch (err) {
         await newsScraperTaskDispatcher.terminate(err.message);
 
