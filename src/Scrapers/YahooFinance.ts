@@ -30,6 +30,7 @@ export default class YahooFinanceNewsScraper extends AbstractNewsScraper impleme
     for (const recentArticleListUrl of recentArticleListUrls) {
       logger.info(`Going to URL ${recentArticleListUrl} ...`);
 
+      await page.waitForTimeout(1000);
       await page.goto(recentArticleListUrl, {
         waitUntil: 'domcontentloaded',
       });
@@ -40,6 +41,7 @@ export default class YahooFinanceNewsScraper extends AbstractNewsScraper impleme
       if ($consentPageDiv) {
         await page.click('#consent-page .actions button[value="agree"]');
 
+        await page.waitForTimeout(1000);
         await page.goto(recentArticleListUrl, {
           waitUntil: 'domcontentloaded',
         });

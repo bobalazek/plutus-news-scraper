@@ -31,6 +31,7 @@ export default class TechCrunchNewsScraper extends AbstractNewsScraper implement
     for (const recentArticleListUrl of recentArticleListUrls) {
       logger.info(`Going to URL ${recentArticleListUrl} ...`);
 
+      await page.waitForTimeout(1000);
       await page.goto(recentArticleListUrl, {
         waitUntil: 'domcontentloaded',
       });
@@ -41,6 +42,7 @@ export default class TechCrunchNewsScraper extends AbstractNewsScraper implement
       if ($consentPageDiv) {
         await page.click('#consent-page .actions button[value="agree"]');
 
+        await page.waitForTimeout(1000);
         await page.goto(recentArticleListUrl, {
           waitUntil: 'domcontentloaded',
         });

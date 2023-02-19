@@ -40,6 +40,7 @@ export default class BloombergNewsScraper extends AbstractNewsScraper implements
     for (const recentArticleListUrl of recentArticleListUrls) {
       logger.info(`Going to URL ${recentArticleListUrl} ...`);
 
+      await page.waitForTimeout(1000);
       await page.goto(recentArticleListUrl, {
         waitUntil: 'domcontentloaded',
       });
