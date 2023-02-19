@@ -72,8 +72,6 @@ export default class BusinessInsiderNewsScraper extends AbstractNewsScraper impl
       }
     }
 
-    await this.closePuppeteerBrowser();
-
     return Promise.resolve(this.getUniqueArray(basicArticles));
   }
 
@@ -112,7 +110,6 @@ export default class BusinessInsiderNewsScraper extends AbstractNewsScraper impl
     }
 
     const linkedData = JSON.parse(linkedDataText);
-    await this.closePuppeteerBrowser();
 
     const article: NewsArticleType = {
       url: url,

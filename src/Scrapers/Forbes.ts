@@ -69,8 +69,6 @@ export default class ForbesNewsScraper extends AbstractNewsScraper implements Ne
       }
     }
 
-    await this.closePuppeteerBrowser();
-
     return Promise.resolve(this.getUniqueArray(basicArticles));
   }
 
@@ -111,8 +109,6 @@ export default class ForbesNewsScraper extends AbstractNewsScraper implements Ne
         })
         .join('');
     });
-
-    await this.closePuppeteerBrowser();
 
     const article: NewsArticleType = {
       url: url,

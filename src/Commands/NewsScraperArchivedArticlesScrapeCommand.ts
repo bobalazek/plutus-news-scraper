@@ -28,9 +28,9 @@ export const addNewsScraperArchivedArticlesScrapeCommand = (program: Command) =>
 
         await newsScraperManager.scrapeArchivedArticles(newsSite, parsedOptions);
       } catch (err) {
-        await newsScraperManager.terminateScraper();
-
         logger.error(err.message);
+      } finally {
+        await newsScraperManager.terminateScraper();
       }
     });
   program.addCommand(command);

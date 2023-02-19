@@ -75,8 +75,6 @@ export default class TheWallStreetJournalNewsScraper extends AbstractNewsScraper
       }
     }
 
-    await this.closePuppeteerBrowser();
-
     return Promise.resolve(this.getUniqueArray(basicArticles));
   }
 
@@ -125,8 +123,6 @@ export default class TheWallStreetJournalNewsScraper extends AbstractNewsScraper
         })
         .join('');
     });
-
-    await this.closePuppeteerBrowser();
 
     const article: NewsArticleType = {
       url: url,

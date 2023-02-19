@@ -83,8 +83,6 @@ export default class TechCrunchNewsScraper extends AbstractNewsScraper implement
       }
     }
 
-    await this.closePuppeteerBrowser();
-
     return Promise.resolve(this.getUniqueArray(basicArticles));
   }
 
@@ -146,8 +144,6 @@ export default class TechCrunchNewsScraper extends AbstractNewsScraper implement
         })
         .join('');
     });
-
-    await this.closePuppeteerBrowser();
 
     const article: NewsArticleType = {
       url: url,

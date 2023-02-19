@@ -72,8 +72,6 @@ export default class FinancialTimesNewsScraper extends AbstractNewsScraper imple
       }
     }
 
-    await this.closePuppeteerBrowser();
-
     return Promise.resolve(this.getUniqueArray(basicArticles));
   }
 
@@ -104,8 +102,6 @@ export default class FinancialTimesNewsScraper extends AbstractNewsScraper imple
 
     // Content
     const content = '';
-
-    await this.closePuppeteerBrowser();
 
     const article: NewsArticleType = {
       url: url,

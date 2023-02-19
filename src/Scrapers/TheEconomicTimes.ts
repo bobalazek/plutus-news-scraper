@@ -84,8 +84,6 @@ export default class TheEconomicTimesNewsScraper extends AbstractNewsScraper imp
       }
     }
 
-    await this.closePuppeteerBrowser();
-
     return Promise.resolve(this.getUniqueArray(basicArticles));
   }
 
@@ -121,8 +119,6 @@ export default class TheEconomicTimesNewsScraper extends AbstractNewsScraper imp
         })
         .join('');
     });
-
-    await this.closePuppeteerBrowser();
 
     const article: NewsArticleType = {
       url: url,

@@ -71,8 +71,6 @@ export default class CNNNewsScraper extends AbstractNewsScraper implements NewsS
       }
     }
 
-    await this.closePuppeteerBrowser();
-
     return Promise.resolve(this.getUniqueArray(basicArticles));
   }
 
@@ -104,8 +102,6 @@ export default class CNNNewsScraper extends AbstractNewsScraper implements NewsS
         })
         .join('');
     });
-
-    await this.closePuppeteerBrowser();
 
     const article: NewsArticleType = {
       url: url,
