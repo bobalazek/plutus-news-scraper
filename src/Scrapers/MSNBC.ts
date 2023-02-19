@@ -65,8 +65,6 @@ export default class MSNBCNewsScraper extends AbstractNewsScraper implements New
       }
     }
 
-    await this.closePuppeteerBrowser();
-
     return Promise.resolve(this.getUniqueArray(basicArticles));
   }
 
@@ -101,8 +99,6 @@ export default class MSNBCNewsScraper extends AbstractNewsScraper implements New
         })
         .join('');
     });
-
-    await this.closePuppeteerBrowser();
 
     const article: NewsArticleType = {
       url: url,

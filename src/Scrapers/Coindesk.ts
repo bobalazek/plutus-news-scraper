@@ -74,8 +74,6 @@ export default class CoindeskNewsScraper extends AbstractNewsScraper implements 
       }
     }
 
-    await this.closePuppeteerBrowser();
-
     return Promise.resolve(this.getUniqueArray(basicArticles));
   }
 
@@ -111,8 +109,6 @@ export default class CoindeskNewsScraper extends AbstractNewsScraper implements 
         })
         .join('');
     });
-
-    await this.closePuppeteerBrowser();
 
     const article: NewsArticleType = {
       url: url,

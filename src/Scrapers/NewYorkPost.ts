@@ -65,8 +65,6 @@ export default class NewYorkPostNewsScraper extends AbstractNewsScraper implemen
       }
     }
 
-    await this.closePuppeteerBrowser();
-
     return Promise.resolve(this.getUniqueArray(basicArticles));
   }
 
@@ -113,8 +111,6 @@ export default class NewYorkPostNewsScraper extends AbstractNewsScraper implemen
         })
         .join('');
     });
-
-    await this.closePuppeteerBrowser();
 
     const article: NewsArticleType = {
       url: url,

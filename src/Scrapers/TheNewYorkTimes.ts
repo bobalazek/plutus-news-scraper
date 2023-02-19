@@ -77,8 +77,6 @@ export default class TheNewYorkTimesNewsScraper extends AbstractNewsScraper impl
       }
     }
 
-    await this.closePuppeteerBrowser();
-
     return Promise.resolve(this.getUniqueArray(basicArticles));
   }
 
@@ -118,8 +116,6 @@ export default class TheNewYorkTimesNewsScraper extends AbstractNewsScraper impl
         })
         .join('');
     });
-
-    await this.closePuppeteerBrowser();
 
     const article: NewsArticleType = {
       url: url,

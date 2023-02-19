@@ -66,8 +66,6 @@ export default class CoinMarketCapNewsScraper extends AbstractNewsScraper implem
       }
     }
 
-    await this.closePuppeteerBrowser();
-
     return Promise.resolve(this.getUniqueArray(basicArticles));
   }
 
@@ -123,8 +121,6 @@ export default class CoinMarketCapNewsScraper extends AbstractNewsScraper implem
         })
         .join('');
     });
-
-    await this.closePuppeteerBrowser();
 
     const article: NewsArticleType = {
       url: url,

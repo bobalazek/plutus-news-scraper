@@ -86,8 +86,6 @@ export default class YahooFinanceNewsScraper extends AbstractNewsScraper impleme
       }
     }
 
-    await this.closePuppeteerBrowser();
-
     return Promise.resolve(this.getUniqueArray(basicArticles));
   }
 
@@ -137,8 +135,6 @@ export default class YahooFinanceNewsScraper extends AbstractNewsScraper impleme
         })
         .join('');
     });
-
-    await this.closePuppeteerBrowser();
 
     const article: NewsArticleType = {
       url: url,

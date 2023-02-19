@@ -71,8 +71,6 @@ export default class TheStreetNewsScraper extends AbstractNewsScraper implements
       }
     }
 
-    await this.closePuppeteerBrowser();
-
     return Promise.resolve(this.getUniqueArray(basicArticles));
   }
 
@@ -110,8 +108,6 @@ export default class TheStreetNewsScraper extends AbstractNewsScraper implements
     }
 
     const linkedData = JSON.parse(linkedDataText);
-
-    await this.closePuppeteerBrowser();
 
     const article: NewsArticleType = {
       url: url,

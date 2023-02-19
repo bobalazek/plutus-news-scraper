@@ -76,8 +76,6 @@ export default class MarketsInsiderNewsScraper extends AbstractNewsScraper imple
       }
     }
 
-    await this.closePuppeteerBrowser();
-
     return Promise.resolve(this.getUniqueArray(basicArticles));
   }
 
@@ -114,8 +112,6 @@ export default class MarketsInsiderNewsScraper extends AbstractNewsScraper imple
     }
 
     const linkedData = JSON.parse(linkedDataText);
-
-    await this.closePuppeteerBrowser();
 
     const article: NewsArticleType = {
       url: url,

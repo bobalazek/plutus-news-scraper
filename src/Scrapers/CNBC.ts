@@ -65,8 +65,6 @@ export default class CNBCNewsScraper extends AbstractNewsScraper implements News
       }
     }
 
-    await this.closePuppeteerBrowser();
-
     return Promise.resolve(this.getUniqueArray(basicArticles));
   }
 
@@ -133,8 +131,6 @@ export default class CNBCNewsScraper extends AbstractNewsScraper implements News
         })
         .join('');
     });
-
-    await this.closePuppeteerBrowser();
 
     const article: NewsArticleType = {
       url: url,

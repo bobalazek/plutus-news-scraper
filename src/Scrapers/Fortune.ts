@@ -71,8 +71,6 @@ export default class FortuneNewsScraper extends AbstractNewsScraper implements N
       }
     }
 
-    await this.closePuppeteerBrowser();
-
     return Promise.resolve(this.getUniqueArray(basicArticles));
   }
 
@@ -115,8 +113,6 @@ export default class FortuneNewsScraper extends AbstractNewsScraper implements N
         })
         .join('');
     });
-
-    await this.closePuppeteerBrowser();
 
     const article: NewsArticleType = {
       url: url,
