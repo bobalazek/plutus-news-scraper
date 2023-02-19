@@ -1,5 +1,3 @@
-import { convert } from 'html-to-text';
-
 import { NewsArticleDataNotFoundError } from '../Errors/NewsArticleDataNotFoundError';
 import { NewsArticleType } from '../Schemas/NewsArticleSchema';
 import { NewsBasicArticleType } from '../Schemas/NewsBasicArticleSchema';
