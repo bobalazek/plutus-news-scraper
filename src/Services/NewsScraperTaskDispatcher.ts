@@ -37,7 +37,7 @@ export class NewsScraperTaskDispatcher {
 
     await this._purgeQueues();
 
-    await this._sendStatusUpdate(LifecycleStatusEnum.STARTING);
+    await this._sendDispatcherStatusUpdate(LifecycleStatusEnum.STARTING);
 
     // Metrics
     this._prometheusService.addDefaultMetrics({ prefix: `news_scraper_task_dispatcher_` });
@@ -53,7 +53,7 @@ export class NewsScraperTaskDispatcher {
     this._startRecentArticlesScraping();
     this._startMessageQueuesMonitoring();
 
-    await this._sendStatusUpdate(LifecycleStatusEnum.STARTED);
+    await this._sendDispatcherStatusUpdate(LifecycleStatusEnum.STARTED);
 
     await new Promise(() => {
       // Together forever and never apart ...
@@ -200,7 +200,7 @@ export class NewsScraperTaskDispatcher {
     }
   }
 
-  private async _sendStatusUpdate(status: LifecycleStatusEnum) {
+  private async _sendDispatcherStatusUpdate(status: LifecycleStatusEnum) {
     return this._newsScraperMessageBroker.sendToQueue(
       NewsScraperMessageBrokerQueuesEnum.NEWS_SCRAPER_TASK_DISPATCHER_STATUS_UPDATE_QUEUE,
       { status, httpServerPort: this._httpServerPort }

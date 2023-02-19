@@ -33,7 +33,7 @@ export class NewsScraperTaskWorker {
 
     logger.info(`========== Starting the worker "${id}" ... ==========`);
 
-    await this._sendStatusUpdate(LifecycleStatusEnum.STARTING);
+    await this._sendWorkerStatusUpdate(LifecycleStatusEnum.STARTING);
 
     // Metrics
     this._prometheusService.addDefaultMetrics({ prefix: `news_scraper_task_worker_${id}_` });
@@ -52,7 +52,7 @@ export class NewsScraperTaskWorker {
       this._startArticleQueueConsumption();
     }
 
-    await this._sendStatusUpdate(LifecycleStatusEnum.STARTED);
+    await this._sendWorkerStatusUpdate(LifecycleStatusEnum.STARTED);
 
     await new Promise(() => {
       // Together forever and never apart ...
@@ -77,7 +77,11 @@ export class NewsScraperTaskWorker {
     return this._newsScraperMessageBroker.consumeFromQueueOneAtTime(
       NewsScraperMessageBrokerQueuesEnum.NEWS_SCRAPER_RECENT_ARTICLES_SCRAPE_QUEUE,
       async (data, acknowledgeMessageCallback, negativeAcknowledgeMessageCallback) => {
-        logger.debug(`[Worker ${this._id}] Processing recent articles scrape job. Data ${JSON.stringify(data)}`);
+        logger.debug(
+          `[Worker ${this._id}][Recent Articles Queue] Processing recent articles scrape job. Data ${JSON.stringify(
+            data
+          )}`
+        );
 
         await this._newsScraperMessageBroker.sendToQueue(
           NewsScraperMessageBrokerQueuesEnum.NEWS_SCRAPER_RECENT_ARTICLES_SCRAPE_STATUS_UPDATE_QUEUE,
@@ -86,7 +90,7 @@ export class NewsScraperTaskWorker {
 
         const newsScraper = await this._newsScraperManager.get(data.newsSite);
         if (!newsScraper) {
-          const errorMessage = `[Worker ${this._id}] News scraper "${data.newsSite}" not found. Skipping ...`;
+          const errorMessage = `[Worker ${this._id}][Recent Articles Queue] News scraper "${data.newsSite}" not found. Skipping ...`;
 
           logger.error(errorMessage);
 
@@ -121,7 +125,7 @@ export class NewsScraperTaskWorker {
             { ...data, status: ProcessingStatusEnum.PROCESSED }
           );
         } catch (err) {
-          logger.error(`[Worker ${this._id}] Error: ${err.message}`);
+          logger.error(`[Worker ${this._id}][Recent Articles Queue] Error: ${err.message}`);
 
           negativeAcknowledgeMessageCallback();
 
@@ -143,7 +147,9 @@ export class NewsScraperTaskWorker {
     return this._newsScraperMessageBroker.consumeFromQueueOneAtTime(
       NewsScraperMessageBrokerQueuesEnum.NEWS_SCRAPER_ARTICLE_SCRAPE_QUEUE,
       async (data, acknowledgeMessageCallback, negativeAcknowledgeMessageCallback) => {
-        logger.debug(`[Worker ${this._id}] Processing recent articles scrape job. Data ${JSON.stringify(data)}`);
+        logger.debug(
+          `[Worker ${this._id}][Article Queue] Processing recent articles scrape job. Data ${JSON.stringify(data)}`
+        );
 
         await this._newsScraperMessageBroker.sendToQueue(
           NewsScraperMessageBrokerQueuesEnum.NEWS_SCRAPER_ARTICLE_SCRAPE_STATUS_UPDATE_QUEUE,
@@ -152,7 +158,7 @@ export class NewsScraperTaskWorker {
 
         const newsScraper = await this._newsScraperManager.getForUrl(data.url);
         if (!newsScraper) {
-          const errorMessage = `[Worker ${this._id}] News scraper for URL "${data.url}" not found. Skipping ...`;
+          const errorMessage = `[Worker ${this._id}][Article Queue] News scraper for URL "${data.url}" not found. Skipping ...`;
 
           logger.error(errorMessage);
 
@@ -180,7 +186,7 @@ export class NewsScraperTaskWorker {
             { ...data, status: ProcessingStatusEnum.PROCESSED }
           );
         } catch (err) {
-          logger.error(`[Worker ${this._id}] Error: ${err.message}`);
+          logger.error(`[Worker ${this._id}][Article Queue] Error: ${err.message}`);
 
           negativeAcknowledgeMessageCallback();
 
@@ -193,7 +199,7 @@ export class NewsScraperTaskWorker {
     );
   }
 
-  private async _sendStatusUpdate(status: LifecycleStatusEnum) {
+  private async _sendWorkerStatusUpdate(status: LifecycleStatusEnum) {
     return this._newsScraperMessageBroker.sendToQueue(
       NewsScraperMessageBrokerQueuesEnum.NEWS_SCRAPER_TASK_WORKER_STATUS_UPDATE_QUEUE,
       { status, id: this._id, httpServerPort: this._httpServerPort }

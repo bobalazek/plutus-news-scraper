@@ -2,7 +2,6 @@ import { readdirSync } from 'fs';
 import { injectable } from 'inversify';
 import { join } from 'path';
 
-import { NewsArticleNotFoundError } from '../Errors/NewsArticleNotFoundError';
 import { NewsArticlesNotFoundError } from '../Errors/NewsArticlesNotFoundError';
 import { NewsArticleExtendedSchema, NewsArticleExtendedType } from '../Schemas/NewsArticleSchema';
 import { NewsBasicArticleExtendedSchema, NewsBasicArticleExtendedType } from '../Schemas/NewsBasicArticleSchema';
@@ -21,40 +20,6 @@ export class NewsScraperManager {
   private _headful: boolean = false;
   private _preventClose: boolean = false;
 
-  async terminateScraper() {
-    if (this._preventClose) {
-      return;
-    }
-
-    await this._currentScraper?.closePuppeteerBrowser(true);
-  }
-
-  async get(newsSiteKey: string) {
-    await this._init();
-
-    return this._scrapers[newsSiteKey] ?? undefined;
-  }
-
-  async getForUrl(url: string) {
-    await this._init();
-
-    const urlObject = new URL(url);
-
-    return this.getForDomain(urlObject.hostname);
-  }
-
-  async getForDomain(domain: string) {
-    await this._init();
-
-    return this.get(this._scrapersDomainMap[domain]);
-  }
-
-  async getAll() {
-    await this._init();
-
-    return Object.values(this._scrapers);
-  }
-
   async scrapeArticle(url: string): Promise<NewsArticleExtendedType> {
     const scraper = await this.getForUrl(url);
     if (typeof scraper === 'undefined') {
@@ -64,10 +29,6 @@ export class NewsScraperManager {
     this._currentScraper = this._prepareScraper(scraper);
 
     const newsArticle = await scraper.scrapeArticle({ url });
-    if (!newsArticle) {
-      throw new NewsArticleNotFoundError(`Article data not found.`);
-    }
-
     const newsArticleParsed = NewsArticleExtendedSchema.parse({
       ...newsArticle,
       newsSiteKey: scraper.key,
@@ -135,9 +96,6 @@ export class NewsScraperManager {
   }
 
   /**
-   * ========== Helpers ==========
-   */
-  /**
    * If this is set to true, then it will open an actual browser window
    *
    * @param value boolean
@@ -159,9 +117,40 @@ export class NewsScraperManager {
     return this;
   }
 
-  /**
-   * ========== Private ==========
-   */
+  async terminateScraper() {
+    if (this._preventClose) {
+      return;
+    }
+
+    await this._currentScraper?.closePuppeteerBrowser(true);
+  }
+
+  async get(newsSiteKey: string) {
+    await this._init();
+
+    return this._scrapers[newsSiteKey] ?? undefined;
+  }
+
+  async getForUrl(url: string) {
+    await this._init();
+
+    const urlObject = new URL(url);
+
+    return this.getForDomain(urlObject.hostname);
+  }
+
+  async getForDomain(domain: string) {
+    await this._init();
+
+    return this.get(this._scrapersDomainMap[domain]);
+  }
+
+  async getAll() {
+    await this._init();
+
+    return Object.values(this._scrapers);
+  }
+
   private async _init(forceReinitialize: boolean = false) {
     if (this._initialized && !forceReinitialize) {
       return;
