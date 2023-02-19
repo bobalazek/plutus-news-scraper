@@ -78,7 +78,7 @@ export default class CNBCNewsScraper extends AbstractNewsScraper implements News
     logger.info(`Going to URL ${url} ...`);
 
     await page.goto(url, {
-      waitUntil: 'domcontentloaded',
+      waitUntil: 'networkidle2',
     });
 
     const newsSiteArticleId = await page.evaluate(() => {
@@ -99,19 +99,22 @@ export default class CNBCNewsScraper extends AbstractNewsScraper implements News
     const authorUrl = await page.evaluate(() => {
       return (
         document
-          .querySelector('.ArticleHeader-author .Author-authorNameAndSocial a.Author-authorName')
+          .querySelector(['.ArticleHeader-author .Author-authorNameAndSocial a.Author-authorName'].join(', '))
           ?.getAttribute('href') ?? ''
       );
     });
-    const categoryName = await page.evaluate(() => {
-      return document.querySelector('meta[property="article:section"]')?.getAttribute('content') ?? '';
-    });
-    const categoryUrl = await page.evaluate(() => {
-      return (
-        document
-          .querySelector('.ArticleHeader-headerContentContainer .ArticleHeader-wrapper a:first-child')
-          ?.getAttribute('href') ?? ''
-      );
+
+    const categories = await page.evaluate(() => {
+      return Array.from(
+        document.querySelectorAll(
+          ['.ArticleHeader-headerContentContainer .ArticleHeader-wrapper a.articleHeader-eyebrow'].join(', ')
+        )
+      ).map(($a) => {
+        return {
+          name: $a.innerHTML ?? '',
+          url: $a.getAttribute('href') ?? undefined,
+        };
+      });
     });
     const imageUrl = await page.evaluate(() => {
       return document.querySelector('head meta[property="og:image"]')?.getAttribute('content') ?? '';
@@ -139,7 +142,7 @@ export default class CNBCNewsScraper extends AbstractNewsScraper implements News
       publishedAt: new Date(datePublished),
       modifiedAt: new Date(dateModified),
       authors: [{ name: authorName, url: authorUrl }],
-      categories: [{ name: categoryName, url: categoryUrl }],
+      categories: categories,
       imageUrl: imageUrl,
     };
 

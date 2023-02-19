@@ -97,6 +97,10 @@ export default class ABCNewsNewsScraper extends AbstractNewsScraper implements N
     const urlId = urlSplit[urlSplit.length - 1];
     const newsSiteArticleId = urlId.includes('?id=') ? urlId.split('?id=')[1] : urlId;
 
+    const languageCode = await page.evaluate(() => {
+      return document.querySelector('html')?.getAttribute('lang') ?? '';
+    });
+
     const linkedDataText = await page.evaluate(() => {
       return document.querySelector('head script[type="application/ld+json"]')?.innerHTML ?? '';
     });
@@ -127,8 +131,15 @@ export default class ABCNewsNewsScraper extends AbstractNewsScraper implements N
       newsSiteArticleId: newsSiteArticleId,
       publishedAt: new Date(linkedData.datePublished),
       modifiedAt: new Date(linkedData.dateModified),
-      authors: linkedData.author,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      authors: linkedData.author.map((author: any) => {
+        return {
+          ...author,
+          url: author.url.startsWith('/') ? `https://abcnews.go.com${author.url}` : author.url,
+        };
+      }),
       imageUrl: linkedData.image.url,
+      languageCode: languageCode,
     };
 
     return Promise.resolve(article);

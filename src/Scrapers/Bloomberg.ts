@@ -12,9 +12,9 @@ export default class BloombergNewsScraper extends AbstractNewsScraper implements
   key: string = 'bloomberg';
   domain: string = 'www.bloomberg.com';
   recentArticleListUrls: string[] = [
+    'https://www.bloomberg.com/',
     'https://www.bloomberg.com/europe',
     'https://www.bloomberg.com/uk',
-    'https://www.bloomberg.com/',
     'https://www.bloomberg.com/asia',
     'https://www.bloomberg.com/middleeast',
     'https://www.bloomberg.com/africa',
@@ -48,11 +48,9 @@ export default class BloombergNewsScraper extends AbstractNewsScraper implements
         await page.evaluate(() => {
           // Get all the possible (anchor) elements that have the links to articles
           const querySelector = [
-            '.single-story-module__info a.single-story-module__headline-link',
-            '.single-story-module__info .single-story-module__related-stories a.single-story-module__related-story-link',
-            '.story-list-module__info a.story-list-story__info__headline-link',
-            '.story-list-story__info a.story-list-story__info__headline-link',
-            '.story-package-module__stories .story-package-module__story a.story-package-module__story__headline-link',
+            '.single-story-module article .single-story-module__info a.single-story-module__headline-link',
+            '.story-list-module .story-list-story .story-list-story__info__headline a.story-list-story__info__headline-link',
+            '.hub-zone-switch__content .story-package-module__story a.story-package-module__story__headline-link',
           ].join(', ');
 
           // Fetch those with the .querySelectoAll() and convert it to an array

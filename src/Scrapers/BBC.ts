@@ -91,7 +91,7 @@ export default class BBCNewsScraper extends AbstractNewsScraper implements NewsS
     logger.info(`Going to URL ${url} ...`);
 
     await page.goto(url, {
-      waitUntil: 'domcontentloaded',
+      waitUntil: 'networkidle2',
     });
 
     const urlSplit = url.split('-');
@@ -103,6 +103,10 @@ export default class BBCNewsScraper extends AbstractNewsScraper implements NewsS
 
     const categoryName = await page.evaluate(() => {
       return document.querySelector('head meta[property="article:section"]')?.getAttribute('content') ?? '';
+    });
+
+    const languageCode = await page.evaluate(() => {
+      return document.querySelector('html')?.getAttribute('lang') ?? '';
     });
 
     const linkedDataText = await page.evaluate(() => {
@@ -138,6 +142,7 @@ export default class BBCNewsScraper extends AbstractNewsScraper implements NewsS
       authors: linkedData.author,
       categories: [{ name: categoryName }],
       imageUrl: linkedData.image.url,
+      languageCode: languageCode,
     };
 
     return Promise.resolve(article);

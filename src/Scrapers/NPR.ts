@@ -90,13 +90,21 @@ export default class NPRNewsScraper extends AbstractNewsScraper implements NewsS
       return document.querySelector('.story .storytitle input:first-child')?.getAttribute('id') ?? '';
     });
 
-    /*  const categoryName = await page.evaluate(() => {
+    const categoryName = await page.evaluate(() => {
       return document.querySelector('.story .slug a')?.innerHTML ?? '';
     });
 
     const categoryUrl = await page.evaluate(() => {
-      return document.querySelector('.story .slug')?.getAttribute('href') ?? '';
-    }); */
+      return document.querySelector('.story .slug a')?.getAttribute('href') ?? '';
+    });
+
+    const authorName = await page.evaluate(() => {
+      return document.querySelector('#storybyline .byline__name a')?.innerHTML ?? '';
+    });
+
+    const authorUrl = await page.evaluate(() => {
+      return document.querySelector('#storybyline .byline__name a')?.getAttribute('href') ?? '';
+    });
 
     const linkedDataText = await page.evaluate(() => {
       return document.querySelector('head script[type="application/ld+json"]')?.innerHTML ?? '';
@@ -106,7 +114,7 @@ export default class NPRNewsScraper extends AbstractNewsScraper implements NewsS
     }
 
     const linkedData = JSON.parse(linkedDataText);
-    console.log(linkedData);
+
     // Content
     const content = await page.evaluate(() => {
       return Array.from(document.querySelectorAll('.storytext p'))
@@ -128,9 +136,9 @@ export default class NPRNewsScraper extends AbstractNewsScraper implements NewsS
       newsSiteArticleId: newsSiteArticleId,
       publishedAt: new Date(linkedData.datePublished),
       modifiedAt: new Date(linkedData.dateModified),
-      // authors: linkedData.author.name[0],
-      // categories: [{ name: categoryName, url: categoryUrl }],
-      // imageUrl: linkedData.image,
+      authors: [{ name: authorName, url: authorUrl }],
+      categories: [{ name: categoryName, url: categoryUrl }],
+      imageUrl: linkedData.image.url,
     };
 
     return Promise.resolve(article);

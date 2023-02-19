@@ -35,7 +35,10 @@ export default class BusinessInsiderNewsScraper extends AbstractNewsScraper impl
       const articleUrls = this.getUniqueArray(
         await page.evaluate(() => {
           // Get all the possible (anchor) elements that have the links to articles
-          const querySelector = ['.vertical-content .top-vertical-trio a.tout-title-link'].join(', ');
+          const querySelector = [
+            '.vertical-content .top-vertical-trio a.tout-title-link',
+            '.l-content .river-item a.tout-title-link',
+          ].join(', ');
 
           // Fetch those with the .querySelectoAll() and convert it to an array
           const $elements = Array.from(document.querySelectorAll(querySelector));
@@ -82,7 +85,7 @@ export default class BusinessInsiderNewsScraper extends AbstractNewsScraper impl
     logger.info(`Going to URL ${url} ...`);
 
     await page.goto(url, {
-      waitUntil: 'domcontentloaded',
+      waitUntil: 'networkidle2',
     });
 
     const newsSiteArticleId = url;
@@ -97,6 +100,10 @@ export default class BusinessInsiderNewsScraper extends AbstractNewsScraper impl
 
     const categoryUrl = 'https://www.businessinsider.com' + categoryLink;
 
+    const languageCode = await page.evaluate(() => {
+      return document.querySelector('html')?.getAttribute('lang') ?? '';
+    });
+
     const linkedDataText = await page.evaluate(() => {
       return document.querySelector('head script[type="application/ld+json"]')?.innerHTML ?? '';
     });
@@ -105,7 +112,6 @@ export default class BusinessInsiderNewsScraper extends AbstractNewsScraper impl
     }
 
     const linkedData = JSON.parse(linkedDataText);
-
     await this.closePuppeteerBrowser();
 
     const article: NewsArticleType = {
@@ -116,9 +122,10 @@ export default class BusinessInsiderNewsScraper extends AbstractNewsScraper impl
       newsSiteArticleId: newsSiteArticleId,
       publishedAt: new Date(linkedData.datePublished),
       modifiedAt: new Date(linkedData.dateModified),
-      authors: linkedData.author,
+      authors: [linkedData.author],
       categories: [{ name: categoryName, url: categoryUrl }],
       imageUrl: linkedData.image.url,
+      languageCode: languageCode,
     };
 
     return Promise.resolve(article);

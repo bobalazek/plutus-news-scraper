@@ -107,6 +107,10 @@ export default class BarronsNewsScraper extends AbstractNewsScraper implements N
 
     const newsSiteArticleId = urlId ?? url;
 
+    const languageCode = await page.evaluate(() => {
+      return document.querySelector('head meta[name="language"]')?.getAttribute('content') ?? '';
+    });
+
     const linkedDataText = await page.evaluate(() => {
       return document.querySelector('head script[type="application/ld+json"]')?.innerHTML ?? '';
     });
@@ -139,6 +143,7 @@ export default class BarronsNewsScraper extends AbstractNewsScraper implements N
       modifiedAt: new Date(linkedData.dateModified),
       authors: linkedData.author,
       imageUrl: linkedData.image[0],
+      languageCode: languageCode,
     };
 
     return Promise.resolve(article);
