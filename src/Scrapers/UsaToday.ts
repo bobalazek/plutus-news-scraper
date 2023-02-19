@@ -17,7 +17,7 @@ export default class UsaTodayNewsScraper extends AbstractNewsScraper implements 
     'https://eu.usatoday.com/news/world/',
     'https://eu.usatoday.com/money/',
     'https://eu.usatoday.com/tech/',
-    ' https://eu.usatoday.com/money/investing/',
+    'https://eu.usatoday.com/money/investing/',
   ];
 
   async scrapeRecentArticles(urls?: string[]): Promise<NewsBasicArticleType[]> {
@@ -77,7 +77,7 @@ export default class UsaTodayNewsScraper extends AbstractNewsScraper implements 
     return Promise.resolve(this.getUniqueArray(basicArticles));
   }
 
-  async scrapeArticle(basicArticle: NewsBasicArticleType): Promise<NewsArticleType | null> {
+  async scrapeArticle(basicArticle: NewsBasicArticleType): Promise<NewsArticleType> {
     const page = await this.getPuppeteerPage();
 
     const url = this._preProcessUrl(basicArticle.url);

@@ -15,7 +15,6 @@ export class NewsScraperDatabase {
         url: POSTGRESQL_URL,
         entities: [NewsArticle],
         synchronize: IS_DEVELOPMENT,
-        logging: true,
         // TODO: add migrations files? or classes? How does it work in typescript
       });
 

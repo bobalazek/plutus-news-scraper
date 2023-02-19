@@ -39,10 +39,13 @@ export class NewsScraperTaskDispatcher {
 
     await this._sendStatusUpdate(LifecycleStatusEnum.STARTING);
 
+    // Metrics
+    this._prometheusService.addDefaultMetrics({ prefix: `news_scraper_task_dispatcher_` });
+
     if (httpServerPort) {
-      await this._httpServerService.start(httpServerPort);
-      this._prometheusService.addDefaultMetrics({ prefix: `news_scraper_task_dispatcher_` });
-      this._prometheusService.addMetricsEndpointToHttpServer(this._httpServerService.getHttpServer());
+      await this._httpServerService.start(httpServerPort, (httpServer) => {
+        this._prometheusService.addMetricsEndpointToHttpServer(httpServer);
+      });
     }
 
     await this.setupScrapers();

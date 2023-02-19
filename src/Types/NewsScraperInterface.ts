@@ -39,7 +39,7 @@ export interface NewsScraperInterface {
    *
    * @param article NewsScraperPartialArticleInterface
    */
-  scrapeArticle(article: NewsBasicArticleType): Promise<NewsArticleType | null>;
+  scrapeArticle(article: NewsBasicArticleType): Promise<NewsArticleType>;
 
   /**
    * Getting all the old and archived articles for that news site.

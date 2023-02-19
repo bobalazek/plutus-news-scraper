@@ -32,7 +32,6 @@ export default class ABCNewsNewsScraper extends AbstractNewsScraper implements N
     for (const recentArticleListUrl of recentArticleListUrls) {
       logger.info(`Going to URL ${recentArticleListUrl} ...`);
 
-      await page.waitForTimeout(1000); // Wait a second before we start scraping the next page ...
       await page.goto(recentArticleListUrl, {
         waitUntil: 'domcontentloaded',
       });
@@ -82,7 +81,7 @@ export default class ABCNewsNewsScraper extends AbstractNewsScraper implements N
     return Promise.resolve(this.getUniqueArray(basicArticles));
   }
 
-  async scrapeArticle(basicArticle: NewsBasicArticleType): Promise<NewsArticleType | null> {
+  async scrapeArticle(basicArticle: NewsBasicArticleType): Promise<NewsArticleType> {
     const page = await this.getPuppeteerPage();
 
     const url = this._preProcessUrl(basicArticle.url);

@@ -76,7 +76,7 @@ export default class TheStreetNewsScraper extends AbstractNewsScraper implements
     return Promise.resolve(this.getUniqueArray(basicArticles));
   }
 
-  async scrapeArticle(basicArticle: NewsBasicArticleType): Promise<NewsArticleType | null> {
+  async scrapeArticle(basicArticle: NewsBasicArticleType): Promise<NewsArticleType> {
     const page = await this.getPuppeteerPage();
 
     const url = this._preProcessUrl(basicArticle.url);

@@ -20,8 +20,11 @@ export const addNewsScraperTaskWorkerStartCommand = (program: Command) => {
       const newsScraperTaskWorker = container.get<NewsScraperTaskWorker>(TYPES.NewsScraperTaskWorker);
 
       try {
-        await newsScraperTaskWorker.start(options.id ?? randomString(6), httpServerPort ?? undefined),
-          consumedQueues.split(',');
+        await newsScraperTaskWorker.start(
+          options.id ?? randomString(6),
+          httpServerPort ?? undefined,
+          consumedQueues.split(',')
+        );
       } catch (err) {
         await newsScraperTaskWorker.terminate(err.message);
 

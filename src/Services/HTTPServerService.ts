@@ -8,7 +8,7 @@ import { logger } from './Logger';
 export class HTTPServerService {
   private _httpServer!: express.Express;
 
-  async start(port: number, listenCallback?: (app: express.Express) => void) {
+  async start(port: number, listenCallback?: (httpServer: express.Express) => void) {
     logger.info(`========== Starting the HTTP server... ==========`);
 
     const isPortInUse = await checkIfPortIsInUse(port);
