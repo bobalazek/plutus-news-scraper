@@ -54,7 +54,7 @@ export abstract class AbstractNewsScraper {
       return;
     }
 
-    await this._browser?.close();
+    return this._browser?.close();
   }
 
   getUniqueArray<T>(array: T[]) {
