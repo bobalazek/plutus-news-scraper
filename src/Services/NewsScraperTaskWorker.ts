@@ -31,6 +31,8 @@ export class NewsScraperTaskWorker {
     this._id = id;
     this._httpServerPort = httpServerPort;
 
+    this._newsScraperManager.setPreventClose(true);
+
     logger.info(`========== Starting the worker "${id}" ... ==========`);
 
     await this._sendWorkerStatusUpdate(LifecycleStatusEnum.STARTING);
@@ -60,6 +62,8 @@ export class NewsScraperTaskWorker {
   }
 
   async terminate(errorMessage?: string) {
+    await this._newsScraperManager.terminateScraper(true);
+
     await this._newsScraperMessageBroker.sendToQueue(
       NewsScraperMessageBrokerQueuesEnum.NEWS_SCRAPER_TASK_WORKER_STATUS_UPDATE_QUEUE,
       {

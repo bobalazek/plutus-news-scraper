@@ -29,6 +29,7 @@ export class NewsScraperManager {
     this._currentScraper = this._prepareScraper(scraper);
 
     const newsArticle = await scraper.scrapeArticle({ url });
+
     const newsArticleParsed = NewsArticleExtendedSchema.parse({
       ...newsArticle,
       newsSiteKey: scraper.key,
@@ -117,8 +118,8 @@ export class NewsScraperManager {
     return this;
   }
 
-  async terminateScraper() {
-    if (this._preventClose) {
+  async terminateScraper(force: boolean = false) {
+    if (this._preventClose && !force) {
       return;
     }
 

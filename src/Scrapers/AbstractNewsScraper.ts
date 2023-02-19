@@ -3,8 +3,8 @@ import puppeteer, { Browser, Page, PuppeteerLaunchOptions } from 'puppeteer';
 import { PUPPETEER_EXECUTABLE_PATH } from '../Utils/Environment';
 
 export abstract class AbstractNewsScraper {
-  private _browser!: Browser;
-  private _page!: Page;
+  private _browser?: Browser;
+  private _page?: Page;
   private _headful: boolean = false;
   private _preventClose: boolean = false;
 
@@ -54,7 +54,10 @@ export abstract class AbstractNewsScraper {
       return;
     }
 
-    return this._browser?.close();
+    await this._browser?.close();
+
+    this._browser = undefined;
+    this._page = undefined;
   }
 
   getUniqueArray<T>(array: T[]) {
