@@ -298,7 +298,7 @@ describe('Services/NewsScraperTaskDispatcher.ts', () => {
       result: ['test_scraper_3', 'test_scraper_1', 'test_scraper_2', 'test_scraper_4'],
     },
   ])('getOrderedScrapers - $testName', async ({ scraperStatusMapData, result }) => {
-    await newsScraperTaskDispatcher.setupScrapers();
+    await newsScraperTaskDispatcher.prepareScraperStatusMap();
 
     if (Object.keys(scraperStatusMapData).length > 0) {
       for (const key in scraperStatusMapData) {

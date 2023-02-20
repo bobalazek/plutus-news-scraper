@@ -1,6 +1,6 @@
 import pino from 'pino';
 
-import { IS_DEVELOPMENT, LOKI_URL } from '../Utils/Environment';
+import { IS_DEVELOPMENT, LOKI_PINO_BATCH_INTERVAL_SECONDS, LOKI_URL } from '../Utils/Environment';
 
 const targets: pino.TransportTargetOptions<pino.TransportBaseOptions>[] = [];
 if (IS_DEVELOPMENT) {
@@ -27,7 +27,7 @@ const transport = pino.transport({
             level: 'debug',
             options: {
               batching: true,
-              interval: 2,
+              interval: LOKI_PINO_BATCH_INTERVAL_SECONDS,
               host: LOKI_URL,
             },
           },

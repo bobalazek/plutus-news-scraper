@@ -6,6 +6,7 @@ import { NewsScraperMessageBrokerQueuesEnum } from '../Types/NewsMessageBrokerQu
 import { NewsScraperInterface } from '../Types/NewsScraperInterface';
 import { NewsScraperStatusEntry } from '../Types/NewsScraperStatusEntry';
 import { ProcessingStatusEnum } from '../Types/ProcessingStatusEnum';
+import { LOKI_PINO_BATCH_INTERVAL_SECONDS } from '../Utils/Environment';
 import { HTTPServerService } from './HTTPServerService';
 import { logger } from './Logger';
 import { NewsScraperManager } from './NewsScraperManager';
@@ -18,10 +19,12 @@ export class NewsScraperTaskDispatcher {
 
   private _scrapers: NewsScraperInterface[] = [];
   private _scrapeInterval: number = 30000;
-  private _messagesCountMonitoringInterval: number = 5000;
+  private _messageQueuesMonitoringInterval: number = 5000;
   private _scrapeRecentArticlesExpirationTime: number = 30000; // After how long do we want to expire this message?
-
   private _scraperStatusMap: Map<string, NewsScraperStatusEntry> = new Map();
+
+  private _dispatchRecentArticlesScrapeIntervalTimer?: ReturnType<typeof setInterval>;
+  private _messageQueuesMonitoringIntervalTimer?: ReturnType<typeof setInterval>;
 
   constructor(
     @inject(TYPES.NewsScraperManager) private _newsScraperManager: NewsScraperManager,
@@ -35,20 +38,15 @@ export class NewsScraperTaskDispatcher {
 
     logger.info(`========== Starting the task dispatcher ... ==========`);
 
+    this._registerTerminate();
+
     await this._purgeQueues();
 
     await this._sendDispatcherStatusUpdate(LifecycleStatusEnum.STARTING);
 
-    // Metrics
-    this._prometheusService.addDefaultMetrics({ prefix: `news_scraper_task_dispatcher_` });
+    await this._registerMetrics();
 
-    if (httpServerPort) {
-      await this._httpServerService.start(httpServerPort, (httpServer) => {
-        this._prometheusService.addMetricsEndpointToHttpServer(httpServer);
-      });
-    }
-
-    await this.setupScrapers();
+    await this.prepareScraperStatusMap();
 
     this._startRecentArticlesScraping();
     this._startMessageQueuesMonitoring();
@@ -61,6 +59,15 @@ export class NewsScraperTaskDispatcher {
   }
 
   async terminate(errorMessage?: string) {
+    clearInterval(this._dispatchRecentArticlesScrapeIntervalTimer);
+    clearInterval(this._messageQueuesMonitoringIntervalTimer);
+
+    if (errorMessage) {
+      logger.error(`Terminating news scraper task dispatcher with error: ${errorMessage}`);
+    } else {
+      logger.info(`Terminating news scraper task dispatcher`);
+    }
+
     await this._newsScraperMessageBroker.sendToQueue(
       NewsScraperMessageBrokerQueuesEnum.NEWS_SCRAPER_TASK_DISPATCHER_STATUS_UPDATE_QUEUE,
       {
@@ -69,10 +76,21 @@ export class NewsScraperTaskDispatcher {
         errorMessage,
       }
     );
+
+    await this._newsScraperMessageBroker.close();
+
+    // Make sure we give out logger enough time to send the last batch of logs
+    await new Promise((resolve) => {
+      setTimeout(() => {
+        resolve(void 0);
+      }, LOKI_PINO_BATCH_INTERVAL_SECONDS * 1000 * 1.2 /* a bit of buffer for network */);
+    });
+
+    process.exit(errorMessage ? 1 : 0);
   }
 
   /* Technically all of the methods below should be private, but we use them in our tests, so ... */
-  async setupScrapers() {
+  async prepareScraperStatusMap() {
     this._scrapers = await this._newsScraperManager.getAll();
 
     for (const scraper of this._scrapers) {
@@ -150,7 +168,7 @@ export class NewsScraperTaskDispatcher {
   private _startRecentArticlesScraping() {
     this._dispatchRecentArticlesScrape();
 
-    setInterval(() => {
+    this._dispatchRecentArticlesScrapeIntervalTimer = setInterval(() => {
       this._dispatchRecentArticlesScrape();
     }, this._scrapeInterval);
 
@@ -184,11 +202,31 @@ export class NewsScraperTaskDispatcher {
   }
 
   private _startMessageQueuesMonitoring() {
-    setInterval(async () => {
+    this._messageQueuesMonitoringIntervalTimer = setInterval(async () => {
       const messagesCountMap = await this._newsScraperMessageBroker.getMessageCountInAllQueues();
 
       logger.info(`Messages count map: ${JSON.stringify(messagesCountMap)}`);
-    }, this._messagesCountMonitoringInterval);
+    }, this._messageQueuesMonitoringInterval);
+  }
+
+  private _registerTerminate() {
+    process.on('beforeExit', async () => {
+      await this.terminate();
+    });
+
+    process.on('uncaughtException', async (err) => {
+      await this.terminate(`UncaughtException: ${err.message}`);
+    });
+  }
+
+  private async _registerMetrics() {
+    this._prometheusService.addDefaultMetrics({ prefix: `news_scraper_task_dispatcher_` });
+
+    if (this._httpServerPort) {
+      await this._httpServerService.start(this._httpServerPort, (httpServer) => {
+        this._prometheusService.addMetricsEndpointToHttpServer(httpServer);
+      });
+    }
   }
 
   private async _purgeQueues() {
