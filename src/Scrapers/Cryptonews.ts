@@ -94,7 +94,7 @@ export default class CryptonewsNewsScraper extends AbstractNewsScraper implement
         ($a) => {
           return {
             name: $a.innerHTML ?? '',
-            url: 'https://cryptonews.com' + $a.getAttribute('href') ?? undefined,
+            url: $a.getAttribute('href') ? 'https://cryptonews.com' + $a.getAttribute('href') : undefined,
           };
         }
       );

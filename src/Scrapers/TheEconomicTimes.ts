@@ -96,12 +96,16 @@ export default class TheEconomicTimesNewsScraper extends AbstractNewsScraper imp
     logger.info(`Going to URL ${url} ...`);
 
     await page.goto(url, {
-      waitUntil: 'domcontentloaded',
+      waitUntil: 'networkidle2',
     });
 
     const urlSplit = url.split('/');
     const urlId = urlSplit[urlSplit.length - 1];
     const newsSiteArticleId = urlId.replace('.cms', '');
+
+    const languageCode = await page.evaluate(() => {
+      return document.querySelector('html')?.getAttribute('lang') ?? '';
+    });
 
     const linkedDataText = await page.evaluate(() => {
       return document.querySelectorAll('body script[type="application/ld+json"]')[1].innerHTML ?? '';
@@ -132,7 +136,8 @@ export default class TheEconomicTimesNewsScraper extends AbstractNewsScraper imp
       publishedAt: new Date(linkedData.datePublished),
       modifiedAt: new Date(linkedData.dateModified),
       authors: [linkedData.author],
-      imageUrl: linkedData.image,
+      imageUrl: linkedData.image.url,
+      languageCode: languageCode,
     };
 
     return Promise.resolve(article);

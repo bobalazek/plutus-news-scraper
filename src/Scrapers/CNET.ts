@@ -102,7 +102,7 @@ export default class CNETNewsScraper extends AbstractNewsScraper implements News
         ($a) => {
           return {
             name: $a.innerHTML ?? '',
-            url: 'https://www.cnet.com' + $a.getAttribute('href') ?? undefined,
+            url: $a.getAttribute('href') ? 'https://www.cnet.com' + $a.getAttribute('href') : undefined,
           };
         }
       );

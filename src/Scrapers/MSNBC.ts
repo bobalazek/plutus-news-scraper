@@ -77,11 +77,15 @@ export default class MSNBCNewsScraper extends AbstractNewsScraper implements New
     logger.info(`Going to URL ${url} ...`);
 
     await page.goto(url, {
-      waitUntil: 'domcontentloaded',
+      waitUntil: 'networkidle2',
     });
 
     const categoryUrlSplit = url;
     const categoryUrl = categoryUrlSplit.substring(0, url.lastIndexOf('/'));
+
+    const languageCode = await page.evaluate(() => {
+      return document.querySelector('html')?.getAttribute('lang') ?? '';
+    });
 
     const linkedDataText = await page.evaluate(() => {
       return document.querySelector('head script[type="application/ld+json"]')?.innerHTML ?? '';
@@ -114,6 +118,7 @@ export default class MSNBCNewsScraper extends AbstractNewsScraper implements New
       authors: linkedData.author,
       categories: [{ name: linkedData.articleSection, url: categoryUrl }],
       imageUrl: linkedData.image.url,
+      languageCode: languageCode,
     };
 
     return Promise.resolve(article);

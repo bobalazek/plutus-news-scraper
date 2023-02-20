@@ -116,18 +116,6 @@ export default class TechCrunchNewsScraper extends AbstractNewsScraper implement
 
     const newsSiteArticleId = shortlink.replace('https://techcrunch.com/?p=', '');
 
-    const category = await page.evaluate(() => {
-      const $a = document.querySelector('.article__header a');
-      if (!$a) {
-        return;
-      }
-
-      return {
-        name: $a.innerHTML,
-        url: 'https://techcrunch.com' + $a.getAttribute('href'),
-      };
-    });
-
     const linkedDataText = await page.evaluate(() => {
       return document.querySelector('head script[type="application/ld+json"]')?.innerHTML ?? '';
     });
@@ -135,7 +123,9 @@ export default class TechCrunchNewsScraper extends AbstractNewsScraper implement
       throw new NewsArticleDataNotFoundError(`Linked data not found for URL ${url}`);
     }
 
-    const linkedData = JSON.parse(linkedDataText);
+    const rawLinkedData = JSON.parse(linkedDataText);
+    const linkedData = rawLinkedData['@graph'][0];
+    const authorLinkedData = rawLinkedData['@graph'][5];
 
     // Content
     await page.waitForSelector('.article-content p');
@@ -149,17 +139,23 @@ export default class TechCrunchNewsScraper extends AbstractNewsScraper implement
 
     const article: NewsArticleType = {
       url: url,
-      title: linkedData['@graph'].headline,
+      title: linkedData.headline,
       multimediaType: NewsArticleMultimediaTypeEnum.TEXT,
       content: convert(content, {
         wordwrap: false,
       }),
       newsSiteArticleId: newsSiteArticleId,
-      publishedAt: new Date(linkedData['@graph'][0].datePublished),
-      modifiedAt: new Date(linkedData['@graph'][0].dateModified),
-      authors: [linkedData['@graph'][5]],
-      categories: category ? [category] : undefined,
-      imageUrl: linkedData['@graph'][0].image.url,
+      publishedAt: new Date(linkedData.datePublished),
+      modifiedAt: new Date(linkedData.dateModified),
+      authors: [authorLinkedData],
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      categories: linkedData.articleSection.map((articleSection: any) => {
+        return {
+          name: articleSection,
+        };
+      }),
+      imageUrl: linkedData.image.url,
+      languageCode: linkedData.inLanguage,
     };
 
     return Promise.resolve(article);

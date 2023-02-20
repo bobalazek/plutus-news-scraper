@@ -99,7 +99,7 @@ export default class AljazeeraNewsScraper extends AbstractNewsScraper implements
         ($a) => {
           return {
             name: $a.innerHTML,
-            url: 'https://www.aljazeera.com' + $a.getAttribute('href') ?? undefined,
+            url: $a.getAttribute('href') ? 'https://www.aljazeera.com' + $a.getAttribute('href') : undefined,
           };
         }
       );

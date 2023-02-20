@@ -91,7 +91,7 @@ export default class SeekingAlphaNewsScraper extends AbstractNewsScraper impleme
     logger.info(`Going to URL ${url} ...`);
 
     await page.goto(url, {
-      waitUntil: 'domcontentloaded',
+      waitUntil: 'networkidle2',
     });
 
     const urlSplit = url.split('/');

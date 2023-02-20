@@ -129,14 +129,21 @@ export default class PbsNewsHourNewsScraper extends AbstractNewsScraper implemen
       });
     });
 
-    const categoryName = await page.evaluate(() => {
-      return document.querySelector('.post__article a.post__category')?.innerHTML ?? '';
+    const categories = await page.evaluate(() => {
+      return Array.from(document.querySelectorAll(['.post__article a.post__category'].join(', '))).map(($a) => {
+        return {
+          name: $a.innerHTML ?? '',
+          url: $a.getAttribute('href') ?? undefined,
+        };
+      });
     });
-    const categoryUrl = await page.evaluate(() => {
-      return document.querySelector('.post__article a.post__category')?.getAttribute('href') ?? '';
-    });
+
     const imageUrl = await page.evaluate(() => {
       return document.querySelector('head meta[property="og:image"]')?.getAttribute('content') ?? '';
+    });
+
+    const languageCode = await page.evaluate(() => {
+      return document.querySelector('html')?.getAttribute('lang') ?? '';
     });
 
     // Content
@@ -159,8 +166,9 @@ export default class PbsNewsHourNewsScraper extends AbstractNewsScraper implemen
       publishedAt: new Date(datePublished),
       modifiedAt: new Date(dateModified),
       authors: authors,
-      categories: [{ name: categoryName, url: categoryUrl }],
+      categories: categories,
       imageUrl: imageUrl,
+      languageCode: languageCode,
     };
 
     return Promise.resolve(article);

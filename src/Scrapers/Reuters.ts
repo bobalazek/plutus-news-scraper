@@ -91,21 +91,28 @@ export default class ReutersNewsScraper extends AbstractNewsScraper implements N
     const newsSiteArticleId = await page.evaluate(() => {
       return document.querySelector('body header[article_id]')?.getAttribute('article_id') ?? '';
     });
+
     const authors = await page.evaluate(() => {
       return Array.from(document.querySelectorAll(['main article header a[rel="author"]'].join(', '))).map(($a) => {
         return {
           name: $a.innerHTML,
-          url: 'https://www.reuters.com' + $a.getAttribute('href'),
+          url: $a.getAttribute('href') ? 'https://www.reuters.com' + $a.getAttribute('href') : undefined,
         };
       });
     });
-    const categoryName = await page.evaluate(() => {
-      return document.querySelector('head meta[name="article:section"]')?.getAttribute('content') ?? '';
+
+    const categories = await page.evaluate(() => {
+      return Array.from(document.querySelectorAll(['main article header nav a'].join(', '))).map(($a) => {
+        return {
+          name: $a.querySelector('span[data-testid="Text"]')?.innerHTML ?? '',
+          url: $a.getAttribute('href') ? 'https://www.reuters.com' + $a.getAttribute('href') : undefined,
+        };
+      });
     });
-    const categoryLink = await page.evaluate(() => {
-      return document.querySelector('main article header nav a')?.getAttribute('href') ?? '';
+
+    const languageCode = await page.evaluate(() => {
+      return document.querySelector('html')?.getAttribute('lang') ?? '';
     });
-    const categoryUrl = 'https://www.reuters.com' + categoryLink;
 
     const linkedDataText = await page.evaluate(() => {
       return document.querySelector('head script[type="application/ld+json"]')?.innerHTML ?? '';
@@ -136,8 +143,9 @@ export default class ReutersNewsScraper extends AbstractNewsScraper implements N
       publishedAt: new Date(linkedData.datePublished),
       modifiedAt: new Date(linkedData.dateModified),
       authors: authors,
-      categories: [{ name: categoryName, url: categoryUrl }],
+      categories: categories,
       imageUrl: linkedData.image,
+      languageCode: languageCode,
     };
 
     return Promise.resolve(article);

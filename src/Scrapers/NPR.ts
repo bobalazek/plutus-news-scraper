@@ -35,7 +35,7 @@ export default class NPRNewsScraper extends AbstractNewsScraper implements NewsS
 
       await page.waitForTimeout(1000);
       await page.goto(recentArticleListUrl, {
-        waitUntil: 'domcontentloaded',
+        waitUntil: 'networkidle2',
       });
 
       const articleUrls = this.getUniqueArray(
@@ -82,27 +82,35 @@ export default class NPRNewsScraper extends AbstractNewsScraper implements NewsS
     logger.info(`Going to URL ${url} ...`);
 
     await page.goto(url, {
-      waitUntil: 'domcontentloaded',
+      waitUntil: 'networkidle2',
     });
 
     const newsSiteArticleId = await page.evaluate(() => {
       return document.querySelector('.story .storytitle input:first-child')?.getAttribute('id') ?? '';
     });
 
-    const categoryName = await page.evaluate(() => {
-      return document.querySelector('.story .slug a')?.innerHTML ?? '';
+    const categories = await page.evaluate(() => {
+      return Array.from(document.querySelectorAll(['#main-section article.story .slug-wrap .slug a'].join(', '))).map(
+        ($a) => {
+          return {
+            name: $a.innerHTML ?? '',
+            url: $a.getAttribute('href') ?? '',
+          };
+        }
+      );
     });
 
-    const categoryUrl = await page.evaluate(() => {
-      return document.querySelector('.story .slug a')?.getAttribute('href') ?? '';
+    const authors = await page.evaluate(() => {
+      return Array.from(document.querySelectorAll(['#storybyline .byline__name a'].join(', '))).map(($a) => {
+        return {
+          name: ($a.innerHTML ?? '').trim(),
+          url: $a.getAttribute('href') ?? '',
+        };
+      });
     });
 
-    const authorName = await page.evaluate(() => {
-      return document.querySelector('#storybyline .byline__name a')?.innerHTML ?? '';
-    });
-
-    const authorUrl = await page.evaluate(() => {
-      return document.querySelector('#storybyline .byline__name a')?.getAttribute('href') ?? '';
+    const languageCode = await page.evaluate(() => {
+      return document.querySelector('html')?.getAttribute('lang') ?? '';
     });
 
     const linkedDataText = await page.evaluate(() => {
@@ -133,9 +141,10 @@ export default class NPRNewsScraper extends AbstractNewsScraper implements NewsS
       newsSiteArticleId: newsSiteArticleId,
       publishedAt: new Date(linkedData.datePublished),
       modifiedAt: new Date(linkedData.dateModified),
-      authors: [{ name: authorName, url: authorUrl }],
-      categories: [{ name: categoryName, url: categoryUrl }],
+      authors: authors,
+      categories: categories,
       imageUrl: linkedData.image.url,
+      languageCode: languageCode,
     };
 
     return Promise.resolve(article);

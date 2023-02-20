@@ -35,7 +35,7 @@ export default class DWNewsScraper extends AbstractNewsScraper implements NewsSc
 
       await page.waitForTimeout(1000);
       await page.goto(recentArticleListUrl, {
-        waitUntil: 'domcontentloaded',
+        waitUntil: 'networkidle2',
       });
 
       const articleUrls = this.getUniqueArray(
@@ -93,26 +93,13 @@ export default class DWNewsScraper extends AbstractNewsScraper implements NewsSc
     logger.info(`Going to URL ${url} ...`);
 
     await page.goto(url, {
-      waitUntil: 'domcontentloaded',
+      waitUntil: 'networkidle2',
     });
 
     const urlSplit = url.split('/');
     const urlId = urlSplit[urlSplit.length - 1];
 
     const newsSiteArticleId = urlId ?? url;
-
-    const categories = await page.evaluate(() => {
-      return Array.from(
-        document.querySelectorAll(
-          ['article .content-area header div[data-tracking-name="content-detail-kicker"] span a'].join(', ')
-        )
-      ).map(($a) => {
-        return {
-          name: $a.innerHTML,
-          url: 'https://www.dw.com' + $a.getAttribute('href') ?? undefined,
-        };
-      });
-    });
 
     const languageCode = await page.evaluate(() => {
       return document.querySelector('html')?.getAttribute('lang') ?? '';
@@ -147,7 +134,6 @@ export default class DWNewsScraper extends AbstractNewsScraper implements NewsSc
       publishedAt: new Date(linkedData.datePublished),
       modifiedAt: new Date(linkedData.dateModified),
       authors: linkedData.author,
-      categories: categories,
       imageUrl: linkedData.image[0],
       languageCode: languageCode,
     };

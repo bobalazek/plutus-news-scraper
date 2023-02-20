@@ -101,7 +101,7 @@ export default class CoinMarketCapNewsScraper extends AbstractNewsScraper implem
       return Array.from(document.querySelectorAll(['body a > a.name'].join(', '))).map(($a) => {
         return {
           name: $a.innerHTML ?? '',
-          url: 'https://coinmarketcap.com' + $a.getAttribute('href') ?? undefined,
+          url: $a.getAttribute('href') ? 'https://coinmarketcap.com' + $a.getAttribute('href') : undefined,
         };
       });
     });

@@ -95,6 +95,10 @@ export default class NewYorkPostNewsScraper extends AbstractNewsScraper implemen
       return document.querySelector('.article-header a')?.getAttribute('href') ?? '';
     });
 
+    const languageCode = await page.evaluate(() => {
+      return document.querySelector('html')?.getAttribute('lang') ?? '';
+    });
+
     const linkedDataText = await page.evaluate(() => {
       return document.querySelector('head script[type="application/ld+json"]')?.innerHTML ?? '';
     });
@@ -123,9 +127,15 @@ export default class NewYorkPostNewsScraper extends AbstractNewsScraper implemen
       newsSiteArticleId: newsSiteArticleId,
       publishedAt: new Date(linkedData.datePublished),
       modifiedAt: new Date(linkedData.dateModified),
-      authors: linkedData.author,
+      authors: [linkedData.author[0]].map((author) => {
+        return {
+          ...author,
+          url: author.url ? author.url : author.URL,
+        };
+      }),
       categories: [{ name: linkedData.articleSection, url: categoryUrl }],
       imageUrl: linkedData.image.url,
+      languageCode: languageCode,
     };
 
     return Promise.resolve(article);

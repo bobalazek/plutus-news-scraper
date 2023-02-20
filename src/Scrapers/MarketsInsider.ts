@@ -43,6 +43,7 @@ export default class MarketsInsiderNewsScraper extends AbstractNewsScraper imple
             '.top-story .top-story__story a.top-story__link',
             '.instrument-stories .instrument-stories__story  a.instrument-stories__link',
             '.popular-articles .popular-articles__story a.popular-articles__link',
+            '.site-content .image-news-list__story a.image-news-list__link',
           ].join(', ');
 
           // Fetch those with the .querySelectoAll() and convert it to an array
@@ -88,22 +89,27 @@ export default class MarketsInsiderNewsScraper extends AbstractNewsScraper imple
     logger.info(`Going to URL ${url} ...`);
 
     await page.goto(url, {
-      waitUntil: 'domcontentloaded',
+      waitUntil: 'networkidle2',
     });
 
     const newsSiteArticleId = await page.evaluate(() => {
       return document.querySelector('head meta[name="viking-id"]')?.getAttribute('value') ?? '';
     });
 
-    const categoryName = await page.evaluate(() => {
-      return document.querySelector('.post-meta .post-breadcrumbs a:last-child')?.innerHTML ?? '';
+    const categories = await page.evaluate(() => {
+      return Array.from(document.querySelectorAll(['.post-meta .post-breadcrumbs a:last-child'].join(', '))).map(
+        ($a) => {
+          return {
+            name: ($a.innerHTML ?? '').trim(),
+            url: $a.getAttribute('href') ? 'https://markets.businessinsider.com' + $a.getAttribute('href') : undefined,
+          };
+        }
+      );
     });
 
-    const categoryLink = await page.evaluate(() => {
-      return document.querySelector('.post-meta .post-breadcrumbs a:last-child')?.getAttribute('href') ?? '';
+    const languageCode = await page.evaluate(() => {
+      return document.querySelector('html')?.getAttribute('lang') ?? '';
     });
-
-    const categoryUrl = 'https://www.businessinsider.com' + categoryLink;
 
     const linkedDataText = await page.evaluate(() => {
       return document.querySelector('head script[type="application/ld+json"]')?.innerHTML ?? '';
@@ -122,9 +128,15 @@ export default class MarketsInsiderNewsScraper extends AbstractNewsScraper imple
       newsSiteArticleId: newsSiteArticleId,
       publishedAt: new Date(linkedData.datePublished),
       modifiedAt: new Date(linkedData.dateModified),
-      authors: [linkedData.author],
-      categories: [{ name: categoryName, url: categoryUrl }],
+      authors: [linkedData.author].map((author) => {
+        return {
+          ...author,
+          url: author.url ? author.url : author.sameAs,
+        };
+      }),
+      categories: categories,
       imageUrl: linkedData.image.url,
+      languageCode: languageCode,
     };
 
     return Promise.resolve(article);

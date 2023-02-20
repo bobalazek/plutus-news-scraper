@@ -80,7 +80,7 @@ export default class ForbesNewsScraper extends AbstractNewsScraper implements Ne
     logger.info(`Going to URL ${url} ...`);
 
     await page.goto(url, {
-      waitUntil: 'domcontentloaded',
+      waitUntil: 'networkidle2',
     });
 
     const newsSiteArticleId = await page.evaluate(() => {
@@ -91,6 +91,10 @@ export default class ForbesNewsScraper extends AbstractNewsScraper implements Ne
 
     const categoryUrl = await page.evaluate(() => {
       return document.querySelector('head meta[property="article:section_url"]')?.getAttribute('content') ?? '';
+    });
+
+    const languageCode = await page.evaluate(() => {
+      return document.querySelector('html')?.getAttribute('lang') ?? '';
     });
 
     const linkedDataText = await page.evaluate(() => {
@@ -124,6 +128,7 @@ export default class ForbesNewsScraper extends AbstractNewsScraper implements Ne
       authors: [linkedData.author],
       categories: [{ name: linkedData.articleSection, url: categoryUrl }],
       imageUrl: linkedData.image.url,
+      languageCode: languageCode,
     };
 
     return Promise.resolve(article);

@@ -83,7 +83,11 @@ export default class FortuneNewsScraper extends AbstractNewsScraper implements N
     logger.info(`Going to URL ${url} ...`);
 
     await page.goto(url, {
-      waitUntil: 'domcontentloaded',
+      waitUntil: 'networkidle2',
+    });
+
+    const languageCode = await page.evaluate(() => {
+      return document.querySelector('html')?.getAttribute('lang') ?? '';
     });
 
     const linkedDataText = await page.evaluate(() => {
@@ -133,6 +137,7 @@ export default class FortuneNewsScraper extends AbstractNewsScraper implements N
         },
       ],
       imageUrl: linkedData.image,
+      languageCode: languageCode,
     };
 
     return Promise.resolve(article);

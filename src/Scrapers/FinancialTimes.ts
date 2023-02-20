@@ -84,13 +84,17 @@ export default class FinancialTimesNewsScraper extends AbstractNewsScraper imple
     logger.info(`Going to URL ${url} ...`);
 
     await page.goto(url, {
-      waitUntil: 'domcontentloaded',
+      waitUntil: 'networkidle2',
     });
 
     const urlSplit = url.split('/');
     const urlId = urlSplit[urlSplit.length - 1];
 
     const newsSiteArticleId = urlId ?? url;
+
+    const languageCode = await page.evaluate(() => {
+      return document.querySelector('html')?.getAttribute('lang') ?? '';
+    });
 
     const linkedDataText = await page.evaluate(() => {
       return document.querySelector('head script[type="application/ld+json"]')?.innerHTML ?? '';
@@ -114,7 +118,9 @@ export default class FinancialTimesNewsScraper extends AbstractNewsScraper imple
       newsSiteArticleId: newsSiteArticleId,
       publishedAt: new Date(linkedData.datePublished),
       modifiedAt: new Date(linkedData.dateModified),
+      authors: linkedData.author,
       imageUrl: linkedData.image.url,
+      languageCode: languageCode,
     };
 
     // TODO: add authors - multiple authors for one article

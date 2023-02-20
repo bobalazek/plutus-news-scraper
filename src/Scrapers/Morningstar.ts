@@ -87,7 +87,7 @@ export default class MorningstarNewsScraper extends AbstractNewsScraper implemen
     logger.info(`Going to URL ${url} ...`);
 
     await page.goto(url, {
-      waitUntil: 'domcontentloaded',
+      waitUntil: 'networkidle2',
     });
 
     const urlSplit = url.split('/');
@@ -103,32 +103,23 @@ export default class MorningstarNewsScraper extends AbstractNewsScraper implemen
     const dateModified = await page.evaluate(() => {
       return document.querySelector('head meta[property="og:article:modified_time"]')?.getAttribute('content') ?? '';
     });
-    const authorName = await page.evaluate(() => {
-      return (
-        document
-          .querySelector('.article__article-info .article__author meta[itemprop="name"]')
-          ?.getAttribute('content') ?? ''
+
+    const authors = await page.evaluate(() => {
+      return Array.from(document.querySelectorAll(['.article__article-info .article__author a'].join(', '))).map(
+        ($a) => {
+          return {
+            name: $a.querySelector('span')?.innerHTML ?? '',
+            url: $a.getAttribute('href') ? 'https://www.morningstar.com' + $a.getAttribute('href') : undefined,
+          };
+        }
       );
     });
-
-    const authorLink = await page.evaluate(() => {
-      return document.querySelector('.article__article-info .article__author a')?.getAttribute('href') ?? '';
-    });
-
-    const authorUrl = 'https://www.morningstar.com/' + authorLink;
-
-    const categoryName = await page.evaluate(() => {
-      return document.querySelector('head meta[property="og:article:section"]')?.getAttribute('content') ?? '';
-    });
-
-    const categoryLink = await page.evaluate(() => {
-      return document.querySelector('.article__container a')?.getAttribute('href') ?? '';
-    });
-
-    const categoryUrl = 'https://www.morningstar.com/' + categoryLink;
-
     const imageUrl = await page.evaluate(() => {
       return document.querySelector('head meta[property="og:image"]')?.getAttribute('content') ?? '';
+    });
+
+    const languageCode = await page.evaluate(() => {
+      return document.querySelector('html')?.getAttribute('lang') ?? '';
     });
 
     // Content
@@ -150,9 +141,9 @@ export default class MorningstarNewsScraper extends AbstractNewsScraper implemen
       newsSiteArticleId: newsSiteArticleId,
       publishedAt: new Date(datePublished),
       modifiedAt: new Date(dateModified),
-      authors: [{ name: authorName, url: authorUrl }],
-      categories: [{ name: categoryName, url: categoryUrl }],
+      authors: authors,
       imageUrl: imageUrl,
+      languageCode: languageCode,
     };
 
     return Promise.resolve(article);

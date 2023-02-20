@@ -94,7 +94,7 @@ export default class BusinessInsiderNewsScraper extends AbstractNewsScraper impl
         ($a) => {
           return {
             name: ($a.innerHTML ?? '').trim(),
-            url: 'https://www.businessinsider.com' + $a.getAttribute('href') ?? undefined,
+            url: $a.getAttribute('href') ? 'https://www.businessinsider.com' + $a.getAttribute('href') : undefined,
           };
         }
       );
