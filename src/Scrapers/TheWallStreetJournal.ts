@@ -101,10 +101,14 @@ export default class TheWallStreetJournalNewsScraper extends AbstractNewsScraper
         document.querySelectorAll(['.article_header .category li.article-breadCrumb a'].join(', '))
       ).map(($a) => {
         return {
-          name: $a.innerHTML,
+          name: ($a.innerHTML ?? '').trim(),
           url: $a.getAttribute('href') ?? undefined,
         };
       });
+    });
+
+    const languageCode = await page.evaluate(() => {
+      return document.querySelector('html')?.getAttribute('lang') ?? '';
     });
 
     const linkedDataText = await page.evaluate(() => {
@@ -135,9 +139,16 @@ export default class TheWallStreetJournalNewsScraper extends AbstractNewsScraper
       newsSiteArticleId: newsSiteArticleId,
       publishedAt: new Date(linkedData.datePublished),
       modifiedAt: new Date(linkedData.dateModified),
-      authors: linkedData.author,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      authors: linkedData.author.map((author: any) => {
+        return {
+          ...author,
+          url: author.url ? author.url : author.sameAs,
+        };
+      }),
       categories: categories,
       imageUrl: linkedData.image[0],
+      languageCode: languageCode,
     };
 
     return Promise.resolve(article);

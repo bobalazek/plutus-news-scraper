@@ -84,17 +84,24 @@ export default class TheGuardianNewsScraper extends AbstractNewsScraper implemen
     logger.info(`Going to URL ${url} ...`);
 
     await page.goto(url, {
-      waitUntil: 'domcontentloaded',
+      waitUntil: 'networkidle2',
     });
 
     const newsSiteArticleId = url;
 
-    const categoryName = await page.evaluate(() => {
-      return document.querySelector('head meta[property="article:section"]')?.getAttribute('content') ?? '';
+    const categories = await page.evaluate(() => {
+      return Array.from(document.querySelectorAll(['main article a[data-component="section"]'].join(', '))).map(
+        ($a) => {
+          return {
+            name: $a.querySelector('span')?.innerHTML ?? '',
+            url: $a.getAttribute('href') ?? undefined,
+          };
+        }
+      );
     });
 
-    const categoryUrl = await page.evaluate(() => {
-      return document.querySelector('main article a[data-component="section"]')?.getAttribute('href') ?? '';
+    const languageCode = await page.evaluate(() => {
+      return document.querySelector('html')?.getAttribute('lang') ?? '';
     });
 
     const linkedDataText = await page.evaluate(() => {
@@ -104,7 +111,7 @@ export default class TheGuardianNewsScraper extends AbstractNewsScraper implemen
       throw new NewsArticleDataNotFoundError(`Linked data not found for URL ${url}`);
     }
 
-    const linkedData = JSON.parse(linkedDataText);
+    const linkedData = JSON.parse(linkedDataText)[0];
 
     // Content
     const content = await page.evaluate(() => {
@@ -117,17 +124,23 @@ export default class TheGuardianNewsScraper extends AbstractNewsScraper implemen
 
     const article: NewsArticleType = {
       url: url,
-      title: linkedData[0].headline,
+      title: linkedData.headline,
       multimediaType: NewsArticleMultimediaTypeEnum.TEXT,
       content: convert(content, {
         wordwrap: false,
       }),
       newsSiteArticleId: newsSiteArticleId,
-      publishedAt: new Date(linkedData[0].datePublished),
-      modifiedAt: new Date(linkedData[0].dateModified),
-      authors: linkedData[0].author,
-      categories: [{ name: categoryName, url: categoryUrl }],
-      imageUrl: linkedData[0].image,
+      publishedAt: new Date(linkedData.datePublished),
+      modifiedAt: new Date(linkedData.dateModified),
+      authors: [linkedData.author[0]].map((author) => {
+        return {
+          ...author,
+          url: author.url ? author.url : author.sameAs,
+        };
+      }),
+      categories: categories,
+      imageUrl: linkedData.image[0],
+      languageCode: languageCode,
     };
 
     return Promise.resolve(article);

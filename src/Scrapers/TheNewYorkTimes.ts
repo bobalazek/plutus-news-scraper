@@ -100,6 +100,10 @@ export default class TheNewYorkTimesNewsScraper extends AbstractNewsScraper impl
       return document.querySelector('head meta[property="article:section"]')?.getAttribute('content') ?? '';
     });
 
+    const languageCode = await page.evaluate(() => {
+      return document.querySelector('html')?.getAttribute('lang') ?? '';
+    });
+
     const linkedDataText = await page.evaluate(() => {
       return document.querySelector('head script[type="application/ld+json"]')?.innerHTML ?? '';
     });
@@ -131,6 +135,7 @@ export default class TheNewYorkTimesNewsScraper extends AbstractNewsScraper impl
       authors: linkedData.author,
       categories: [{ name: categoryName }],
       imageUrl: linkedData.image.url,
+      languageCode: languageCode,
     };
 
     return Promise.resolve(article);

@@ -84,7 +84,7 @@ export default class UsaTodayNewsScraper extends AbstractNewsScraper implements 
     logger.info(`Going to URL ${url} ...`);
 
     await page.goto(url, {
-      waitUntil: 'domcontentloaded',
+      waitUntil: 'networkidle2',
     });
 
     const urlSplit = url.split('/');
@@ -98,6 +98,10 @@ export default class UsaTodayNewsScraper extends AbstractNewsScraper implements 
           url: 'https://eu.usatoday.com' + $a.getAttribute('link') ?? undefined,
         };
       });
+    });
+
+    const languageCode = await page.evaluate(() => {
+      return document.querySelector('html')?.getAttribute('lang') ?? '';
     });
 
     const linkedDataText = await page.evaluate(() => {
@@ -131,6 +135,7 @@ export default class UsaTodayNewsScraper extends AbstractNewsScraper implements 
       authors: [linkedData.author],
       categories: categories,
       imageUrl: linkedData.image.url,
+      languageCode: languageCode,
     };
 
     return Promise.resolve(article);

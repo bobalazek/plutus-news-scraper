@@ -83,7 +83,7 @@ export default class TheStreetNewsScraper extends AbstractNewsScraper implements
     logger.info(`Going to URL ${url} ...`);
 
     await page.goto(url, {
-      waitUntil: 'domcontentloaded',
+      waitUntil: 'networkidle2',
     });
 
     const urlSplit = url.split('/');
@@ -92,14 +92,12 @@ export default class TheStreetNewsScraper extends AbstractNewsScraper implements
 
     const newsSiteArticleId = slugSplit[slugSplit.length - 1];
 
-    const authorUrl = await page.evaluate(() => {
-      return (
-        document.querySelector('.article-author-rail a.article-author-rail__author-link')?.getAttribute('href') ?? ''
-      );
-    });
-
     const categoryUrlSplit = url;
     const categoryUrl = categoryUrlSplit.substring(0, url.lastIndexOf('/'));
+
+    const languageCode = await page.evaluate(() => {
+      return document.querySelector('html')?.getAttribute('lang') ?? '';
+    });
 
     const linkedDataText = await page.evaluate(() => {
       return document.querySelector('head script[type="application/ld+json"]')?.innerHTML ?? '';
@@ -108,19 +106,20 @@ export default class TheStreetNewsScraper extends AbstractNewsScraper implements
       throw new NewsArticleDataNotFoundError(`Linked data not found for URL ${url}`);
     }
 
-    const linkedData = JSON.parse(linkedDataText);
+    const linkedData = JSON.parse(linkedDataText)[0];
 
     const article: NewsArticleType = {
       url: url,
-      title: linkedData[0].headline,
+      title: linkedData.headline,
       multimediaType: NewsArticleMultimediaTypeEnum.TEXT,
-      content: linkedData[0].articleBody,
+      content: linkedData.articleBody,
       newsSiteArticleId: newsSiteArticleId,
-      publishedAt: new Date(linkedData[0].datePublished),
-      modifiedAt: new Date(linkedData[0].dateModified),
-      authors: [{ name: linkedData[0].author, url: authorUrl }],
-      categories: [{ name: linkedData[0].articleSection, url: categoryUrl }],
-      imageUrl: linkedData[0].image.url,
+      publishedAt: new Date(linkedData.datePublished),
+      modifiedAt: new Date(linkedData.dateModified),
+      authors: [linkedData.author],
+      categories: [{ name: linkedData.articleSection, url: categoryUrl }],
+      imageUrl: linkedData.image.url,
+      languageCode: languageCode,
     };
 
     return Promise.resolve(article);

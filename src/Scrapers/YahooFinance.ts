@@ -109,7 +109,7 @@ export default class YahooFinanceNewsScraper extends AbstractNewsScraper impleme
       await page.click('#consent-page .actions button[value="agree"]');
 
       await page.goto(url, {
-        waitUntil: 'domcontentloaded',
+        waitUntil: 'networkidle2',
       });
     }
 
@@ -120,6 +120,10 @@ export default class YahooFinanceNewsScraper extends AbstractNewsScraper impleme
     const slugLastPart = slugSplit[slugSplit.length - 1];
     const newsSiteArticleId = slugLastPart.replace('.html', '');
 
+    const languageCode = await page.evaluate(() => {
+      return document.querySelector('html')?.getAttribute('lang') ?? '';
+    });
+
     const linkedDataText = await page.evaluate(() => {
       return document.querySelector('script[type="application/ld+json"]')?.innerHTML ?? '';
     });
@@ -128,7 +132,7 @@ export default class YahooFinanceNewsScraper extends AbstractNewsScraper impleme
     }
 
     const linkedData = JSON.parse(linkedDataText);
-
+    console.log(linkedData);
     // Content
     const content = await page.evaluate(() => {
       return Array.from(document.querySelectorAll('article .caas-body p'))
@@ -148,8 +152,15 @@ export default class YahooFinanceNewsScraper extends AbstractNewsScraper impleme
       newsSiteArticleId: newsSiteArticleId,
       publishedAt: new Date(linkedData.datePublished),
       modifiedAt: new Date(linkedData.dateModified),
-      authors: [linkedData.author],
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      authors: [linkedData.author].map((author: any) => {
+        return {
+          ...author,
+          url: author.url ? author.url : '',
+        };
+      }),
       imageUrl: linkedData.image.url,
+      languageCode: languageCode,
     };
 
     return Promise.resolve(article);
