@@ -7,6 +7,7 @@ import { NewsScraperInterface } from '../Types/NewsScraperInterface';
 import { NewsScraperStatusEntry } from '../Types/NewsScraperStatusEntry';
 import { ProcessingStatusEnum } from '../Types/ProcessingStatusEnum';
 import { LOKI_PINO_BATCH_INTERVAL_SECONDS } from '../Utils/Environment';
+import { sleep } from '../Utils/Helpers';
 import { HTTPServerService } from './HTTPServerService';
 import { logger } from './Logger';
 import { NewsScraperManager } from './NewsScraperManager';
@@ -81,11 +82,7 @@ export class NewsScraperTaskDispatcher {
     await this._httpServerService.terminate();
 
     // Make sure we give out logger enough time to send the last batch of logs
-    await new Promise((resolve) => {
-      setTimeout(() => {
-        resolve(void 0);
-      }, LOKI_PINO_BATCH_INTERVAL_SECONDS * 1000 * 1.2 /* a bit of buffer accounting for network latency */);
-    });
+    await sleep(LOKI_PINO_BATCH_INTERVAL_SECONDS * 1000 * 1.2 /* a bit of buffer accounting for network latency */);
 
     process.exit(errorMessage ? 1 : 0);
   }

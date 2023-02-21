@@ -20,3 +20,9 @@ export const checkIfPortIsInUse = async (port: number): Promise<boolean> => {
     });
   });
 };
+
+export const sleep = (milliseconds: number): Promise<unknown> => {
+  return new Promise((resolve) => {
+    return setTimeout(resolve, milliseconds);
+  });
+};
