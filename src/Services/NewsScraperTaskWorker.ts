@@ -5,6 +5,8 @@ import { NewsArticle } from '../Entitites/NewsArticle';
 import { LifecycleStatusEnum } from '../Types/LifecycleStatusEnum';
 import { NewsScraperMessageBrokerQueuesEnum } from '../Types/NewsMessageBrokerQueues';
 import { ProcessingStatusEnum } from '../Types/ProcessingStatusEnum';
+import { LOKI_PINO_BATCH_INTERVAL_SECONDS } from '../Utils/Environment';
+import { sleep } from '../Utils/Helpers';
 import { HTTPServerService } from './HTTPServerService';
 import { logger } from './Logger';
 import { NewsScraperDatabase } from './NewsScraperDatabase';
@@ -16,6 +18,7 @@ import { PrometheusService } from './PrometheusService';
 export class NewsScraperTaskWorker {
   private _id!: string;
   private _httpServerPort?: number;
+  private _consumedQueues!: string[];
 
   private _scrapeArticleExpirationTime: number = 300000; // 5 minute
 
@@ -30,29 +33,17 @@ export class NewsScraperTaskWorker {
   async start(id: string, httpServerPort?: number, consumedQueues: string[] = ['*']) {
     this._id = id;
     this._httpServerPort = httpServerPort;
-
-    this._newsScraperManager.setPreventClose(true);
+    this._consumedQueues = consumedQueues;
 
     logger.info(`========== Starting the worker "${id}" ... ==========`);
 
+    this._registerTerminate();
+
     await this._sendWorkerStatusUpdate(LifecycleStatusEnum.STARTING);
 
-    // Metrics
-    this._prometheusService.addDefaultMetrics({ prefix: `news_scraper_task_worker_${id}_` });
+    await this._registerMetrics();
 
-    if (httpServerPort) {
-      await this._httpServerService.start(httpServerPort, () => {
-        this._prometheusService.addMetricsEndpointToExpressApp(this._httpServerService.getExpressApp());
-      });
-    }
-
-    if (consumedQueues.includes('*') || consumedQueues.includes('scrape_recent_articles')) {
-      this._startRecentArticlesQueueConsumption();
-    }
-
-    if (consumedQueues.includes('*') || consumedQueues.includes('scrape_article')) {
-      this._startArticleQueueConsumption();
-    }
+    this._startConsumption();
 
     await this._sendWorkerStatusUpdate(LifecycleStatusEnum.STARTED);
 
@@ -62,7 +53,11 @@ export class NewsScraperTaskWorker {
   }
 
   async terminate(errorMessage?: string) {
-    await this._newsScraperManager.terminateScraper(true);
+    if (errorMessage) {
+      logger.error(`Terminating news scraper task worker with error: ${errorMessage}`);
+    } else {
+      logger.info(`Terminating news scraper task worker`);
+    }
 
     await this._newsScraperMessageBroker.sendToQueue(
       NewsScraperMessageBrokerQueuesEnum.NEWS_SCRAPER_TASK_WORKER_STATUS_UPDATE_QUEUE,
@@ -73,6 +68,17 @@ export class NewsScraperTaskWorker {
         errorMessage,
       }
     );
+
+    await this._newsScraperManager.terminateScraper(true);
+
+    await this._newsScraperDatabase.terminate();
+    await this._newsScraperMessageBroker.terminate();
+    await this._httpServerService.terminate();
+
+    // Make sure we give out logger enough time to send the last batch of logs
+    await sleep(LOKI_PINO_BATCH_INTERVAL_SECONDS * 1000 * 1.2 /* a bit of buffer accounting for network latency */);
+
+    process.exit(errorMessage ? 1 : 0);
   }
 
   private async _startRecentArticlesQueueConsumption() {
@@ -201,6 +207,38 @@ export class NewsScraperTaskWorker {
         }
       }
     );
+  }
+
+  private _startConsumption() {
+    this._newsScraperManager.setPreventClose(true);
+
+    if (this._consumedQueues.includes('*') || this._consumedQueues.includes('scrape_recent_articles')) {
+      this._startRecentArticlesQueueConsumption();
+    }
+
+    if (this._consumedQueues.includes('*') || this._consumedQueues.includes('scrape_article')) {
+      this._startArticleQueueConsumption();
+    }
+  }
+
+  private _registerTerminate() {
+    process.on('SIGTERM', async () => {
+      await this.terminate();
+    });
+
+    process.on('uncaughtException', async (err) => {
+      await this.terminate(`UncaughtException: ${err.message}`);
+    });
+  }
+
+  private async _registerMetrics() {
+    this._prometheusService.addDefaultMetrics({ prefix: `news_scraper_task_worker_${this._id}_` });
+
+    if (this._httpServerPort) {
+      await this._httpServerService.start(this._httpServerPort, () => {
+        this._prometheusService.addMetricsEndpointToExpressApp(this._httpServerService.getExpressApp());
+      });
+    }
   }
 
   private async _sendWorkerStatusUpdate(status: LifecycleStatusEnum) {
