@@ -40,7 +40,7 @@ export class PrometheusService {
 
       const metrics = await client.register.metrics();
 
-      return res.send(metrics);
+      res.send(metrics);
     });
   }
 }

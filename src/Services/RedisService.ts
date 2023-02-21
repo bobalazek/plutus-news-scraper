@@ -155,7 +155,7 @@ export class RedisService {
     await pubClient.disconnect();
   }
 
-  async close() {
+  async terminate() {
     const client = await this.getClient();
     await client.quit();
 

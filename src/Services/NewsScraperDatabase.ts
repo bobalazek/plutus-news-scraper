@@ -29,4 +29,10 @@ export class NewsScraperDatabase {
 
     return dataSource.runMigrations();
   }
+
+  async terminate() {
+    const dataSource = await this.getDataSource();
+
+    await dataSource.destroy();
+  }
 }
