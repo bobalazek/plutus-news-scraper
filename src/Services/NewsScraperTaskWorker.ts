@@ -41,8 +41,8 @@ export class NewsScraperTaskWorker {
     this._prometheusService.addDefaultMetrics({ prefix: `news_scraper_task_worker_${id}_` });
 
     if (httpServerPort) {
-      await this._httpServerService.start(httpServerPort, (httpServer) => {
-        this._prometheusService.addMetricsEndpointToHttpServer(httpServer);
+      await this._httpServerService.start(httpServerPort, () => {
+        this._prometheusService.addMetricsEndpointToExpressApp(this._httpServerService.getExpressApp());
       });
     }
 

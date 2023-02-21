@@ -142,7 +142,7 @@ export class RabbitMQService {
     return this.connect();
   }
 
-  async close() {
+  async terminate() {
     for (const channel of this._channelsMap.values()) {
       await channel.close();
     }

@@ -109,7 +109,7 @@ export class NewsScraperMessageBroker {
     return data;
   }
 
-  async close() {
-    return this._rabbitMQService.close();
+  async terminate() {
+    return this._rabbitMQService.terminate();
   }
 }

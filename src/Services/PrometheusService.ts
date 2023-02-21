@@ -32,8 +32,8 @@ export class PrometheusService {
     client.collectDefaultMetrics(config);
   }
 
-  addMetricsEndpointToHttpServer(httpServer: express.Express) {
-    httpServer.get('/metrics', async (_, res) => {
+  addMetricsEndpointToExpressApp(expressApp: express.Express) {
+    expressApp.get('/metrics', async (_, res) => {
       const client = this.getClient();
 
       res.set('Content-type', client.register.contentType);

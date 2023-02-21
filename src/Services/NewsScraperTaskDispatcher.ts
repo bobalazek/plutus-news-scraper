@@ -59,14 +59,14 @@ export class NewsScraperTaskDispatcher {
   }
 
   async terminate(errorMessage?: string) {
-    clearInterval(this._dispatchRecentArticlesScrapeIntervalTimer);
-    clearInterval(this._messageQueuesMonitoringIntervalTimer);
-
     if (errorMessage) {
       logger.error(`Terminating news scraper task dispatcher with error: ${errorMessage}`);
     } else {
       logger.info(`Terminating news scraper task dispatcher`);
     }
+
+    clearInterval(this._dispatchRecentArticlesScrapeIntervalTimer);
+    clearInterval(this._messageQueuesMonitoringIntervalTimer);
 
     await this._newsScraperMessageBroker.sendToQueue(
       NewsScraperMessageBrokerQueuesEnum.NEWS_SCRAPER_TASK_DISPATCHER_STATUS_UPDATE_QUEUE,
@@ -77,13 +77,14 @@ export class NewsScraperTaskDispatcher {
       }
     );
 
-    await this._newsScraperMessageBroker.close();
+    await this._newsScraperMessageBroker.terminate();
+    await this._httpServerService.terminate();
 
     // Make sure we give out logger enough time to send the last batch of logs
     await new Promise((resolve) => {
       setTimeout(() => {
         resolve(void 0);
-      }, LOKI_PINO_BATCH_INTERVAL_SECONDS * 1000 * 1.2 /* a bit of buffer for network */);
+      }, LOKI_PINO_BATCH_INTERVAL_SECONDS * 1000 * 1.2 /* a bit of buffer accounting for network latency */);
     });
 
     process.exit(errorMessage ? 1 : 0);
@@ -210,7 +211,7 @@ export class NewsScraperTaskDispatcher {
   }
 
   private _registerTerminate() {
-    process.on('beforeExit', async () => {
+    process.on('SIGTERM', async () => {
       await this.terminate();
     });
 
@@ -223,8 +224,8 @@ export class NewsScraperTaskDispatcher {
     this._prometheusService.addDefaultMetrics({ prefix: `news_scraper_task_dispatcher_` });
 
     if (this._httpServerPort) {
-      await this._httpServerService.start(this._httpServerPort, (httpServer) => {
-        this._prometheusService.addMetricsEndpointToHttpServer(httpServer);
+      await this._httpServerService.start(this._httpServerPort, () => {
+        this._prometheusService.addMetricsEndpointToExpressApp(this._httpServerService.getExpressApp());
       });
     }
   }
