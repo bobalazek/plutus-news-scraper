@@ -132,7 +132,7 @@ export default class YahooFinanceNewsScraper extends AbstractNewsScraper impleme
     }
 
     const linkedData = JSON.parse(linkedDataText);
-    console.log(linkedData);
+
     // Content
     const content = await page.evaluate(() => {
       return Array.from(document.querySelectorAll('article .caas-body p'))
@@ -156,7 +156,7 @@ export default class YahooFinanceNewsScraper extends AbstractNewsScraper impleme
       authors: [linkedData.author].map((author: any) => {
         return {
           ...author,
-          url: author.url ? author.url : '',
+          url: author.url ? author.url : undefined,
         };
       }),
       imageUrl: linkedData.image.url,

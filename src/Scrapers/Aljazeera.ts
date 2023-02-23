@@ -14,13 +14,10 @@ export default class AljazeeraNewsScraper extends AbstractNewsScraper implements
   recentArticleListUrls: string[] = [
     'https://www.aljazeera.com/',
     'https://www.aljazeera.com/news/',
-    'https://www.aljazeera.com/tag/ukraine-russia-crisis/',
     'https://www.aljazeera.com/features/',
     'https://www.aljazeera.com/economy/',
-    'https://www.aljazeera.com/tag/coronavirus-pandemic/',
     'https://www.aljazeera.com/climate-crisis',
     'https://www.aljazeera.com/investigations/',
-    'https://www.aljazeera.com/tag/science-and-technology/',
   ];
 
   async scrapeRecentArticles(urls?: string[]): Promise<NewsBasicArticleType[]> {
