@@ -3,40 +3,40 @@ import puppeteer, { Browser, Page, PuppeteerLaunchOptions } from 'puppeteer';
 import { PUPPETEER_EXECUTABLE_PATH } from '../Utils/Environment';
 
 export abstract class AbstractNewsScraper {
-  private _browser?: Browser;
-  private _page?: Page;
-  private _headful: boolean = false;
-  private _preventClose: boolean = false;
+  private _puppeteerBrowser?: Browser;
+  private _puppteerPage?: Page;
+  private _puppeteerHeadful: boolean = false;
+  private _puppeteerPreventClose: boolean = false;
 
   async getPuppeteerBrowser(options?: PuppeteerLaunchOptions) {
-    if (!this._browser) {
-      this._browser = await puppeteer.launch({
+    if (!this._puppeteerBrowser) {
+      this._puppeteerBrowser = await puppeteer.launch({
         defaultViewport: null,
-        headless: !this._headful,
+        headless: !this._puppeteerHeadful,
         executablePath: PUPPETEER_EXECUTABLE_PATH || undefined,
         ...options,
       });
     }
 
-    return this._browser;
+    return this._puppeteerBrowser;
   }
 
   async getPuppeteerPage(options?: PuppeteerLaunchOptions) {
-    if (!this._page) {
+    if (!this._puppteerPage) {
       const browser = await this.getPuppeteerBrowser(options);
 
-      this._page = await browser.newPage();
+      this._puppteerPage = await browser.newPage();
 
-      await this.setUserAgent();
+      await this.setPuppeteerUserAgent();
     }
 
-    return this._page;
+    return this._puppteerPage;
   }
 
   /**
    * @param userAgent if set to null, it will set it to the default string provided
    */
-  async setUserAgent(userAgent?: string | null) {
+  async setPuppeteerUserAgent(userAgent?: string | null) {
     if (!userAgent) {
       userAgent =
         'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36';
@@ -50,14 +50,14 @@ export abstract class AbstractNewsScraper {
   }
 
   async closePuppeteerBrowser(force: boolean = false) {
-    if (this._preventClose && !force) {
+    if (this._puppeteerPreventClose && !force) {
       return;
     }
 
-    await this._browser?.close();
+    await this._puppeteerBrowser?.close();
 
-    this._browser = undefined;
-    this._page = undefined;
+    this._puppeteerBrowser = undefined;
+    this._puppteerPage = undefined;
   }
 
   getUniqueArray<T>(array: T[]) {
@@ -69,8 +69,8 @@ export abstract class AbstractNewsScraper {
    *
    * @param value boolean
    */
-  setHeadful(value: boolean) {
-    this._headful = value;
+  setPuppeteerHeadful(value: boolean) {
+    this._puppeteerHeadful = value;
   }
 
   /**
@@ -78,7 +78,7 @@ export abstract class AbstractNewsScraper {
    *
    * @param value boolean
    */
-  setPreventClose(value: boolean) {
-    this._preventClose = value;
+  setPuppeteerPreventClose(value: boolean) {
+    this._puppeteerPreventClose = value;
   }
 }
