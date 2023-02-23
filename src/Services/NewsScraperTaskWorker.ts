@@ -20,6 +20,9 @@ export class NewsScraperTaskWorker {
   private _httpServerPort?: number;
   private _consumedQueues!: string[];
 
+  private _terminationStarted: boolean = false;
+  private _recentArticlesConsumptionInProgress: boolean = false;
+  private _articleConsumptionInProgress: boolean = false;
   private _scrapeArticleExpirationTime: number = 300000; // 5 minute
 
   constructor(
@@ -59,6 +62,8 @@ export class NewsScraperTaskWorker {
       logger.info(`Terminating news scraper task worker`);
     }
 
+    this._terminationStarted = true;
+
     await this._newsScraperMessageBroker.sendToQueue(
       NewsScraperMessageBrokerQueuesEnum.NEWS_SCRAPER_TASK_WORKER_STATUS_UPDATE_QUEUE,
       {
@@ -68,6 +73,18 @@ export class NewsScraperTaskWorker {
         errorMessage,
       }
     );
+
+    await new Promise((resolve) => {
+      const consumptionInterval = setInterval(() => {
+        if (!this._recentArticlesConsumptionInProgress && !this._articleConsumptionInProgress) {
+          clearInterval(consumptionInterval);
+
+          resolve(void 0);
+        }
+      }, 100);
+
+      // TODO: maybe we want to have a setTimeout in case the above one gets stuck?
+    });
 
     await this._newsScraperManager.terminateScraper(true);
 
@@ -87,11 +104,21 @@ export class NewsScraperTaskWorker {
     return this._newsScraperMessageBroker.consumeFromQueueOneAtTime(
       NewsScraperMessageBrokerQueuesEnum.NEWS_SCRAPER_RECENT_ARTICLES_SCRAPE_QUEUE,
       async (data, acknowledgeMessageCallback, negativeAcknowledgeMessageCallback) => {
+        if (this._terminationStarted) {
+          await this._newsScraperMessageBroker.deleteQueue(
+            NewsScraperMessageBrokerQueuesEnum.NEWS_SCRAPER_RECENT_ARTICLES_SCRAPE_QUEUE
+          );
+
+          return;
+        }
+
         logger.debug(
           `[Worker ${this._id}][Recent Articles Queue] Processing recent articles scrape job. Data ${JSON.stringify(
             data
           )}`
         );
+
+        this._recentArticlesConsumptionInProgress = true;
 
         await this._newsScraperMessageBroker.sendToQueue(
           NewsScraperMessageBrokerQueuesEnum.NEWS_SCRAPER_RECENT_ARTICLES_SCRAPE_STATUS_UPDATE_QUEUE,
@@ -110,6 +137,8 @@ export class NewsScraperTaskWorker {
             NewsScraperMessageBrokerQueuesEnum.NEWS_SCRAPER_RECENT_ARTICLES_SCRAPE_STATUS_UPDATE_QUEUE,
             { ...data, status: ProcessingStatusEnum.FAILED, errorMessage }
           );
+
+          this._recentArticlesConsumptionInProgress = false;
 
           return;
         }
@@ -143,6 +172,8 @@ export class NewsScraperTaskWorker {
             NewsScraperMessageBrokerQueuesEnum.NEWS_SCRAPER_RECENT_ARTICLES_SCRAPE_STATUS_UPDATE_QUEUE,
             { ...data, status: ProcessingStatusEnum.FAILED, errorMessage: err.message }
           );
+        } finally {
+          this._recentArticlesConsumptionInProgress = false;
         }
       }
     );
@@ -157,9 +188,19 @@ export class NewsScraperTaskWorker {
     return this._newsScraperMessageBroker.consumeFromQueueOneAtTime(
       NewsScraperMessageBrokerQueuesEnum.NEWS_SCRAPER_ARTICLE_SCRAPE_QUEUE,
       async (data, acknowledgeMessageCallback, negativeAcknowledgeMessageCallback) => {
+        if (this._terminationStarted) {
+          await this._newsScraperMessageBroker.deleteQueue(
+            NewsScraperMessageBrokerQueuesEnum.NEWS_SCRAPER_ARTICLE_SCRAPE_QUEUE
+          );
+
+          return;
+        }
+
         logger.debug(
           `[Worker ${this._id}][Article Queue] Processing recent articles scrape job. Data ${JSON.stringify(data)}`
         );
+
+        this._articleConsumptionInProgress = true;
 
         await this._newsScraperMessageBroker.sendToQueue(
           NewsScraperMessageBrokerQueuesEnum.NEWS_SCRAPER_ARTICLE_SCRAPE_STATUS_UPDATE_QUEUE,
@@ -178,6 +219,8 @@ export class NewsScraperTaskWorker {
             NewsScraperMessageBrokerQueuesEnum.NEWS_SCRAPER_ARTICLE_SCRAPE_STATUS_UPDATE_QUEUE,
             { ...data, status: ProcessingStatusEnum.FAILED, errorMessage }
           );
+
+          this._articleConsumptionInProgress = false;
 
           return;
         }
@@ -204,6 +247,8 @@ export class NewsScraperTaskWorker {
             NewsScraperMessageBrokerQueuesEnum.NEWS_SCRAPER_ARTICLE_SCRAPE_STATUS_UPDATE_QUEUE,
             { ...data, status: ProcessingStatusEnum.FAILED, errorMessage: err.message }
           );
+        } finally {
+          this._articleConsumptionInProgress = false;
         }
       }
     );
