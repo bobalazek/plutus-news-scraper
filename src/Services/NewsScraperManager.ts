@@ -206,8 +206,8 @@ export class NewsScraperManager {
 
   private _prepareScraper(scraper: NewsScraperInterface) {
     const newsScraper = scraper as unknown as AbstractNewsScraper;
-    newsScraper.setHeadful(this._headful);
-    newsScraper.setPreventClose(this._preventClose);
+    newsScraper.setPuppeteerHeadful(this._headful);
+    newsScraper.setPuppeteerPreventClose(this._preventClose);
 
     return newsScraper;
   }
