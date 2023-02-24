@@ -13,6 +13,7 @@ This is the news component of the Plutus platform.
 - To scrape the archived articles, run: `yarn cli news-scraper:archived-articles:scrape --news-site <news-site> [-h,--headful][-p,--prevent-close]`
 - To start the task dispatcher, run: `yarn cli news-scraper:task-dispatcher:start`
 - To start the task worker, run: `yarn cli news-scraper:task-worker:start [-i,--id <id>]`
+- To execute database migrations, run: `yarn cli news-scraper:database:migrations:run`
 
 ## Docker
 
