@@ -297,8 +297,8 @@ describe('Services/NewsScraperTaskDispatcher.ts', () => {
       },
       result: ['test_scraper_3', 'test_scraper_1', 'test_scraper_2', 'test_scraper_4'],
     },
-  ])('getOrderedScrapers - $testName', async ({ scraperStatusMapData, result }) => {
-    await newsScraperTaskDispatcher.prepareScraperStatusMap();
+  ])('getSortedScrapers - $testName', async ({ scraperStatusMapData, result }) => {
+    await newsScraperTaskDispatcher.resetScraperStatusMap();
 
     if (Object.keys(scraperStatusMapData).length > 0) {
       for (const key in scraperStatusMapData) {
@@ -306,7 +306,7 @@ describe('Services/NewsScraperTaskDispatcher.ts', () => {
       }
     }
 
-    const scrapers = newsScraperTaskDispatcher.getOrderedScrapers();
+    const scrapers = newsScraperTaskDispatcher.getSortedScrapers();
     const scraperKeys = scrapers.map((scraper) => {
       return scraper.key;
     });

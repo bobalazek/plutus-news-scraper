@@ -67,7 +67,7 @@ export class NewsScraperTaskWorker {
     await this._newsScraperMessageBroker.sendToQueue(
       NewsScraperMessageBrokerQueuesEnum.NEWS_SCRAPER_TASK_WORKER_STATUS_UPDATE_QUEUE,
       {
-        status: errorMessage ? LifecycleStatusEnum.ERRORED : LifecycleStatusEnum.CLOSED,
+        status: errorMessage ? LifecycleStatusEnum.ERRORED : LifecycleStatusEnum.CLOSING,
         id: this._id,
         httpServerPort: this._httpServerPort,
         errorMessage,
@@ -83,14 +83,18 @@ export class NewsScraperTaskWorker {
         }
       }, 100);
 
-      // TODO: maybe we want to have a setTimeout in case the above one gets stuck?
+      setTimeout(() => {
+        clearInterval(consumptionInterval);
+
+        resolve(void 0);
+      }, 30000);
     });
 
     await this._newsScraperManager.terminateScraper(true);
 
-    await this._newsScraperDatabase.terminate();
     await this._newsScraperMessageBroker.terminate();
     await this._httpServerService.terminate();
+    await this._newsScraperDatabase.terminate();
 
     // Make sure we give out logger enough time to send the last batch of logs
     await sleep(LOKI_PINO_BATCH_INTERVAL_SECONDS * 1000 * 1.2 /* a bit of buffer accounting for network latency */);

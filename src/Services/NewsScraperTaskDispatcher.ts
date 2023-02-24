@@ -47,7 +47,7 @@ export class NewsScraperTaskDispatcher {
 
     await this._registerMetrics();
 
-    await this.prepareScraperStatusMap();
+    await this.resetScraperStatusMap();
 
     this._startRecentArticlesScraping();
     this._startMessageQueuesMonitoring();
@@ -72,7 +72,7 @@ export class NewsScraperTaskDispatcher {
     await this._newsScraperMessageBroker.sendToQueue(
       NewsScraperMessageBrokerQueuesEnum.NEWS_SCRAPER_TASK_DISPATCHER_STATUS_UPDATE_QUEUE,
       {
-        status: errorMessage ? LifecycleStatusEnum.ERRORED : LifecycleStatusEnum.CLOSED,
+        status: errorMessage ? LifecycleStatusEnum.ERRORED : LifecycleStatusEnum.CLOSING,
         httpServerPort: this._httpServerPort,
         errorMessage,
       }
@@ -88,7 +88,7 @@ export class NewsScraperTaskDispatcher {
   }
 
   /* Technically all of the methods below should be private, but we use them in our tests, so ... */
-  async prepareScraperStatusMap() {
+  async resetScraperStatusMap() {
     this._scrapers = await this._newsScraperManager.getAll();
 
     for (const scraper of this._scrapers) {
@@ -103,7 +103,7 @@ export class NewsScraperTaskDispatcher {
     }
   }
 
-  getOrderedScrapers() {
+  getSortedScrapers() {
     const scrapers: NewsScraperInterface[] = [];
     const scrapersAppendAtEnd: NewsScraperInterface[] = [];
 
@@ -246,7 +246,7 @@ export class NewsScraperTaskDispatcher {
   private async _dispatchRecentArticlesScrape() {
     logger.info(`Dispatch news article events for scrapers ...`);
 
-    const scrapers = this.getOrderedScrapers();
+    const scrapers = this.getSortedScrapers();
     if (scrapers.length === 0) {
       logger.info(`Scrapers not found. Skipping ...`);
 
