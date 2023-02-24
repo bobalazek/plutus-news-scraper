@@ -2,7 +2,7 @@ import { Command } from 'commander';
 
 import { container } from '../DI/Container';
 import { TYPES } from '../DI/ContainerTypes';
-import { logger } from '../Services/Logger';
+import { Logger } from '../Services/Logger';
 import { NewsScraperTaskWorker } from '../Services/NewsScraperTaskWorker';
 import { randomString } from '../Utils/Helpers';
 
@@ -17,6 +17,7 @@ export const addNewsScraperTaskWorkerStartCommand = (program: Command) => {
       const httpServerPort = options.httpServerPort;
       const consumedQueues = options.consumedQueues;
 
+      const logger = container.get<Logger>(TYPES.Logger);
       const newsScraperTaskWorker = container.get<NewsScraperTaskWorker>(TYPES.NewsScraperTaskWorker);
 
       try {

@@ -1,9 +1,10 @@
 import * as express from 'express';
 import { Server } from 'http';
-import { injectable } from 'inversify';
+import { inject, injectable } from 'inversify';
 
+import { TYPES } from '../DI/ContainerTypes';
 import { checkIfPortIsInUse } from '../Utils/Helpers';
-import { logger } from './Logger';
+import { Logger } from './Logger';
 
 @injectable()
 export class HTTPServerService {
@@ -11,8 +12,10 @@ export class HTTPServerService {
   private _httpServer!: Server;
   private _status: 'NOT_READY' | 'READY' | 'TERMINATING' = 'NOT_READY';
 
+  constructor(@inject(TYPES.Logger) private _logger: Logger) {}
+
   async start(port: number, listenCallback?: () => void) {
-    logger.info(`========== Starting the HTTP server... ==========`);
+    this._logger.info(`========== Starting the HTTP server... ==========`);
 
     const isPortInUse = await checkIfPortIsInUse(port);
     if (isPortInUse) {
@@ -22,7 +25,7 @@ export class HTTPServerService {
     this._expressApp = express();
 
     this._httpServer = this._expressApp.listen(port, async () => {
-      logger.info(`HTTP server started. Listening on port ${port} ...`);
+      this._logger.info(`HTTP server started. Listening on port ${port} ...`);
 
       this._status = 'READY';
 

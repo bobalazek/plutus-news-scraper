@@ -1,8 +1,10 @@
 import puppeteer, { Browser, Page, PuppeteerLaunchOptions } from 'puppeteer';
 
+import { Logger } from '../Services/Logger';
 import { PUPPETEER_EXECUTABLE_PATH } from '../Utils/Environment';
 
 export abstract class AbstractNewsScraper {
+  protected _logger!: Logger;
   private _puppeteerBrowser?: Browser;
   private _puppteerPage?: Page;
   private _puppeteerHeadful: boolean = false;
@@ -64,6 +66,12 @@ export abstract class AbstractNewsScraper {
     return [...new Set<T>(array)];
   }
 
+  setLogger(logger: Logger) {
+    this._logger = logger;
+
+    return this;
+  }
+
   /**
    * If this is set to true, then it will open an actual browser window
    *
@@ -71,6 +79,8 @@ export abstract class AbstractNewsScraper {
    */
   setPuppeteerHeadful(value: boolean) {
     this._puppeteerHeadful = value;
+
+    return this;
   }
 
   /**
@@ -80,5 +90,7 @@ export abstract class AbstractNewsScraper {
    */
   setPuppeteerPreventClose(value: boolean) {
     this._puppeteerPreventClose = value;
+
+    return this;
   }
 }

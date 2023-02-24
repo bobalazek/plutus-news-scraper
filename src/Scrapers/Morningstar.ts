@@ -2,7 +2,6 @@ import { convert } from 'html-to-text';
 
 import { NewsArticleType } from '../Schemas/NewsArticleSchema';
 import { NewsBasicArticleType } from '../Schemas/NewsBasicArticleSchema';
-import { logger } from '../Services/Logger';
 import { NewsArticleMultimediaTypeEnum } from '../Types/NewsArticleMultimediaTypeEnum';
 import { NewsScraperInterface } from '../Types/NewsScraperInterface';
 import { AbstractNewsScraper } from './AbstractNewsScraper';
@@ -26,10 +25,10 @@ export default class MorningstarNewsScraper extends AbstractNewsScraper implemen
 
     const page = await this.getPuppeteerPage();
 
-    logger.info(`Starting to scrape the recent articles on Morningstar ...`);
+    this._logger.info(`Starting to scrape the recent articles on Morningstar ...`);
 
     for (const recentArticleListUrl of recentArticleListUrls) {
-      logger.info(`Going to URL ${recentArticleListUrl} ...`);
+      this._logger.info(`Going to URL ${recentArticleListUrl} ...`);
 
       await page.waitForTimeout(1000);
       await page.goto(recentArticleListUrl, {
@@ -60,12 +59,12 @@ export default class MorningstarNewsScraper extends AbstractNewsScraper implemen
           return `https://www.morningstar.com${uri}`;
         });
 
-      logger.info(`Found ${articleUrls.length} articles on this page`);
+      this._logger.info(`Found ${articleUrls.length} articles on this page`);
 
       for (const articleUrl of articleUrls) {
         const url = this._preProcessUrl(articleUrl);
 
-        logger.debug(`Article URL: ${url}`);
+        this._logger.debug(`Article URL: ${url}`);
 
         basicArticles.push({
           // We are actually pushing a basic article object, instead of just URL,
@@ -84,7 +83,7 @@ export default class MorningstarNewsScraper extends AbstractNewsScraper implemen
 
     const url = this._preProcessUrl(basicArticle.url);
 
-    logger.info(`Going to URL ${url} ...`);
+    this._logger.info(`Going to URL ${url} ...`);
 
     await page.goto(url, {
       waitUntil: 'networkidle2',

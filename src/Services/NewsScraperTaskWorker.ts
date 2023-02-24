@@ -8,7 +8,7 @@ import { ProcessingStatusEnum } from '../Types/ProcessingStatusEnum';
 import { LOKI_PINO_BATCH_INTERVAL_SECONDS } from '../Utils/Environment';
 import { sleep } from '../Utils/Helpers';
 import { HTTPServerService } from './HTTPServerService';
-import { logger } from './Logger';
+import { Logger } from './Logger';
 import { NewsScraperDatabase } from './NewsScraperDatabase';
 import { NewsScraperManager } from './NewsScraperManager';
 import { NewsScraperMessageBroker } from './NewsScraperMessageBroker';
@@ -26,6 +26,7 @@ export class NewsScraperTaskWorker {
   private _scrapeArticleExpirationTime: number = 300000; // 5 minute
 
   constructor(
+    @inject(TYPES.Logger) private _logger: Logger,
     @inject(TYPES.NewsScraperManager) private _newsScraperManager: NewsScraperManager,
     @inject(TYPES.NewsScraperMessageBroker) private _newsScraperMessageBroker: NewsScraperMessageBroker,
     @inject(TYPES.NewsScraperDatabase) private _newsScraperDatabase: NewsScraperDatabase,
@@ -38,7 +39,7 @@ export class NewsScraperTaskWorker {
     this._httpServerPort = httpServerPort;
     this._consumedQueues = consumedQueues;
 
-    logger.info(`========== Starting the worker "${id}" ... ==========`);
+    this._logger.info(`========== Starting the worker "${id}" ... ==========`);
 
     this._registerTerminate();
 
@@ -57,9 +58,9 @@ export class NewsScraperTaskWorker {
 
   async terminate(errorMessage?: string) {
     if (errorMessage) {
-      logger.error(`Terminating news scraper task worker with error: ${errorMessage}`);
+      this._logger.error(`Terminating news scraper task worker with error: ${errorMessage}`);
     } else {
-      logger.info(`Terminating news scraper task worker`);
+      this._logger.info(`Terminating news scraper task worker`);
     }
 
     this._terminationStarted = true;
@@ -103,7 +104,7 @@ export class NewsScraperTaskWorker {
   }
 
   private async _startRecentArticlesQueueConsumption() {
-    logger.info(`[Worker ${this._id}] Starting to consume recent articles scrape queue ...`);
+    this._logger.info(`[Worker ${this._id}] Starting to consume recent articles scrape queue ...`);
 
     return this._newsScraperMessageBroker.consumeFromQueueOneAtTime(
       NewsScraperMessageBrokerQueuesEnum.NEWS_SCRAPER_RECENT_ARTICLES_SCRAPE_QUEUE,
@@ -116,7 +117,7 @@ export class NewsScraperTaskWorker {
           return;
         }
 
-        logger.debug(
+        this._logger.debug(
           `[Worker ${this._id}][Recent Articles Queue] Processing recent articles scrape job. Data ${JSON.stringify(
             data
           )}`
@@ -133,7 +134,7 @@ export class NewsScraperTaskWorker {
         if (!newsScraper) {
           const errorMessage = `[Worker ${this._id}][Recent Articles Queue] News scraper "${data.newsSite}" not found. Skipping ...`;
 
-          logger.error(errorMessage);
+          this._logger.error(errorMessage);
 
           negativeAcknowledgeMessageCallback();
 
@@ -168,7 +169,7 @@ export class NewsScraperTaskWorker {
             { ...data, status: ProcessingStatusEnum.PROCESSED }
           );
         } catch (err) {
-          logger.error(`[Worker ${this._id}][Recent Articles Queue] Error: ${err.message}`);
+          this._logger.error(`[Worker ${this._id}][Recent Articles Queue] Error: ${err.message}`);
 
           negativeAcknowledgeMessageCallback();
 
@@ -184,7 +185,7 @@ export class NewsScraperTaskWorker {
   }
 
   private async _startArticleQueueConsumption() {
-    logger.info(`[Worker ${this._id}] Starting to consume article scrape queue ...`);
+    this._logger.info(`[Worker ${this._id}] Starting to consume article scrape queue ...`);
 
     const dataSource = await this._newsScraperDatabase.getDataSource();
     const newsArticleRepository = dataSource.getRepository(NewsArticle);
@@ -200,7 +201,7 @@ export class NewsScraperTaskWorker {
           return;
         }
 
-        logger.debug(
+        this._logger.debug(
           `[Worker ${this._id}][Article Queue] Processing recent articles scrape job. Data ${JSON.stringify(data)}`
         );
 
@@ -215,7 +216,7 @@ export class NewsScraperTaskWorker {
         if (!newsScraper) {
           const errorMessage = `[Worker ${this._id}][Article Queue] News scraper for URL "${data.url}" not found. Skipping ...`;
 
-          logger.error(errorMessage);
+          this._logger.error(errorMessage);
 
           negativeAcknowledgeMessageCallback();
 
@@ -243,7 +244,7 @@ export class NewsScraperTaskWorker {
             { ...data, status: ProcessingStatusEnum.PROCESSED }
           );
         } catch (err) {
-          logger.error(`[Worker ${this._id}][Article Queue] Error: ${err.message}`);
+          this._logger.error(`[Worker ${this._id}][Article Queue] Error: ${err.message}`);
 
           negativeAcknowledgeMessageCallback();
 

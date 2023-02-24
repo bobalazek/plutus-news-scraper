@@ -9,7 +9,7 @@ import { ProcessingStatusEnum } from '../Types/ProcessingStatusEnum';
 import { LOKI_PINO_BATCH_INTERVAL_SECONDS } from '../Utils/Environment';
 import { sleep } from '../Utils/Helpers';
 import { HTTPServerService } from './HTTPServerService';
-import { logger } from './Logger';
+import { Logger } from './Logger';
 import { NewsScraperManager } from './NewsScraperManager';
 import { NewsScraperMessageBroker } from './NewsScraperMessageBroker';
 import { PrometheusService } from './PrometheusService';
@@ -28,6 +28,7 @@ export class NewsScraperTaskDispatcher {
   private _messageQueuesMonitoringIntervalTimer?: ReturnType<typeof setInterval>;
 
   constructor(
+    @inject(TYPES.Logger) private _logger: Logger,
     @inject(TYPES.NewsScraperManager) private _newsScraperManager: NewsScraperManager,
     @inject(TYPES.NewsScraperMessageBroker) private _newsScraperMessageBroker: NewsScraperMessageBroker,
     @inject(TYPES.HTTPServerService) private _httpServerService: HTTPServerService,
@@ -37,7 +38,7 @@ export class NewsScraperTaskDispatcher {
   async start(httpServerPort?: number) {
     this._httpServerPort = httpServerPort;
 
-    logger.info(`========== Starting the task dispatcher ... ==========`);
+    this._logger.info(`========== Starting the task dispatcher ... ==========`);
 
     this._registerTerminate();
 
@@ -61,9 +62,9 @@ export class NewsScraperTaskDispatcher {
 
   async terminate(errorMessage?: string) {
     if (errorMessage) {
-      logger.error(`Terminating news scraper task dispatcher with error: ${errorMessage}`);
+      this._logger.error(`Terminating news scraper task dispatcher with error: ${errorMessage}`);
     } else {
-      logger.info(`Terminating news scraper task dispatcher`);
+      this._logger.info(`Terminating news scraper task dispatcher`);
     }
 
     clearInterval(this._dispatchRecentArticlesScrapeIntervalTimer);
@@ -203,7 +204,7 @@ export class NewsScraperTaskDispatcher {
     this._messageQueuesMonitoringIntervalTimer = setInterval(async () => {
       const messagesCountMap = await this._newsScraperMessageBroker.getMessageCountInAllQueues();
 
-      logger.info(`Messages count map: ${JSON.stringify(messagesCountMap)}`);
+      this._logger.info(`Messages count map: ${JSON.stringify(messagesCountMap)}`);
     }, this._messageQueuesMonitoringInterval);
   }
 
@@ -244,17 +245,17 @@ export class NewsScraperTaskDispatcher {
   }
 
   private async _dispatchRecentArticlesScrape() {
-    logger.info(`Dispatch news article events for scrapers ...`);
+    this._logger.info(`Dispatch news article events for scrapers ...`);
 
     const scrapers = this.getSortedScrapers();
     if (scrapers.length === 0) {
-      logger.info(`Scrapers not found. Skipping ...`);
+      this._logger.info(`Scrapers not found. Skipping ...`);
 
       return;
     }
 
     for (const scraper of scrapers) {
-      logger.debug(`Dispatching events for ${scraper.key} ...`);
+      this._logger.debug(`Dispatching events for ${scraper.key} ...`);
 
       await this._newsScraperMessageBroker.sendToQueue(
         NewsScraperMessageBrokerQueuesEnum.NEWS_SCRAPER_RECENT_ARTICLES_SCRAPE_QUEUE,

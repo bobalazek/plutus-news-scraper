@@ -2,7 +2,7 @@ import { Command } from 'commander';
 
 import { container } from '../DI/Container';
 import { TYPES } from '../DI/ContainerTypes';
-import { logger } from '../Services/Logger';
+import { Logger } from '../Services/Logger';
 import { NewsScraperTaskDispatcher } from '../Services/NewsScraperTaskDispatcher';
 
 export const addNewsScraperTaskDispatcherStartCommand = (program: Command) => {
@@ -13,6 +13,7 @@ export const addNewsScraperTaskDispatcherStartCommand = (program: Command) => {
     .action(async (options: any) => {
       const httpServerPort = options.httpServerPort;
 
+      const logger = container.get<Logger>(TYPES.Logger);
       const newsScraperTaskDispatcher = container.get<NewsScraperTaskDispatcher>(TYPES.NewsScraperTaskDispatcher);
 
       try {

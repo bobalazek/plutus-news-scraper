@@ -1,4 +1,5 @@
 export const TYPES = {
+  Logger: Symbol.for('Logger'),
   RedisService: Symbol.for('RedisService'),
   RabbitMQService: Symbol.for('RabbitMQService'),
   PrometheusService: Symbol.for('PrometheusService'),

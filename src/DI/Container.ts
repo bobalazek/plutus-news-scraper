@@ -2,6 +2,7 @@ import { Container } from 'inversify';
 import 'reflect-metadata';
 
 import { HTTPServerService } from '../Services/HTTPServerService';
+import { Logger } from '../Services/Logger';
 import { NewsScraperDatabase } from '../Services/NewsScraperDatabase';
 import { NewsScraperManager } from '../Services/NewsScraperManager';
 import { NewsScraperMessageBroker } from '../Services/NewsScraperMessageBroker';
@@ -17,6 +18,7 @@ const container = new Container({
   autoBindInjectable: true,
 });
 
+container.bind<Logger>(TYPES.Logger).to(Logger);
 container.bind<RedisService>(TYPES.RedisService).to(RedisService);
 container.bind<RabbitMQService>(TYPES.RabbitMQService).to(RabbitMQService);
 container.bind<PrometheusService>(TYPES.PrometheusService).to(PrometheusService);

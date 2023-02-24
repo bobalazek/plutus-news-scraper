@@ -1,7 +1,8 @@
 import { readdirSync } from 'fs';
-import { injectable } from 'inversify';
+import { inject, injectable } from 'inversify';
 import { join } from 'path';
 
+import { TYPES } from '../DI/ContainerTypes';
 import { NewsArticlesNotFoundError } from '../Errors/NewsArticlesNotFoundError';
 import { NewsArticleExtendedSchema, NewsArticleExtendedType } from '../Schemas/NewsArticleSchema';
 import { NewsBasicArticleExtendedSchema, NewsBasicArticleExtendedType } from '../Schemas/NewsBasicArticleSchema';
@@ -9,7 +10,7 @@ import type { AbstractNewsScraper } from '../Scrapers/AbstractNewsScraper';
 import { NewsArticleTypeEnum } from '../Types/NewsArticleTypeEnum';
 import { NewsScraperInterface } from '../Types/NewsScraperInterface';
 import { ROOT_DIRECTORY } from '../Utils/Paths';
-import { logger } from './Logger';
+import { Logger } from './Logger';
 
 @injectable()
 export class NewsScraperManager {
@@ -19,6 +20,8 @@ export class NewsScraperManager {
   private _currentScraper: AbstractNewsScraper | null = null;
   private _headful: boolean = false;
   private _preventClose: boolean = false;
+
+  constructor(@inject(TYPES.Logger) private _logger: Logger) {}
 
   async scrapeArticle(url: string): Promise<NewsArticleExtendedType> {
     const scraper = await this.getForUrl(url);
@@ -36,8 +39,8 @@ export class NewsScraperManager {
       type: NewsArticleTypeEnum.NEWS_ARTICLE,
     });
 
-    logger.debug(`Article data:`);
-    logger.debug(newsArticleParsed);
+    this._logger.debug(`Article data:`);
+    this._logger.debug(newsArticleParsed);
 
     return newsArticleParsed;
   }
@@ -206,6 +209,7 @@ export class NewsScraperManager {
 
   private _prepareScraper(scraper: NewsScraperInterface) {
     const newsScraper = scraper as unknown as AbstractNewsScraper;
+    newsScraper.setLogger(this._logger);
     newsScraper.setPuppeteerHeadful(this._headful);
     newsScraper.setPuppeteerPreventClose(this._preventClose);
 

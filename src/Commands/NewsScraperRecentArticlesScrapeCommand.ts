@@ -2,7 +2,7 @@ import { Command } from 'commander';
 
 import { container } from '../DI/Container';
 import { TYPES } from '../DI/ContainerTypes';
-import { logger } from '../Services/Logger';
+import { Logger } from '../Services/Logger';
 import { NewsScraperManager } from '../Services/NewsScraperManager';
 
 export const addNewsScraperRecentArticlesScrapeCommand = (program: Command) => {
@@ -19,6 +19,7 @@ export const addNewsScraperRecentArticlesScrapeCommand = (program: Command) => {
       const headful = options.headful;
       const preventClose = options.preventClose;
 
+      const logger = container.get<Logger>(TYPES.Logger);
       const newsScraperManager = container.get<NewsScraperManager>(TYPES.NewsScraperManager);
       newsScraperManager.setHeadful(headful);
       newsScraperManager.setPreventClose(preventClose);
