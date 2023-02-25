@@ -1,5 +1,4 @@
 export enum LifecycleStatusEnum {
-  PENDING = 'pending',
   STARTING = 'starting',
   STARTED = 'started',
   CLOSING = 'closing',

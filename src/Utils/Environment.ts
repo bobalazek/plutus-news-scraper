@@ -1,5 +1,7 @@
 export const APP_PREFIX = 'news_scraper_';
-export const IS_DEVELOPMENT = process.env.NODE_ENV !== 'prod';
+export const NODE_ENV = process.env.NODE_ENV;
+export const IS_TEST = NODE_ENV === 'test';
+export const IS_DEVELOPMENT = NODE_ENV !== 'prod';
 export const PUPPETEER_EXECUTABLE_PATH = process.env.PUPPETEER_EXECUTABLE_PATH as string;
 export const RABBITMQ_URL = process.env.RABBITMQ_URL as string;
 export const REDIS_URL = process.env.REDIS_URL as string;

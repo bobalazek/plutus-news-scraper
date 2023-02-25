@@ -1,12 +1,15 @@
 /// <reference types="jest" />
 import { injectable } from 'inversify';
+import { DataSource } from 'typeorm';
 
 import { container } from '../DI/Container';
 import { TYPES } from '../DI/ContainerTypes';
+import { ScrapeRun } from '../Entitites/ScrapeRun';
 import { NewsArticleMultimediaTypeEnum } from '../Types/NewsArticleMultimediaTypeEnum';
+import { NewsScraperMessageBrokerQueuesEnum } from '../Types/NewsMessageBrokerQueues';
 import { NewsScraperInterface } from '../Types/NewsScraperInterface';
-import { NewsScraperStatusEntry } from '../Types/NewsScraperStatusEntry';
 import { ProcessingStatusEnum } from '../Types/ProcessingStatusEnum';
+import { NewsScraperDatabase } from './NewsScraperDatabase';
 import { NewsScraperManager } from './NewsScraperManager';
 import { NewsScraperTaskDispatcher } from './NewsScraperTaskDispatcher';
 
@@ -54,259 +57,425 @@ class MockNewsScraperManager extends NewsScraperManager {
   }
 }
 
+@injectable()
+class MockNewsScraperDatabase extends NewsScraperDatabase {
+  async getDataSource() {
+    const dataSource = new DataSource({
+      type: 'sqlite',
+      database: ':memory:',
+      entities: [ScrapeRun],
+      synchronize: true,
+      dropSchema: true,
+    });
+
+    await dataSource.initialize();
+
+    return Promise.resolve(dataSource);
+  }
+}
+
 describe('Services/NewsScraperTaskDispatcher.ts', () => {
+  const queue = NewsScraperMessageBrokerQueuesEnum.NEWS_SCRAPER_RECENT_ARTICLES_SCRAPE_QUEUE;
+
   let newsScraperTaskDispatcher: NewsScraperTaskDispatcher;
+  let newsScraperDatabase: NewsScraperDatabase;
 
   beforeAll(() => {
     container.rebind<NewsScraperManager>(TYPES.NewsScraperManager).to(MockNewsScraperManager);
+    container.rebind<MockNewsScraperDatabase>(TYPES.NewsScraperDatabase).to(MockNewsScraperDatabase);
 
     newsScraperTaskDispatcher = container.get<NewsScraperTaskDispatcher>(TYPES.NewsScraperTaskDispatcher);
+    newsScraperDatabase = container.get<MockNewsScraperDatabase>(TYPES.NewsScraperDatabase);
   });
 
-  it.each<{ testName: string; scraperStatusMapData: Record<string, NewsScraperStatusEntry>; result: string[] }>([
+  it.each<{ testName: string; scrapeRuns: ScrapeRun[]; result: string[] }>([
     {
       testName: 'initial state',
-      scraperStatusMapData: {},
+      scrapeRuns: [],
       result: ['test_scraper_1', 'test_scraper_2', 'test_scraper_3', 'test_scraper_4'],
     },
     {
       testName: 'first processing',
-      scraperStatusMapData: {
-        test_scraper_1: {
+      scrapeRuns: [
+        {
+          id: '1',
+          type: queue,
           status: ProcessingStatusEnum.PROCESSING,
-          lastUpdate: new Date('2020-01-01 12:00:00'),
-          lastStarted: new Date('2020-01-01 12:00:00'),
-          lastProcessed: null,
-          lastFailed: null,
-          lastFailedErrorMessage: null,
+          arguments: {
+            newsSite: 'test_scraper_1',
+          },
+          startedAt: new Date('2020-01-01 12:00:00'),
+          completedAt: null,
+          failedAt: null,
+          failedErrorMessage: null,
+          updatedAt: new Date('2020-01-01 12:00:00'),
+          createdAt: new Date('2020-01-01 12:00:00'),
         },
-        test_scraper_2: {
+        {
+          id: '2',
+          type: queue,
           status: ProcessingStatusEnum.PENDING,
-          lastUpdate: null,
-          lastStarted: null,
-          lastProcessed: null,
-          lastFailed: null,
-          lastFailedErrorMessage: null,
+          arguments: {
+            newsSite: 'test_scraper_2',
+          },
+          startedAt: null,
+          completedAt: null,
+          failedAt: null,
+          failedErrorMessage: null,
+          updatedAt: new Date('2020-01-01 12:00:00'),
+          createdAt: new Date('2020-01-01 12:00:00'),
         },
-        test_scraper_3: {
+        {
+          id: '3',
+          type: queue,
           status: ProcessingStatusEnum.PENDING,
-          lastUpdate: null,
-          lastStarted: null,
-          lastProcessed: null,
-          lastFailed: null,
-          lastFailedErrorMessage: null,
+          arguments: {
+            newsSite: 'test_scraper_3',
+          },
+          startedAt: null,
+          completedAt: null,
+          failedAt: null,
+          failedErrorMessage: null,
+          updatedAt: new Date('2020-01-01 12:00:00'),
+          createdAt: new Date('2020-01-01 12:00:00'),
         },
-        test_scraper_4: {
+        {
+          id: '4',
+          type: queue,
           status: ProcessingStatusEnum.PENDING,
-          lastUpdate: null,
-          lastStarted: null,
-          lastProcessed: null,
-          lastFailed: null,
-          lastFailedErrorMessage: null,
+          arguments: {
+            newsSite: 'test_scraper_4',
+          },
+          startedAt: null,
+          completedAt: null,
+          failedAt: null,
+          failedErrorMessage: null,
+          updatedAt: new Date('2020-01-01 12:00:00'),
+          createdAt: new Date('2020-01-01 12:00:00'),
         },
-      },
+      ],
       result: ['test_scraper_2', 'test_scraper_3', 'test_scraper_4'],
     },
     {
       testName: 'first processed, second processing',
-      scraperStatusMapData: {
-        test_scraper_1: {
+      scrapeRuns: [
+        {
+          id: '1',
+          type: queue,
           status: ProcessingStatusEnum.PROCESSED,
-          lastUpdate: new Date('2020-01-01 12:00:00'),
-          lastStarted: new Date('2020-01-01 12:00:00'),
-          lastProcessed: new Date('2020-01-01 12:00:10'),
-          lastFailed: null,
-          lastFailedErrorMessage: null,
+          arguments: {
+            newsSite: 'test_scraper_1',
+          },
+          startedAt: new Date('2020-01-01 12:00:00'),
+          completedAt: new Date('2020-01-01 12:00:10'),
+          failedAt: null,
+          failedErrorMessage: null,
+          updatedAt: new Date('2020-01-01 12:00:00'),
+          createdAt: new Date('2020-01-01 12:00:00'),
         },
-        test_scraper_2: {
+        {
+          id: '2',
+          type: queue,
           status: ProcessingStatusEnum.PROCESSING,
-          lastUpdate: new Date('2020-01-01 12:00:10'),
-          lastStarted: new Date('2020-01-01 12:00:10'),
-          lastProcessed: null,
-          lastFailed: null,
-          lastFailedErrorMessage: null,
+          arguments: {
+            newsSite: 'test_scraper_2',
+          },
+          startedAt: new Date('2020-01-01 12:00:10'),
+          completedAt: null,
+          failedAt: null,
+          failedErrorMessage: null,
+          updatedAt: new Date('2020-01-01 12:00:10'),
+          createdAt: new Date('2020-01-01 12:00:00'),
         },
-        test_scraper_3: {
+        {
+          id: '3',
+          type: queue,
           status: ProcessingStatusEnum.PENDING,
-          lastUpdate: null,
-          lastStarted: null,
-          lastProcessed: null,
-          lastFailed: null,
-          lastFailedErrorMessage: null,
+          arguments: {
+            newsSite: 'test_scraper_3',
+          },
+          startedAt: null,
+          completedAt: null,
+          failedAt: null,
+          failedErrorMessage: null,
+          updatedAt: new Date('2020-01-01 12:00:00'),
+          createdAt: new Date('2020-01-01 12:00:00'),
         },
-        test_scraper_4: {
+        {
+          id: '4',
+          type: queue,
           status: ProcessingStatusEnum.PENDING,
-          lastUpdate: null,
-          lastStarted: null,
-          lastProcessed: null,
-          lastFailed: null,
-          lastFailedErrorMessage: null,
+          arguments: {
+            newsSite: 'test_scraper_4',
+          },
+          startedAt: null,
+          completedAt: null,
+          failedAt: null,
+          failedErrorMessage: null,
+          updatedAt: new Date('2020-01-01 12:00:00'),
+          createdAt: new Date('2020-01-01 12:00:00'),
         },
-      },
+      ],
       result: ['test_scraper_3', 'test_scraper_4', 'test_scraper_1'],
     },
     {
       testName: 'all processed',
-      scraperStatusMapData: {
-        test_scraper_1: {
+      scrapeRuns: [
+        {
+          id: '1',
+          type: queue,
           status: ProcessingStatusEnum.PROCESSED,
-          lastUpdate: new Date('2020-01-01 12:00:00'),
-          lastStarted: new Date('2020-01-01 12:00:00'),
-          lastProcessed: new Date('2020-01-01 12:00:10'),
-          lastFailed: null,
-          lastFailedErrorMessage: null,
+          arguments: {
+            newsSite: 'test_scraper_1',
+          },
+          startedAt: new Date('2020-01-01 12:00:00'),
+          completedAt: new Date('2020-01-01 12:00:10'),
+          failedAt: null,
+          failedErrorMessage: null,
+          updatedAt: new Date('2020-01-01 12:00:10'),
+          createdAt: new Date('2020-01-01 12:00:00'),
         },
-        test_scraper_2: {
+        {
+          id: '2',
+          type: queue,
           status: ProcessingStatusEnum.PROCESSED,
-          lastUpdate: new Date('2020-01-01 12:00:10'),
-          lastStarted: new Date('2020-01-01 12:00:10'),
-          lastProcessed: new Date('2020-01-01 12:00:20'),
-          lastFailed: null,
-          lastFailedErrorMessage: null,
+          arguments: {
+            newsSite: 'test_scraper_2',
+          },
+          startedAt: new Date('2020-01-01 12:00:10'),
+          completedAt: new Date('2020-01-01 12:00:20'),
+          failedAt: null,
+          failedErrorMessage: null,
+          updatedAt: new Date('2020-01-01 12:00:20'),
+          createdAt: new Date('2020-01-01 12:00:00'),
         },
-        test_scraper_3: {
+        {
+          id: '3',
+          type: queue,
           status: ProcessingStatusEnum.PROCESSED,
-          lastUpdate: new Date('2020-01-01 12:00:20'),
-          lastStarted: new Date('2020-01-01 12:00:20'),
-          lastProcessed: new Date('2020-01-01 12:00:30'),
-          lastFailed: null,
-          lastFailedErrorMessage: null,
+          arguments: {
+            newsSite: 'test_scraper_3',
+          },
+          startedAt: new Date('2020-01-01 12:00:20'),
+          completedAt: new Date('2020-01-01 12:00:30'),
+          failedAt: null,
+          failedErrorMessage: null,
+          updatedAt: new Date('2020-01-01 12:00:30'),
+          createdAt: new Date('2020-01-01 12:00:00'),
         },
-        test_scraper_4: {
+        {
+          id: '4',
+          type: queue,
           status: ProcessingStatusEnum.PROCESSED,
-          lastUpdate: new Date('2020-01-01 12:00:30'),
-          lastStarted: new Date('2020-01-01 12:00:30'),
-          lastProcessed: new Date('2020-01-01 12:00:40'),
-          lastFailed: null,
-          lastFailedErrorMessage: null,
+          arguments: {
+            newsSite: 'test_scraper_4',
+          },
+          startedAt: new Date('2020-01-01 12:00:30'),
+          completedAt: new Date('2020-01-01 12:00:40'),
+          failedAt: null,
+          failedErrorMessage: null,
+          updatedAt: new Date('2020-01-01 12:00:40'),
+          createdAt: new Date('2020-01-01 12:00:00'),
         },
-      },
+      ],
       result: ['test_scraper_1', 'test_scraper_2', 'test_scraper_3', 'test_scraper_4'],
     },
     {
       testName: 'all processed, #2 processed before #1',
-      scraperStatusMapData: {
-        test_scraper_1: {
+      scrapeRuns: [
+        {
+          id: '1',
+          type: queue,
           status: ProcessingStatusEnum.PROCESSED,
-          lastUpdate: new Date('2020-01-01 12:00:00'),
-          lastStarted: new Date('2020-01-01 12:00:00'),
-          lastProcessed: new Date('2020-01-01 12:00:30'),
-          lastFailed: null,
-          lastFailedErrorMessage: null,
+          arguments: {
+            newsSite: 'test_scraper_1',
+          },
+          startedAt: new Date('2020-01-01 12:00:00'),
+          completedAt: new Date('2020-01-01 12:00:25'),
+          failedAt: null,
+          failedErrorMessage: null,
+          updatedAt: new Date('2020-01-01 12:00:10'),
+          createdAt: new Date('2020-01-01 12:00:00'),
         },
-        test_scraper_2: {
+        {
+          id: '2',
+          type: queue,
           status: ProcessingStatusEnum.PROCESSED,
-          lastUpdate: new Date('2020-01-01 12:00:10'),
-          lastStarted: new Date('2020-01-01 12:00:10'),
-          lastProcessed: new Date('2020-01-01 12:00:20'),
-          lastFailed: null,
-          lastFailedErrorMessage: null,
+          arguments: {
+            newsSite: 'test_scraper_2',
+          },
+          startedAt: new Date('2020-01-01 12:00:10'),
+          completedAt: new Date('2020-01-01 12:00:20'),
+          failedAt: null,
+          failedErrorMessage: null,
+          updatedAt: new Date('2020-01-01 12:00:20'),
+          createdAt: new Date('2020-01-01 12:00:00'),
         },
-        test_scraper_3: {
+        {
+          id: '3',
+          type: queue,
           status: ProcessingStatusEnum.PROCESSED,
-          lastUpdate: new Date('2020-01-01 12:00:20'),
-          lastStarted: new Date('2020-01-01 12:00:20'),
-          lastProcessed: new Date('2020-01-01 12:00:30'),
-          lastFailed: null,
-          lastFailedErrorMessage: null,
+          arguments: {
+            newsSite: 'test_scraper_3',
+          },
+          startedAt: new Date('2020-01-01 12:00:20'),
+          completedAt: new Date('2020-01-01 12:00:30'),
+          failedAt: null,
+          failedErrorMessage: null,
+          updatedAt: new Date('2020-01-01 12:00:30'),
+          createdAt: new Date('2020-01-01 12:00:00'),
         },
-        test_scraper_4: {
+        {
+          id: '4',
+          type: queue,
           status: ProcessingStatusEnum.PROCESSED,
-          lastUpdate: new Date('2020-01-01 12:00:30'),
-          lastStarted: new Date('2020-01-01 12:00:30'),
-          lastProcessed: new Date('2020-01-01 12:00:40'),
-          lastFailed: null,
-          lastFailedErrorMessage: null,
+          arguments: {
+            newsSite: 'test_scraper_4',
+          },
+          startedAt: new Date('2020-01-01 12:00:30'),
+          completedAt: new Date('2020-01-01 12:00:40'),
+          failedAt: null,
+          failedErrorMessage: null,
+          updatedAt: new Date('2020-01-01 12:00:40'),
+          createdAt: new Date('2020-01-01 12:00:00'),
         },
-      },
+      ],
       result: ['test_scraper_2', 'test_scraper_1', 'test_scraper_3', 'test_scraper_4'],
     },
     {
       testName: 'all except #3 processed, #3 failed late',
-      scraperStatusMapData: {
-        test_scraper_1: {
+      scrapeRuns: [
+        {
+          id: '1',
+          type: queue,
           status: ProcessingStatusEnum.PROCESSED,
-          lastUpdate: new Date('2020-01-01 12:00:00'),
-          lastStarted: new Date('2020-01-01 12:00:00'),
-          lastProcessed: new Date('2020-01-01 12:00:20'),
-          lastFailed: null,
-          lastFailedErrorMessage: null,
+          arguments: {
+            newsSite: 'test_scraper_1',
+          },
+          startedAt: new Date('2020-01-01 12:00:00'),
+          completedAt: new Date('2020-01-01 12:00:25'),
+          failedAt: null,
+          failedErrorMessage: null,
+          updatedAt: new Date('2020-01-01 12:00:10'),
+          createdAt: new Date('2020-01-01 12:00:00'),
         },
-        test_scraper_2: {
+        {
+          id: '2',
+          type: queue,
           status: ProcessingStatusEnum.PROCESSED,
-          lastUpdate: new Date('2020-01-01 12:00:10'),
-          lastStarted: new Date('2020-01-01 12:00:10'),
-          lastProcessed: new Date('2020-01-01 12:00:30'),
-          lastFailed: null,
-          lastFailedErrorMessage: null,
+          arguments: {
+            newsSite: 'test_scraper_2',
+          },
+          startedAt: new Date('2020-01-01 12:00:10'),
+          completedAt: new Date('2020-01-01 12:00:20'),
+          failedAt: null,
+          failedErrorMessage: null,
+          updatedAt: new Date('2020-01-01 12:00:20'),
+          createdAt: new Date('2020-01-01 12:00:00'),
         },
-        test_scraper_3: {
+        {
+          id: '3',
+          type: queue,
           status: ProcessingStatusEnum.FAILED,
-          lastUpdate: new Date('2020-01-01 12:00:40'),
-          lastStarted: new Date('2020-01-01 12:00:40'),
-          lastProcessed: null,
-          lastFailed: new Date('2020-01-01 12:00:50'),
-          lastFailedErrorMessage: null,
+          arguments: {
+            newsSite: 'test_scraper_3',
+          },
+          startedAt: new Date('2020-01-01 12:00:20'),
+          completedAt: null,
+          failedAt: new Date('2020-01-01 12:00:50'),
+          failedErrorMessage: null,
+          updatedAt: new Date('2020-01-01 12:00:50'),
+          createdAt: new Date('2020-01-01 12:00:00'),
         },
-        test_scraper_4: {
+        {
+          id: '4',
+          type: queue,
           status: ProcessingStatusEnum.PROCESSED,
-          lastUpdate: new Date('2020-01-01 12:00:30'),
-          lastStarted: new Date('2020-01-01 12:00:30'),
-          lastProcessed: new Date('2020-01-01 12:00:40'),
-          lastFailed: null,
-          lastFailedErrorMessage: null,
+          arguments: {
+            newsSite: 'test_scraper_4',
+          },
+          startedAt: new Date('2020-01-01 12:00:30'),
+          completedAt: new Date('2020-01-01 12:00:40'),
+          failedAt: null,
+          failedErrorMessage: null,
+          updatedAt: new Date('2020-01-01 12:00:40'),
+          createdAt: new Date('2020-01-01 12:00:00'),
         },
-      },
+      ],
       result: ['test_scraper_1', 'test_scraper_2', 'test_scraper_4', 'test_scraper_3'],
     },
     {
       testName: 'all except #3 processed, #3 failed early',
-      scraperStatusMapData: {
-        test_scraper_1: {
+      scrapeRuns: [
+        {
+          id: '1',
+          type: queue,
           status: ProcessingStatusEnum.PROCESSED,
-          lastUpdate: new Date('2020-01-01 12:00:00'),
-          lastStarted: new Date('2020-01-01 12:00:00'),
-          lastProcessed: new Date('2020-01-01 12:00:20'),
-          lastFailed: null,
-          lastFailedErrorMessage: null,
+          arguments: {
+            newsSite: 'test_scraper_1',
+          },
+          startedAt: new Date('2020-01-01 12:00:00'),
+          completedAt: new Date('2020-01-01 12:00:25'),
+          failedAt: null,
+          failedErrorMessage: null,
+          updatedAt: new Date('2020-01-01 12:00:10'),
+          createdAt: new Date('2020-01-01 12:00:00'),
         },
-        test_scraper_2: {
+        {
+          id: '2',
+          type: queue,
           status: ProcessingStatusEnum.PROCESSED,
-          lastUpdate: new Date('2020-01-01 12:00:10'),
-          lastStarted: new Date('2020-01-01 12:00:10'),
-          lastProcessed: new Date('2020-01-01 12:00:30'),
-          lastFailed: null,
-          lastFailedErrorMessage: null,
+          arguments: {
+            newsSite: 'test_scraper_2',
+          },
+          startedAt: new Date('2020-01-01 12:00:10'),
+          completedAt: new Date('2020-01-01 12:00:20'),
+          failedAt: null,
+          failedErrorMessage: null,
+          updatedAt: new Date('2020-01-01 12:00:20'),
+          createdAt: new Date('2020-01-01 12:00:00'),
         },
-        test_scraper_3: {
+        {
+          id: '3',
+          type: queue,
           status: ProcessingStatusEnum.FAILED,
-          lastUpdate: new Date('2020-01-01 12:00:05'),
-          lastStarted: new Date('2020-01-01 12:00:05'),
-          lastProcessed: null,
-          lastFailed: new Date('2020-01-01 12:00:08'),
-          lastFailedErrorMessage: null,
+          arguments: {
+            newsSite: 'test_scraper_3',
+          },
+          startedAt: new Date('2020-01-01 12:00:05'),
+          completedAt: null,
+          failedAt: new Date('2020-01-01 12:00:08'),
+          failedErrorMessage: null,
+          updatedAt: new Date('2020-01-01 12:00:08'),
+          createdAt: new Date('2020-01-01 12:00:00'),
         },
-        test_scraper_4: {
+        {
+          id: '4',
+          type: queue,
           status: ProcessingStatusEnum.PROCESSED,
-          lastUpdate: new Date('2020-01-01 12:00:30'),
-          lastStarted: new Date('2020-01-01 12:00:30'),
-          lastProcessed: new Date('2020-01-01 12:00:40'),
-          lastFailed: null,
-          lastFailedErrorMessage: null,
+          arguments: {
+            newsSite: 'test_scraper_4',
+          },
+          startedAt: new Date('2020-01-01 12:00:30'),
+          completedAt: new Date('2020-01-01 12:00:40'),
+          failedAt: null,
+          failedErrorMessage: null,
+          updatedAt: new Date('2020-01-01 12:00:40'),
+          createdAt: new Date('2020-01-01 12:00:00'),
         },
-      },
+      ],
       result: ['test_scraper_3', 'test_scraper_1', 'test_scraper_2', 'test_scraper_4'],
     },
-  ])('getSortedScrapers - $testName', async ({ scraperStatusMapData, result }) => {
-    await newsScraperTaskDispatcher.resetScraperStatusMap();
+  ])('getSortedScrapers - $testName', async ({ scrapeRuns, result }) => {
+    await newsScraperTaskDispatcher.prepare();
 
-    if (Object.keys(scraperStatusMapData).length > 0) {
-      for (const key in scraperStatusMapData) {
-        newsScraperTaskDispatcher.setScraperStatusMap(key, scraperStatusMapData[key]);
-      }
-    }
+    const dataSource = await newsScraperDatabase.getDataSource();
+    const scrapeRunRepository = dataSource.getRepository(ScrapeRun);
 
-    const scrapers = newsScraperTaskDispatcher.getSortedScrapers();
+    await scrapeRunRepository.clear();
+    await scrapeRunRepository.save(scrapeRuns);
+
+    const scrapers = await newsScraperTaskDispatcher.getSortedScrapers();
     const scraperKeys = scrapers.map((scraper) => {
       return scraper.key;
     });

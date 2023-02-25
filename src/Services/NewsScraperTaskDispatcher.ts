@@ -22,11 +22,10 @@ import { PrometheusService } from './PrometheusService';
 export class NewsScraperTaskDispatcher {
   private _httpServerPort?: number;
 
-  private _scrapers: NewsScraperInterface[] = [];
+  private _newsScrapers: NewsScraperInterface[] = [];
   private _scrapeInterval: number = 30000;
   private _messageQueuesMonitoringInterval: number = 5000;
   private _scrapeRecentArticlesExpirationTime: number = 30000; // After how long do we want to expire this message?
-  private _scraperStatusMap: Map<string, NewsScraperStatusEntry> = new Map();
 
   private _scrapeRunRepository!: Repository<ScrapeRun>;
   private _dispatchRecentArticlesScrapeIntervalTimer?: ReturnType<typeof setInterval>;
@@ -48,15 +47,13 @@ export class NewsScraperTaskDispatcher {
 
     this._registerTerminate();
 
-    await this._prepare();
+    await this.prepare();
 
     await this._purgeQueues();
 
     await this._sendDispatcherStatusUpdate(LifecycleStatusEnum.STARTING);
 
     await this._registerMetrics();
-
-    await this.resetScraperStatusMap();
 
     this._startRecentArticlesScraping();
     this._startMessageQueuesMonitoring();
@@ -98,33 +95,70 @@ export class NewsScraperTaskDispatcher {
   }
 
   /* Technically all of the methods below should be private, but we use them in our tests, so ... */
-  async resetScraperStatusMap() {
-    this._scrapers = await this._newsScraperManager.getAll();
+  async prepare() {
+    const dataSource = await this._newsScraperDatabase.getDataSource();
 
-    for (const scraper of this._scrapers) {
-      this._scraperStatusMap.set(scraper.key, {
-        status: ProcessingStatusEnum.PENDING,
-        lastUpdate: null,
-        lastStarted: null,
-        lastProcessed: null,
-        lastFailed: null,
-        lastFailedErrorMessage: null,
-      });
-    }
+    this._scrapeRunRepository = dataSource.getRepository(ScrapeRun);
+    this._newsScrapers = await this._newsScraperManager.getAll();
   }
 
-  getSortedScrapers() {
+  async getSortedScrapers() {
+    // TODO: optimise the whole function
+
     const scrapers: NewsScraperInterface[] = [];
     const scrapersAppendAtEnd: NewsScraperInterface[] = [];
 
-    for (const scraper of this._scrapers) {
-      const scraperStatusData = this._scraperStatusMap.get(scraper.key);
+    const scraperStatusMap = new Map<string, NewsScraperStatusEntry>(
+      this._newsScrapers.map((newsScraper) => {
+        return [
+          newsScraper.key,
+          {
+            status: ProcessingStatusEnum.PENDING,
+            lastUpdatedAt: null,
+            lastStartedAt: null,
+            lastCompletedAt: null,
+            lastFailedAt: null,
+            lastFailedErrorMessage: null,
+          },
+        ];
+      })
+    );
+
+    const lastScrapeRuns = await this._scrapeRunRepository
+      .createQueryBuilder('scrapeRun')
+      .where('scrapeRun.type = :type')
+      .setParameters({
+        type: NewsScraperMessageBrokerQueuesEnum.NEWS_SCRAPER_RECENT_ARTICLES_SCRAPE_QUEUE,
+      })
+      .orderBy('scrapeRun.updatedAt', 'DESC')
+      .groupBy('scrapeRun.hash') // Hash will include the queue and newsSite
+      .getMany();
+
+    console.log(await this._scrapeRunRepository.find());
+    for (const lastScrapeRun of lastScrapeRuns) {
+      const newsSiteKey = lastScrapeRun.arguments?.newsSite === 'string' ? lastScrapeRun.arguments.newsSite : '';
+      if (!scraperStatusMap.has(newsSiteKey)) {
+        continue;
+      }
+
+      scraperStatusMap.set(newsSiteKey, {
+        status: lastScrapeRun.status,
+        lastUpdatedAt: lastScrapeRun.updatedAt ?? null,
+        lastStartedAt: lastScrapeRun.startedAt ?? null,
+        lastCompletedAt: lastScrapeRun.completedAt ?? null,
+        lastFailedAt: lastScrapeRun.failedAt ?? null,
+        lastFailedErrorMessage: lastScrapeRun.failedErrorMessage ?? null,
+      });
+    }
+
+    for (const scraper of this._newsScrapers) {
+      const scraperStatusData = scraperStatusMap.get(scraper.key);
       if (!scraperStatusData) {
         continue;
       }
 
       if (
-        scraperStatusData.lastUpdate !== null &&
+        scraperStatusData.lastUpdatedAt !== null &&
         (scraperStatusData.status === ProcessingStatusEnum.PENDING ||
           scraperStatusData.status === ProcessingStatusEnum.PROCESSING)
       ) {
@@ -147,30 +181,24 @@ export class NewsScraperTaskDispatcher {
     }
 
     scrapers.sort((a, b) => {
-      const scraperAStatusData = this._scraperStatusMap.get(a.key);
-      const scraperBStatusData = this._scraperStatusMap.get(b.key);
+      const scraperAStatusData = scraperStatusMap.get(a.key);
+      const scraperBStatusData = scraperStatusMap.get(b.key);
 
       const timeA =
-        scraperAStatusData?.lastProcessed?.getTime() ??
-        scraperAStatusData?.lastFailed?.getTime() ??
-        scraperAStatusData?.lastStarted?.getTime() ??
+        scraperAStatusData?.lastCompletedAt?.getTime() ??
+        scraperAStatusData?.lastFailedAt?.getTime() ??
+        scraperAStatusData?.lastStartedAt?.getTime() ??
         0;
       const timeB =
-        scraperBStatusData?.lastProcessed?.getTime() ??
-        scraperBStatusData?.lastFailed?.getTime() ??
-        scraperBStatusData?.lastStarted?.getTime() ??
+        scraperBStatusData?.lastCompletedAt?.getTime() ??
+        scraperBStatusData?.lastFailedAt?.getTime() ??
+        scraperBStatusData?.lastStartedAt?.getTime() ??
         0;
 
       return timeA - timeB;
     });
 
     return scrapers;
-  }
-
-  setScraperStatusMap(key: string, value: NewsScraperStatusEntry) {
-    this._scraperStatusMap.set(key, value);
-
-    return this;
   }
 
   private _startRecentArticlesScraping() {
@@ -183,34 +211,24 @@ export class NewsScraperTaskDispatcher {
     this._newsScraperMessageBroker.consumeFromQueue(
       NewsScraperMessageBrokerQueuesEnum.NEWS_SCRAPER_RECENT_ARTICLES_SCRAPE_STATUS_UPDATE_QUEUE,
       async (data, acknowledgeMessageCallback) => {
-        const scraperStatus = this._scraperStatusMap.get(data.newsSite);
-        if (!scraperStatus) {
-          acknowledgeMessageCallback();
+        const scrapeRun = data.scrapeRunId
+          ? await this._scrapeRunRepository.findOneBy({
+              id: data.scrapeRunId,
+            })
+          : null;
+        if (scrapeRun) {
+          scrapeRun.status = data.status;
 
-          return;
-        }
-
-        const now = new Date();
-
-        scraperStatus.status = data.status;
-        scraperStatus.lastUpdate = now;
-
-        if (data.status === ProcessingStatusEnum.PROCESSING) {
-          scraperStatus.lastStarted = now;
-        } else if (data.status === ProcessingStatusEnum.PROCESSED) {
-          scraperStatus.lastProcessed = now;
-        } else if (data.status === ProcessingStatusEnum.FAILED) {
-          scraperStatus.lastFailed = now;
-          scraperStatus.lastFailedErrorMessage = data.errorMessage ?? null;
-        }
-
-        if (data.scrapeRunId) {
-          const scrapeRun = await this._scrapeRunRepository.findOneBy({
-            id: data.scrapeRunId,
-          });
-          if (scrapeRun) {
-            // TODO
+          if (data.status === ProcessingStatusEnum.PROCESSING) {
+            scrapeRun.startedAt = new Date();
+          } else if (data.status === ProcessingStatusEnum.PROCESSED) {
+            scrapeRun.completedAt = new Date();
+          } else if (data.status === ProcessingStatusEnum.FAILED) {
+            scrapeRun.failedAt = new Date();
+            scrapeRun.failedErrorMessage = data.errorMessage;
           }
+
+          await this._scrapeRunRepository.save(scrapeRun);
         }
 
         acknowledgeMessageCallback();
@@ -234,12 +252,6 @@ export class NewsScraperTaskDispatcher {
     process.on('uncaughtException', async (err) => {
       await this.terminate(`UncaughtException: ${err.message}`);
     });
-  }
-
-  private async _prepare() {
-    const dataSource = await this._newsScraperDatabase.getDataSource();
-
-    this._scrapeRunRepository = dataSource.getRepository(ScrapeRun);
   }
 
   private async _registerMetrics() {
@@ -271,7 +283,7 @@ export class NewsScraperTaskDispatcher {
   private async _dispatchRecentArticlesScrape() {
     this._logger.info(`Dispatch news article events for scrapers ...`);
 
-    const scrapers = this.getSortedScrapers();
+    const scrapers = await this.getSortedScrapers();
     if (scrapers.length === 0) {
       this._logger.info(`Scrapers not found. Skipping ...`);
 
@@ -290,7 +302,7 @@ export class NewsScraperTaskDispatcher {
 
       const scrapeRun = this._scrapeRunRepository.create({
         type: queue,
-        status: LifecycleStatusEnum.PENDING,
+        status: ProcessingStatusEnum.PENDING,
         arguments: args,
         hash,
       });

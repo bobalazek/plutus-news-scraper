@@ -2,46 +2,55 @@ import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateCol
 
 import { NewsArticleAuthorType, NewsArticleCategoryType, NewsArticleType } from '../Schemas/NewsArticleSchema';
 import { NewsArticleMultimediaTypeEnum } from '../Types/NewsArticleMultimediaTypeEnum';
+import { IS_TEST } from '../Utils/Environment';
 
 @Entity('news_articles')
 export class NewsArticle implements NewsArticleType {
   @PrimaryGeneratedColumn('uuid')
   id!: string;
 
-  @Column()
+  @Column({
+    type: 'varchar',
+  })
   url!: string;
 
-  @Column()
+  @Column({
+    type: 'varchar',
+  })
   title!: string;
 
   @Column({
-    type: 'enum',
+    type: IS_TEST ? 'simple-enum' : 'enum',
     enum: NewsArticleMultimediaTypeEnum,
   })
   multimediaType!: NewsArticleMultimediaTypeEnum;
 
-  @Column()
+  @Column({
+    type: 'varchar',
+  })
   content!: string;
 
-  @Column()
+  @Column({
+    type: 'varchar',
+  })
   newsSiteArticleId!: string;
 
   @Column({ type: 'jsonb', nullable: true })
-  authors?: NewsArticleAuthorType[];
+  authors?: NewsArticleAuthorType[] | null;
 
   @Column({ type: 'jsonb', nullable: true })
-  categories?: NewsArticleCategoryType[];
+  categories?: NewsArticleCategoryType[] | null;
 
-  @Column({ nullable: true })
-  imageUrl?: string;
+  @Column({ type: 'varchar', nullable: true })
+  imageUrl?: string | null;
 
-  @Column({ nullable: true })
-  languageCode?: string;
+  @Column({ type: 'varchar', nullable: true })
+  languageCode?: string | null;
 
-  @Column()
+  @Column({ type: 'datetime' })
   publishedAt!: Date;
 
-  @Column()
+  @Column({ type: 'datetime' })
   modifiedAt!: Date;
 
   @CreateDateColumn()

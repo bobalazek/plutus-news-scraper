@@ -1,6 +1,7 @@
 import { Column, CreateDateColumn, Entity, Index, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
 
-import { LifecycleStatusEnum } from '../Types/LifecycleStatusEnum';
+import { ProcessingStatusEnum } from '../Types/ProcessingStatusEnum';
+import { IS_TEST } from '../Utils/Environment';
 
 @Entity('scrape_runs')
 export class ScrapeRun {
@@ -8,39 +9,42 @@ export class ScrapeRun {
   id!: string;
 
   @Index()
-  @Column()
+  @Column({
+    type: 'varchar',
+  })
   type!: string;
 
   @Column({
-    type: 'enum',
-    enum: LifecycleStatusEnum,
-    default: LifecycleStatusEnum.PENDING,
+    type: IS_TEST ? 'simple-enum' : 'enum',
+    enum: ProcessingStatusEnum,
+    default: ProcessingStatusEnum.PENDING,
   })
-  status!: LifecycleStatusEnum;
+  status!: ProcessingStatusEnum;
 
   @Column({
-    type: 'json',
+    type: IS_TEST ? 'simple-json' : 'json',
     nullable: true,
   })
-  arguments?: Record<string, string | number | null>;
+  arguments?: Record<string, string | number | null> | null;
 
   @Index()
   @Column({
+    type: 'varchar',
     nullable: true,
   })
-  hash?: string;
+  hash?: string | null;
 
-  @Column({ nullable: true })
-  failedErrorMessage?: string;
+  @Column({ type: 'varchar', nullable: true })
+  failedErrorMessage?: string | null;
 
-  @Column({ nullable: true })
-  startedAt?: Date;
+  @Column({ type: 'datetime', nullable: true })
+  startedAt?: Date | null;
 
-  @Column({ nullable: true })
-  completedAt?: Date;
+  @Column({ type: 'datetime', nullable: true })
+  completedAt?: Date | null;
 
-  @Column({ nullable: true })
-  failedAt?: Date;
+  @Column({ type: 'datetime', nullable: true })
+  failedAt?: Date | null;
 
   @CreateDateColumn()
   createdAt!: Date;
