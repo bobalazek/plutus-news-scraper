@@ -1,4 +1,7 @@
+import { createHash } from 'crypto';
 import * as express from 'express';
+
+import { NewsScraperMessageBrokerQueuesEnum } from '../Types/NewsMessageBrokerQueues';
 
 export const randomString = (length: number): string => {
   return [...Array(length)].map(() => (~~(Math.random() * 36)).toString(36)).join('');
@@ -25,4 +28,16 @@ export const sleep = (milliseconds: number): Promise<unknown> => {
   return new Promise((resolve) => {
     return setTimeout(resolve, milliseconds);
   });
+};
+
+export const getHashForNewsSiteAndQueue = (newsSite: string, queue: NewsScraperMessageBrokerQueuesEnum): string => {
+  return createHash('sha256')
+    .update(
+      JSON.stringify({
+        queue,
+        newsSite,
+      }),
+      'utf8'
+    )
+    .digest('hex');
 };

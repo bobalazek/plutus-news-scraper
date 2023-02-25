@@ -1,4 +1,3 @@
-import { createHash } from 'crypto';
 import { inject, injectable } from 'inversify';
 import { Repository } from 'typeorm';
 
@@ -10,7 +9,7 @@ import { NewsScraperInterface } from '../Types/NewsScraperInterface';
 import { NewsScraperStatusEntry } from '../Types/NewsScraperStatusEntry';
 import { ProcessingStatusEnum } from '../Types/ProcessingStatusEnum';
 import { LOKI_PINO_BATCH_INTERVAL_SECONDS } from '../Utils/Environment';
-import { sleep } from '../Utils/Helpers';
+import { getHashForNewsSiteAndQueue, sleep } from '../Utils/Helpers';
 import { HTTPServerService } from './HTTPServerService';
 import { Logger } from './Logger';
 import { NewsScraperDatabase } from './NewsScraperDatabase';
@@ -133,8 +132,6 @@ export class NewsScraperTaskDispatcher {
       .orderBy('scrapeRun.updatedAt', 'DESC')
       .groupBy('scrapeRun.hash') // Hash will include the queue and newsSite
       .getMany();
-
-    console.log(await this._scrapeRunRepository.find());
     for (const lastScrapeRun of lastScrapeRuns) {
       const newsSiteKey = lastScrapeRun.arguments?.newsSite === 'string' ? lastScrapeRun.arguments.newsSite : '';
       if (!scraperStatusMap.has(newsSiteKey)) {
@@ -150,6 +147,8 @@ export class NewsScraperTaskDispatcher {
         lastFailedErrorMessage: lastScrapeRun.failedErrorMessage ?? null,
       });
     }
+
+    // TODO: not yet working
 
     for (const scraper of this._newsScrapers) {
       const scraperStatusData = scraperStatusMap.get(scraper.key);
@@ -298,7 +297,7 @@ export class NewsScraperTaskDispatcher {
       let args: NewsMessageBrokerQueuesDataType[typeof queue] = {
         newsSite: scraper.key,
       };
-      const hash = this._getHashForNewsSiteAndQueue(args.newsSite, queue);
+      const hash = getHashForNewsSiteAndQueue(args.newsSite, queue);
 
       const scrapeRun = this._scrapeRunRepository.create({
         type: queue,
@@ -320,17 +319,5 @@ export class NewsScraperTaskDispatcher {
         { durable: true }
       );
     }
-  }
-
-  private _getHashForNewsSiteAndQueue(newsSite: string, queue: NewsScraperMessageBrokerQueuesEnum) {
-    return createHash('sha256')
-      .update(
-        JSON.stringify({
-          queue,
-          newsSite,
-        }),
-        'utf8'
-      )
-      .digest('hex');
   }
 }

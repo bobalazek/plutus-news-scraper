@@ -6,7 +6,7 @@ import { IS_DEVELOPMENT, POSTGRESQL_URL } from '../Utils/Environment';
 
 @injectable()
 export class NewsScraperDatabase {
-  private _dataSource!: DataSource;
+  protected _dataSource!: DataSource;
 
   async getDataSource() {
     if (!this._dataSource) {
