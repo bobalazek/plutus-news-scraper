@@ -234,7 +234,6 @@ export class NewsScraperTaskWorker {
           const article = await newsScraper.scrapeArticle(data);
 
           const newsArticle = newsArticleRepository.create(article);
-
           await newsArticleRepository.save(newsArticle);
 
           acknowledgeMessageCallback();

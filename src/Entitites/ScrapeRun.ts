@@ -5,7 +5,7 @@ import { LifecycleStatusEnum } from '../Types/LifecycleStatusEnum';
 @Entity('scrape_runs')
 export class ScrapeRun {
   @PrimaryGeneratedColumn('uuid')
-  id!: number;
+  id!: string;
 
   @Index()
   @Column()
@@ -14,6 +14,7 @@ export class ScrapeRun {
   @Column({
     type: 'enum',
     enum: LifecycleStatusEnum,
+    default: LifecycleStatusEnum.PENDING,
   })
   status!: LifecycleStatusEnum;
 

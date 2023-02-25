@@ -1,8 +1,11 @@
+import { createHash } from 'crypto';
 import { inject, injectable } from 'inversify';
+import { Repository } from 'typeorm';
 
 import { TYPES } from '../DI/ContainerTypes';
+import { ScrapeRun } from '../Entitites/ScrapeRun';
 import { LifecycleStatusEnum } from '../Types/LifecycleStatusEnum';
-import { NewsScraperMessageBrokerQueuesEnum } from '../Types/NewsMessageBrokerQueues';
+import { NewsMessageBrokerQueuesDataType, NewsScraperMessageBrokerQueuesEnum } from '../Types/NewsMessageBrokerQueues';
 import { NewsScraperInterface } from '../Types/NewsScraperInterface';
 import { NewsScraperStatusEntry } from '../Types/NewsScraperStatusEntry';
 import { ProcessingStatusEnum } from '../Types/ProcessingStatusEnum';
@@ -10,6 +13,7 @@ import { LOKI_PINO_BATCH_INTERVAL_SECONDS } from '../Utils/Environment';
 import { sleep } from '../Utils/Helpers';
 import { HTTPServerService } from './HTTPServerService';
 import { Logger } from './Logger';
+import { NewsScraperDatabase } from './NewsScraperDatabase';
 import { NewsScraperManager } from './NewsScraperManager';
 import { NewsScraperMessageBroker } from './NewsScraperMessageBroker';
 import { PrometheusService } from './PrometheusService';
@@ -24,6 +28,7 @@ export class NewsScraperTaskDispatcher {
   private _scrapeRecentArticlesExpirationTime: number = 30000; // After how long do we want to expire this message?
   private _scraperStatusMap: Map<string, NewsScraperStatusEntry> = new Map();
 
+  private _scrapeRunRepository!: Repository<ScrapeRun>;
   private _dispatchRecentArticlesScrapeIntervalTimer?: ReturnType<typeof setInterval>;
   private _messageQueuesMonitoringIntervalTimer?: ReturnType<typeof setInterval>;
 
@@ -31,6 +36,7 @@ export class NewsScraperTaskDispatcher {
     @inject(TYPES.Logger) private _logger: Logger,
     @inject(TYPES.NewsScraperManager) private _newsScraperManager: NewsScraperManager,
     @inject(TYPES.NewsScraperMessageBroker) private _newsScraperMessageBroker: NewsScraperMessageBroker,
+    @inject(TYPES.NewsScraperDatabase) private _newsScraperDatabase: NewsScraperDatabase,
     @inject(TYPES.HTTPServerService) private _httpServerService: HTTPServerService,
     @inject(TYPES.PrometheusService) private _prometheusService: PrometheusService
   ) {}
@@ -41,6 +47,8 @@ export class NewsScraperTaskDispatcher {
     this._logger.info(`========== Starting the task dispatcher ... ==========`);
 
     this._registerTerminate();
+
+    await this._prepare();
 
     await this._purgeQueues();
 
@@ -81,6 +89,7 @@ export class NewsScraperTaskDispatcher {
 
     await this._newsScraperMessageBroker.terminate();
     await this._httpServerService.terminate();
+    await this._newsScraperDatabase.terminate();
 
     // Make sure we give out logger enough time to send the last batch of logs
     await sleep(LOKI_PINO_BATCH_INTERVAL_SECONDS * 1000 * 1.2 /* a bit of buffer accounting for network latency */);
@@ -173,7 +182,7 @@ export class NewsScraperTaskDispatcher {
 
     this._newsScraperMessageBroker.consumeFromQueue(
       NewsScraperMessageBrokerQueuesEnum.NEWS_SCRAPER_RECENT_ARTICLES_SCRAPE_STATUS_UPDATE_QUEUE,
-      (data, acknowledgeMessageCallback) => {
+      async (data, acknowledgeMessageCallback) => {
         const scraperStatus = this._scraperStatusMap.get(data.newsSite);
         if (!scraperStatus) {
           acknowledgeMessageCallback();
@@ -193,6 +202,15 @@ export class NewsScraperTaskDispatcher {
         } else if (data.status === ProcessingStatusEnum.FAILED) {
           scraperStatus.lastFailed = now;
           scraperStatus.lastFailedErrorMessage = data.errorMessage ?? null;
+        }
+
+        if (data.scrapeRunId) {
+          const scrapeRun = await this._scrapeRunRepository.findOneBy({
+            id: data.scrapeRunId,
+          });
+          if (scrapeRun) {
+            // TODO
+          }
         }
 
         acknowledgeMessageCallback();
@@ -216,6 +234,12 @@ export class NewsScraperTaskDispatcher {
     process.on('uncaughtException', async (err) => {
       await this.terminate(`UncaughtException: ${err.message}`);
     });
+  }
+
+  private async _prepare() {
+    const dataSource = await this._newsScraperDatabase.getDataSource();
+
+    this._scrapeRunRepository = dataSource.getRepository(ScrapeRun);
   }
 
   private async _registerMetrics() {
@@ -254,17 +278,47 @@ export class NewsScraperTaskDispatcher {
       return;
     }
 
+    const queue = NewsScraperMessageBrokerQueuesEnum.NEWS_SCRAPER_RECENT_ARTICLES_SCRAPE_QUEUE;
+
     for (const scraper of scrapers) {
       this._logger.debug(`Dispatching events for ${scraper.key} ...`);
 
+      let args: NewsMessageBrokerQueuesDataType[typeof queue] = {
+        newsSite: scraper.key,
+      };
+      const hash = this._getHashForNewsSiteAndQueue(args.newsSite, queue);
+
+      const scrapeRun = this._scrapeRunRepository.create({
+        type: queue,
+        status: LifecycleStatusEnum.PENDING,
+        arguments: args,
+        hash,
+      });
+      await this._scrapeRunRepository.save(scrapeRun);
+
+      args = {
+        ...args,
+        scrapeRunId: scrapeRun.id,
+      };
+
       await this._newsScraperMessageBroker.sendToQueue(
-        NewsScraperMessageBrokerQueuesEnum.NEWS_SCRAPER_RECENT_ARTICLES_SCRAPE_QUEUE,
-        {
-          newsSite: scraper.key,
-        },
+        queue,
+        args,
         { expiration: this._scrapeRecentArticlesExpirationTime, persistent: true },
         { durable: true }
       );
     }
+  }
+
+  private _getHashForNewsSiteAndQueue(newsSite: string, queue: NewsScraperMessageBrokerQueuesEnum) {
+    return createHash('sha256')
+      .update(
+        JSON.stringify({
+          queue,
+          newsSite,
+        }),
+        'utf8'
+      )
+      .digest('hex');
   }
 }
