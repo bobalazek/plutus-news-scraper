@@ -6,7 +6,6 @@ import { ScrapeRun } from '../Entitites/ScrapeRun';
 import { LifecycleStatusEnum } from '../Types/LifecycleStatusEnum';
 import { NewsMessageBrokerQueuesDataType, NewsScraperMessageBrokerQueuesEnum } from '../Types/NewsMessageBrokerQueues';
 import { NewsScraperInterface } from '../Types/NewsScraperInterface';
-import { NewsScraperStatusEntry } from '../Types/NewsScraperStatusEntry';
 import { ProcessingStatusEnum } from '../Types/ProcessingStatusEnum';
 import { LOKI_PINO_BATCH_INTERVAL_SECONDS } from '../Utils/Environment';
 import { getHashForNewsSiteAndQueue, sleep } from '../Utils/Helpers';
@@ -102,26 +101,7 @@ export class NewsScraperTaskDispatcher {
   }
 
   async getSortedScrapers() {
-    // TODO: optimise the whole function
-
     const scrapers: NewsScraperInterface[] = [];
-    const scrapersAppendAtEnd: NewsScraperInterface[] = [];
-
-    const scraperStatusMap = new Map<string, NewsScraperStatusEntry>(
-      this._newsScrapers.map((newsScraper) => {
-        return [
-          newsScraper.key,
-          {
-            status: ProcessingStatusEnum.PENDING,
-            lastUpdatedAt: null,
-            lastStartedAt: null,
-            lastCompletedAt: null,
-            lastFailedAt: null,
-            lastFailedErrorMessage: null,
-          },
-        ];
-      })
-    );
 
     const lastScrapeRuns = await this._scrapeRunRepository
       .createQueryBuilder('scrapeRun')
@@ -129,73 +109,43 @@ export class NewsScraperTaskDispatcher {
       .setParameters({
         type: NewsScraperMessageBrokerQueuesEnum.NEWS_SCRAPER_RECENT_ARTICLES_SCRAPE_QUEUE,
       })
-      .orderBy('scrapeRun.updatedAt', 'DESC')
+      .orderBy('scrapeRun.updatedAt', 'ASC')
       .groupBy('scrapeRun.hash') // Hash will include the queue and newsSite
       .getMany();
-    for (const lastScrapeRun of lastScrapeRuns) {
-      const newsSiteKey = lastScrapeRun.arguments?.newsSite === 'string' ? lastScrapeRun.arguments.newsSite : '';
-      if (!scraperStatusMap.has(newsSiteKey)) {
-        continue;
-      }
 
-      scraperStatusMap.set(newsSiteKey, {
-        status: lastScrapeRun.status,
-        lastUpdatedAt: lastScrapeRun.updatedAt ?? null,
-        lastStartedAt: lastScrapeRun.startedAt ?? null,
-        lastCompletedAt: lastScrapeRun.completedAt ?? null,
-        lastFailedAt: lastScrapeRun.failedAt ?? null,
-        lastFailedErrorMessage: lastScrapeRun.failedErrorMessage ?? null,
-      });
-    }
-
-    // TODO: not yet working
-
-    for (const scraper of this._newsScrapers) {
-      const scraperStatusData = scraperStatusMap.get(scraper.key);
-      if (!scraperStatusData) {
-        continue;
-      }
-
-      if (
-        scraperStatusData.lastUpdatedAt !== null &&
-        (scraperStatusData.status === ProcessingStatusEnum.PENDING ||
-          scraperStatusData.status === ProcessingStatusEnum.PROCESSING)
-      ) {
-        continue;
-      }
-
-      if (scraperStatusData.status === ProcessingStatusEnum.PROCESSED) {
-        scrapersAppendAtEnd.push(scraper);
-
-        continue;
-      }
-
-      scrapers.push(scraper);
-    }
-
-    if (scrapersAppendAtEnd.length > 0) {
-      for (const scraperAppendAtEnd of scrapersAppendAtEnd) {
-        scrapers.push(scraperAppendAtEnd);
-      }
-    }
-
-    scrapers.sort((a, b) => {
-      const scraperAStatusData = scraperStatusMap.get(a.key);
-      const scraperBStatusData = scraperStatusMap.get(b.key);
-
-      const timeA =
-        scraperAStatusData?.lastCompletedAt?.getTime() ??
-        scraperAStatusData?.lastFailedAt?.getTime() ??
-        scraperAStatusData?.lastStartedAt?.getTime() ??
-        0;
-      const timeB =
-        scraperBStatusData?.lastCompletedAt?.getTime() ??
-        scraperBStatusData?.lastFailedAt?.getTime() ??
-        scraperBStatusData?.lastStartedAt?.getTime() ??
-        0;
-
-      return timeA - timeB;
+    const scrapeRunsscraperKeys = lastScrapeRuns.map((scrapeRun) => {
+      return scrapeRun.arguments?.newsSite;
     });
+
+    const newsScrapersMap = new Map<string, NewsScraperInterface>(
+      this._newsScrapers.map((newsScraper) => {
+        return [newsScraper.key, newsScraper];
+      })
+    );
+
+    if (this._newsScrapers.length) {
+      for (const newsScraper of this._newsScrapers) {
+        if (scrapeRunsscraperKeys.includes(newsScraper.key)) {
+          continue;
+        }
+
+        scrapers.push(newsScraper);
+      }
+    }
+
+    for (const lastScrapeRun of lastScrapeRuns) {
+      if (lastScrapeRun.status === ProcessingStatusEnum.PROCESSING) {
+        continue;
+      }
+
+      const newsSiteKey = typeof lastScrapeRun.arguments?.newsSite === 'string' ? lastScrapeRun.arguments.newsSite : '';
+      const newsScraper = newsScrapersMap.get(newsSiteKey);
+      if (!newsScraper) {
+        continue;
+      }
+
+      scrapers.push(newsScraper);
+    }
 
     return scrapers;
   }
