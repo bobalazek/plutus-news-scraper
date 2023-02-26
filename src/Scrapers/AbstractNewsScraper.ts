@@ -1,3 +1,5 @@
+import fetch from 'node-fetch';
+import { parse } from 'node-html-parser';
 import puppeteer, { Browser, Page, PuppeteerLaunchOptions } from 'puppeteer';
 
 import { Logger } from '../Services/Logger';
@@ -6,10 +8,11 @@ import { PUPPETEER_EXECUTABLE_PATH } from '../Utils/Environment';
 export abstract class AbstractNewsScraper {
   protected _logger!: Logger;
   private _puppeteerBrowser?: Browser;
-  private _puppteerPage?: Page;
+  private _puppteerPagesMap: Map<string, Page> = new Map();
   private _puppeteerHeadful: boolean = false;
   private _puppeteerPreventClose: boolean = false;
 
+  /***** Puppeteer ******/
   async getPuppeteerBrowser(options?: PuppeteerLaunchOptions) {
     if (!this._puppeteerBrowser) {
       this._puppeteerBrowser = await puppeteer.launch({
@@ -23,28 +26,30 @@ export abstract class AbstractNewsScraper {
     return this._puppeteerBrowser;
   }
 
-  async getPuppeteerPage(options?: PuppeteerLaunchOptions) {
-    if (!this._puppteerPage) {
+  async getPuppeteerPage(key: string = 'default', options?: PuppeteerLaunchOptions) {
+    let page = this._puppteerPagesMap.get(key);
+    if (!page) {
       const browser = await this.getPuppeteerBrowser(options);
 
-      this._puppteerPage = await browser.newPage();
+      page = await browser.newPage();
 
-      await this.setPuppeteerUserAgent();
+      await this.setPuppeteerUserAgent(page);
+
+      this._puppteerPagesMap.set(key, page);
     }
 
-    return this._puppteerPage;
+    return page;
   }
 
   /**
+   * @param page
    * @param userAgent if set to null, it will set it to the default string provided
    */
-  async setPuppeteerUserAgent(userAgent?: string | null) {
+  async setPuppeteerUserAgent(page: Page, userAgent?: string | null) {
     if (!userAgent) {
       userAgent =
         'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36';
     }
-
-    const page = await this.getPuppeteerPage();
 
     await page.setUserAgent(userAgent as string);
 
@@ -59,17 +64,11 @@ export abstract class AbstractNewsScraper {
     await this._puppeteerBrowser?.close();
 
     this._puppeteerBrowser = undefined;
-    this._puppteerPage = undefined;
+    this._puppteerPagesMap.clear();
   }
 
-  getUniqueArray<T>(array: T[]) {
-    return [...new Set<T>(array)];
-  }
-
-  setLogger(logger: Logger) {
-    this._logger = logger;
-
-    return this;
+  getPuppeteerPagesMap() {
+    return this._puppteerPagesMap;
   }
 
   /**
@@ -90,6 +89,25 @@ export abstract class AbstractNewsScraper {
    */
   setPuppeteerPreventClose(value: boolean) {
     this._puppeteerPreventClose = value;
+
+    return this;
+  }
+
+  /***** DOM *****/
+  async getDOMFromUrl(url: string) {
+    const response = await fetch(url);
+    const responseHtml = await response.text();
+
+    return parse(responseHtml);
+  }
+
+  /***** Helpers *****/
+  getUniqueArray<T>(array: T[]) {
+    return [...new Set<T>(array)];
+  }
+
+  setLogger(logger: Logger) {
+    this._logger = logger;
 
     return this;
   }

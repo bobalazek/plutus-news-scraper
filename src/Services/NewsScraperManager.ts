@@ -24,6 +24,8 @@ export class NewsScraperManager {
   constructor(@inject(TYPES.Logger) private _logger: Logger) {}
 
   async scrapeArticle(url: string): Promise<NewsArticleExtendedType> {
+    const startTime = performance.now();
+
     const scraper = await this.getForUrl(url);
     if (typeof scraper === 'undefined') {
       throw new Error(`No scraper for the URL "${url}" was found`);
@@ -42,10 +44,16 @@ export class NewsScraperManager {
     this._logger.debug(`Article data:`);
     this._logger.debug(newsArticleParsed);
 
+    const endTime = performance.now();
+
+    this._logger.trace(`scrapeArticle took ${((endTime - startTime) / 1000).toPrecision(3)}s`);
+
     return newsArticleParsed;
   }
 
   async scrapeRecentArticles(newsSiteKey: string, urls?: string[]): Promise<NewsBasicArticleExtendedType[]> {
+    const startTime = performance.now();
+
     const scraper = await this.get(newsSiteKey);
     if (typeof scraper === 'undefined') {
       throw new Error(`Scraper ${newsSiteKey} was not found`);
@@ -57,24 +65,31 @@ export class NewsScraperManager {
       throw new Error(`This scraper (${newsSiteKey}) does not have the .scrapeRecentArticles() method implemented`);
     }
 
-    // TODO: should we yield the URLs for those articles?
-    const recentArticles = await scraper.scrapeRecentArticles(urls);
-    if (recentArticles.length === 0) {
+    const recentArticlesRaw = await scraper.scrapeRecentArticles(urls);
+    if (recentArticlesRaw.length === 0) {
       throw new NewsArticlesNotFoundError(`No recent articles found for this news site`);
     }
 
-    return recentArticles.map((recentArticle) => {
+    const recentArticles = recentArticlesRaw.map((recentArticle) => {
       return NewsBasicArticleExtendedSchema.parse({
         ...recentArticle,
         newsSiteKey: scraper.key,
       });
     });
+
+    const endTime = performance.now();
+
+    this._logger.trace(`scrapeRecentArticles took ${((endTime - startTime) / 1000).toPrecision(3)}s`);
+
+    return recentArticles;
   }
 
   async scrapeArchivedArticles(
     newsSiteKey: string,
     options: Record<string, string>
   ): Promise<NewsBasicArticleExtendedType[]> {
+    const startTime = performance.now();
+
     const scraper = await this.get(newsSiteKey);
     if (typeof scraper === 'undefined') {
       throw new Error(`Scraper ${newsSiteKey} was not found`);
@@ -86,17 +101,23 @@ export class NewsScraperManager {
       throw new Error(`This scraper (${newsSiteKey}) does not have the .scrapeArchivedArticles() method implemented`);
     }
 
-    const archivedArticles = await scraper.scrapeArchivedArticles(options);
-    if (archivedArticles.length === 0) {
+    const archivedArticlesRaw = await scraper.scrapeArchivedArticles(options);
+    if (archivedArticlesRaw.length === 0) {
       throw new NewsArticlesNotFoundError(`No archived articles found for this news site`);
     }
 
-    return archivedArticles.map((recentArticle) => {
+    const archivedArticles = archivedArticlesRaw.map((recentArticle) => {
       return NewsBasicArticleExtendedSchema.parse({
         ...recentArticle,
         newsSiteKey: scraper.key,
       });
     });
+
+    const endTime = performance.now();
+
+    this._logger.trace(`scrapeArchivedArticles took ${((endTime - startTime) / 1000).toPrecision(3)}s`);
+
+    return archivedArticles;
   }
 
   /**
