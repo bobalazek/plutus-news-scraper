@@ -174,7 +174,7 @@ export class NewsScraperManager {
 
       try {
         const importedModule = await import(`../Scrapers/${scraperFileName}`); // Needs to be the relative path from the transpiled .js file
-        const scraperModule = new importedModule.default.default() as NewsScraperInterface;
+        const scraperModule = new importedModule.default() as NewsScraperInterface; // or importedModule.default.default() if using the TSC compailer
 
         if (!scraperModule.domain) {
           throw new Error(`Domain not set for the scraper ${scraperFileName}`);
