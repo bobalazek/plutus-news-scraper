@@ -56,7 +56,7 @@ export abstract class AbstractNewsScraper {
     return page;
   }
 
-  async closePuppeteerBrowser(force: boolean = false) {
+  async terminate(force: boolean = false) {
     if (this._puppeteerPreventClose && !force) {
       return;
     }

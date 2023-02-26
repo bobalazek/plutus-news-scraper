@@ -19,19 +19,17 @@ export const addNewsScraperArchivedArticlesScrapeCommand = (program: Command) =>
       const headful = options.headful;
       const preventClose = options.preventClose;
 
+      const parsedOptions = JSON.parse(optionsString);
+
       const logger = container.get<Logger>(TYPES.Logger);
       const newsScraperManager = container.get<NewsScraperManager>(TYPES.NewsScraperManager);
-      newsScraperManager.setHeadful(headful);
-      newsScraperManager.setPreventClose(preventClose);
 
       try {
-        const parsedOptions = JSON.parse(optionsString);
-
-        await newsScraperManager.scrapeArchivedArticles(newsSite, parsedOptions);
+        await newsScraperManager.scrapeArchivedArticles(newsSite, parsedOptions, headful, preventClose);
       } catch (err) {
         logger.error(err.message);
       } finally {
-        await newsScraperManager.terminateScraper();
+        await newsScraperManager.terminate();
       }
     });
   program.addCommand(command);

@@ -23,7 +23,7 @@ export class NewsScraperManager {
 
   constructor(@inject(TYPES.Logger) private _logger: Logger) {}
 
-  async scrapeArticle(url: string): Promise<NewsArticleExtendedType> {
+  async scrapeArticle(url: string, headful?: boolean, preventClose?: boolean): Promise<NewsArticleExtendedType> {
     const startTime = performance.now();
 
     const scraper = await this.getForUrl(url);
@@ -31,7 +31,7 @@ export class NewsScraperManager {
       throw new Error(`No scraper for the URL "${url}" was found`);
     }
 
-    this._currentScraper = this._prepareScraper(scraper);
+    this._currentScraper = this._prepareScraper(scraper, headful, preventClose);
 
     const newsArticle = await scraper.scrapeArticle({ url });
 
@@ -51,7 +51,12 @@ export class NewsScraperManager {
     return newsArticleParsed;
   }
 
-  async scrapeRecentArticles(newsSiteKey: string, urls?: string[]): Promise<NewsBasicArticleExtendedType[]> {
+  async scrapeRecentArticles(
+    newsSiteKey: string,
+    urls?: string[],
+    headful?: boolean,
+    preventClose?: boolean
+  ): Promise<NewsBasicArticleExtendedType[]> {
     const startTime = performance.now();
 
     const scraper = await this.get(newsSiteKey);
@@ -59,7 +64,7 @@ export class NewsScraperManager {
       throw new Error(`Scraper ${newsSiteKey} was not found`);
     }
 
-    this._currentScraper = this._prepareScraper(scraper);
+    this._currentScraper = this._prepareScraper(scraper, headful, preventClose);
 
     if (typeof scraper.scrapeRecentArticles === 'undefined') {
       throw new Error(`This scraper (${newsSiteKey}) does not have the .scrapeRecentArticles() method implemented`);
@@ -86,7 +91,9 @@ export class NewsScraperManager {
 
   async scrapeArchivedArticles(
     newsSiteKey: string,
-    options: Record<string, string>
+    options: Record<string, string>,
+    headful?: boolean,
+    preventClose?: boolean
   ): Promise<NewsBasicArticleExtendedType[]> {
     const startTime = performance.now();
 
@@ -95,7 +102,7 @@ export class NewsScraperManager {
       throw new Error(`Scraper ${newsSiteKey} was not found`);
     }
 
-    this._currentScraper = this._prepareScraper(scraper);
+    this._currentScraper = this._prepareScraper(scraper, headful, preventClose);
 
     if (typeof scraper.scrapeArchivedArticles === 'undefined') {
       throw new Error(`This scraper (${newsSiteKey}) does not have the .scrapeArchivedArticles() method implemented`);
@@ -120,34 +127,12 @@ export class NewsScraperManager {
     return archivedArticles;
   }
 
-  /**
-   * If this is set to true, then it will open an actual browser window
-   *
-   * @param value boolean
-   */
-  setHeadful(value: boolean) {
-    this._headful = value;
-
-    return this;
-  }
-
-  /**
-   * Set if we should prevent the closing/termination of the browser at the end or not?
-   *
-   * @param value boolean
-   */
-  setPreventClose(value: boolean) {
-    this._preventClose = value;
-
-    return this;
-  }
-
-  async terminateScraper(force: boolean = false) {
+  async terminate(force: boolean = false) {
     if (this._preventClose && !force) {
       return;
     }
 
-    await this._currentScraper?.closePuppeteerBrowser(true);
+    await this._currentScraper?.terminate(true);
   }
 
   async get(newsSiteKey: string) {
@@ -228,7 +213,10 @@ export class NewsScraperManager {
     this._initialized = true;
   }
 
-  private _prepareScraper(scraper: NewsScraperInterface) {
+  private _prepareScraper(scraper: NewsScraperInterface, headful?: boolean, preventClose?: boolean) {
+    this._headful = headful ?? false;
+    this._preventClose = preventClose ?? false;
+
     const newsScraper = scraper as unknown as AbstractNewsScraper;
     newsScraper.setLogger(this._logger);
     newsScraper.setPuppeteerHeadful(this._headful);

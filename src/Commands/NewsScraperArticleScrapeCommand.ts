@@ -19,15 +19,13 @@ export const addNewsScraperArticleScrapeCommand = (program: Command) => {
 
       const logger = container.get<Logger>(TYPES.Logger);
       const newsScraperManager = container.get<NewsScraperManager>(TYPES.NewsScraperManager);
-      newsScraperManager.setHeadful(headful);
-      newsScraperManager.setPreventClose(preventClose);
 
       try {
-        await newsScraperManager.scrapeArticle(url);
+        await newsScraperManager.scrapeArticle(url, headful, preventClose);
       } catch (err) {
         logger.error(err.message);
       } finally {
-        await newsScraperManager.terminateScraper();
+        await newsScraperManager.terminate();
       }
     });
   program.addCommand(command);

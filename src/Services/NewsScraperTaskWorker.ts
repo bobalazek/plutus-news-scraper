@@ -91,7 +91,7 @@ export class NewsScraperTaskWorker {
       }, 30000);
     });
 
-    await this._newsScraperManager.terminateScraper(true);
+    await this._newsScraperManager.terminate(true);
 
     await this._newsScraperMessageBroker.terminate();
     await this._httpServerService.terminate();
@@ -259,8 +259,6 @@ export class NewsScraperTaskWorker {
   }
 
   private _startConsumption() {
-    this._newsScraperManager.setPreventClose(true);
-
     if (this._consumedQueues.includes('*') || this._consumedQueues.includes('scrape_recent_articles')) {
       this._startRecentArticlesQueueConsumption();
     }
