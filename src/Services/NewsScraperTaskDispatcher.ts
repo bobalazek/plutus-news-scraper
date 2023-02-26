@@ -105,6 +105,10 @@ export class NewsScraperTaskDispatcher {
 
     const lastScrapeRuns = await this._scrapeRunRepository
       .createQueryBuilder('scrapeRun')
+      .select('scrapeRun.status')
+      .addSelect('scrapeRun.arguments')
+      .addSelect('MAX(scrapeRun.createdAt)')
+      .distinct(true)
       .where('scrapeRun.type = :type')
       .setParameters({
         type: NewsScraperMessageBrokerQueuesEnum.NEWS_SCRAPER_RECENT_ARTICLES_SCRAPE_QUEUE,
