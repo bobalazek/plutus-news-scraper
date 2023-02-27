@@ -91,12 +91,11 @@ export default class YahooFinanceNewsScraper extends AbstractNewsScraper impleme
   }
 
   async scrapeArticle(basicArticle: NewsBasicArticleType): Promise<NewsArticleType> {
-    const page = await this.getPuppeteerPage();
-
     const url = this._preProcessUrl(basicArticle.url);
 
     this._logger.info(`Going to URL ${url} ...`);
 
+    const page = await this.getPuppeteerPage();
     await page.goto(url, {
       waitUntil: 'domcontentloaded',
     });
@@ -107,6 +106,7 @@ export default class YahooFinanceNewsScraper extends AbstractNewsScraper impleme
     if ($consentPageDiv) {
       await page.click('#consent-page .actions button[value="agree"]');
 
+      const page = await this.getPuppeteerPage();
       await page.goto(url, {
         waitUntil: 'networkidle2',
       });
