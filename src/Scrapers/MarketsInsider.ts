@@ -24,20 +24,18 @@ export default class MarketsInsiderNewsScraper extends AbstractNewsScraper imple
     const basicArticles: NewsBasicArticleType[] = [];
     const recentArticleListUrls = Array.isArray(urls) ? urls : this.recentArticleListUrls;
 
-    const page = await this.getPuppeteerPage();
-
     this._logger.info(`Starting to scrape the recent articles on Markets Insider ...`);
 
     for (const recentArticleListUrl of recentArticleListUrls) {
       this._logger.info(`Going to URL ${recentArticleListUrl} ...`);
 
       await sleep(1000);
-      await page.goto(recentArticleListUrl, {
+      await this.goToPage(recentArticleListUrl, {
         waitUntil: 'domcontentloaded',
       });
 
       const articleUrls = this.getUniqueArray(
-        await page.evaluate(() => {
+        await this.evaluateInDocument(() => {
           // Get all the possible (anchor) elements that have the links to articles
           const querySelector = [
             '.top-story .top-story__story a.top-story__link',
@@ -86,16 +84,15 @@ export default class MarketsInsiderNewsScraper extends AbstractNewsScraper imple
 
     this._logger.info(`Going to URL ${url} ...`);
 
-    const page = await this.getPuppeteerPage();
-    await page.goto(url, {
+    await this.goToPage(url, {
       waitUntil: 'networkidle2',
     });
 
-    const newsSiteArticleId = await page.evaluate(() => {
+    const newsSiteArticleId = await this.evaluateInDocument(() => {
       return document.querySelector('head meta[name="viking-id"]')?.getAttribute('value') ?? '';
     });
 
-    const categories = await page.evaluate(() => {
+    const categories = await this.evaluateInDocument(() => {
       return Array.from(document.querySelectorAll(['.post-meta .post-breadcrumbs a:last-child'].join(', '))).map(
         ($a) => {
           return {
@@ -106,11 +103,11 @@ export default class MarketsInsiderNewsScraper extends AbstractNewsScraper imple
       );
     });
 
-    const languageCode = await page.evaluate(() => {
+    const languageCode = await this.evaluateInDocument(() => {
       return document.querySelector('html')?.getAttribute('lang') ?? '';
     });
 
-    const linkedDataText = await page.evaluate(() => {
+    const linkedDataText = await this.evaluateInDocument(() => {
       return document.querySelector('head script[type="application/ld+json"]')?.innerHTML ?? '';
     });
     if (!linkedDataText) {

@@ -26,18 +26,16 @@ export default class TheEconomicTimesNewsScraper extends AbstractNewsScraper imp
     const basicArticles: NewsBasicArticleType[] = [];
     const recentArticleListUrls = Array.isArray(urls) ? urls : this.recentArticleListUrls;
 
-    const page = await this.getPuppeteerPage();
-
     this._logger.info(`Starting to scrape the recent articles on The Economic Times ...`);
 
     for (const recentArticleListUrl of recentArticleListUrls) {
       this._logger.info(`Going to URL ${recentArticleListUrl} ...`);
 
       await sleep(1000);
-      await page.goto(recentArticleListUrl, { waitUntil: 'domcontentloaded' });
+      await this.goToPage(recentArticleListUrl, { waitUntil: 'domcontentloaded' });
 
       const articleUrls = this.getUniqueArray(
-        await page.evaluate(() => {
+        await this.evaluateInDocument(() => {
           // Get all the possible (anchor) elements that have the links to articles
           const querySelector = [
             '.newsList li a',
@@ -93,8 +91,7 @@ export default class TheEconomicTimesNewsScraper extends AbstractNewsScraper imp
 
     this._logger.info(`Going to URL ${url} ...`);
 
-    const page = await this.getPuppeteerPage();
-    await page.goto(url, {
+    await this.goToPage(url, {
       waitUntil: 'networkidle2',
     });
 
@@ -102,11 +99,11 @@ export default class TheEconomicTimesNewsScraper extends AbstractNewsScraper imp
     const urlId = urlSplit[urlSplit.length - 1];
     const newsSiteArticleId = urlId.replace('.cms', '');
 
-    const languageCode = await page.evaluate(() => {
+    const languageCode = await this.evaluateInDocument(() => {
       return document.querySelector('html')?.getAttribute('lang') ?? '';
     });
 
-    const linkedDataText = await page.evaluate(() => {
+    const linkedDataText = await this.evaluateInDocument(() => {
       return document.querySelectorAll('body script[type="application/ld+json"]')[1].innerHTML ?? '';
     });
     if (!linkedDataText) {
@@ -116,7 +113,7 @@ export default class TheEconomicTimesNewsScraper extends AbstractNewsScraper imp
     const linkedData = JSON.parse(linkedDataText);
 
     // Content
-    const content = await page.evaluate(() => {
+    const content = await this.evaluateInDocument(() => {
       return Array.from(document.querySelectorAll('.article_wrap .pageContent'))
         .map((element) => {
           return element.innerHTML;

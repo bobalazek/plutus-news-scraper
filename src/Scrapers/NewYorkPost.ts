@@ -21,20 +21,18 @@ export default class NewYorkPostNewsScraper extends AbstractNewsScraper implemen
     const basicArticles: NewsBasicArticleType[] = [];
     const recentArticleListUrls = Array.isArray(urls) ? urls : this.recentArticleListUrls;
 
-    const page = await this.getPuppeteerPage();
-
     this._logger.info(`Starting to scrape the recent articles on New York Post ...`);
 
     for (const recentArticleListUrl of recentArticleListUrls) {
       this._logger.info(`Going to URL ${recentArticleListUrl} ...`);
 
       await sleep(1000);
-      await page.goto(recentArticleListUrl, {
+      await this.goToPage(recentArticleListUrl, {
         waitUntil: 'domcontentloaded',
       });
 
       const articleUrls = this.getUniqueArray(
-        await page.evaluate(() => {
+        await this.evaluateInDocument(() => {
           // Get all the possible (anchor) elements that have the links to articles
           const querySelector = ['.story h2 a', '.the-latest__stories .story a'].join(', ');
 
@@ -74,12 +72,11 @@ export default class NewYorkPostNewsScraper extends AbstractNewsScraper implemen
 
     this._logger.info(`Going to URL ${url} ...`);
 
-    const page = await this.getPuppeteerPage();
-    await page.goto(url, {
+    await this.goToPage(url, {
       waitUntil: 'domcontentloaded',
     });
 
-    const parsleyMetadataText = await page.evaluate(() => {
+    const parsleyMetadataText = await this.evaluateInDocument(() => {
       return document.querySelector('head meta[name="parsely-metadata"]')?.getAttribute('content') ?? '';
     });
     if (!parsleyMetadataText) {
@@ -90,15 +87,15 @@ export default class NewYorkPostNewsScraper extends AbstractNewsScraper implemen
 
     const newsSiteArticleId = parsleyMetadata.post_id.replace('nypost-', '');
 
-    const categoryUrl = await page.evaluate(() => {
+    const categoryUrl = await this.evaluateInDocument(() => {
       return document.querySelector('.article-header a')?.getAttribute('href') ?? '';
     });
 
-    const languageCode = await page.evaluate(() => {
+    const languageCode = await this.evaluateInDocument(() => {
       return document.querySelector('html')?.getAttribute('lang') ?? '';
     });
 
-    const linkedDataText = await page.evaluate(() => {
+    const linkedDataText = await this.evaluateInDocument(() => {
       return document.querySelector('head script[type="application/ld+json"]')?.innerHTML ?? '';
     });
     if (!linkedDataText) {
@@ -108,7 +105,7 @@ export default class NewYorkPostNewsScraper extends AbstractNewsScraper implemen
     const linkedData = JSON.parse(linkedDataText);
 
     // Content
-    const content = await page.evaluate(() => {
+    const content = await this.evaluateInDocument(() => {
       return Array.from(document.querySelectorAll('#main .single__content'))
         .map((element) => {
           return element.innerHTML;

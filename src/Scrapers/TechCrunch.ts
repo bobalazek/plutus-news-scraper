@@ -24,31 +24,28 @@ export default class TechCrunchNewsScraper extends AbstractNewsScraper implement
     const basicArticles: NewsBasicArticleType[] = [];
     const recentArticleListUrls = Array.isArray(urls) ? urls : this.recentArticleListUrls;
 
-    const page = await this.getPuppeteerPage();
-
     this._logger.info(`Starting to scrape the recent articles on TechCrunch...`);
 
     for (const recentArticleListUrl of recentArticleListUrls) {
       this._logger.info(`Going to URL ${recentArticleListUrl} ...`);
 
       await sleep(1000);
-      await page.goto(recentArticleListUrl, {
+      await this.goToPage(recentArticleListUrl, {
         waitUntil: 'domcontentloaded',
       });
 
-      const $consentPageDiv = await page.evaluate(() => {
+      const $consentPageDiv = await this.evaluateInDocument(() => {
         return document.querySelector('#consent-page');
       });
       if ($consentPageDiv) {
-        await page.click('#consent-page .actions button[value="agree"]');
-
-        await page.goto(recentArticleListUrl, {
+        await this.clickOnPage('#consent-page .actions button[value="agree"]');
+        await this.goToPage(recentArticleListUrl, {
           waitUntil: 'domcontentloaded',
         });
       }
 
       const articleUrls = this.getUniqueArray(
-        await page.evaluate(() => {
+        await this.evaluateInDocument(() => {
           // Get all the possible (anchor) elements that have the links to articles
           const querySelector = ['.content a.post-block__title__link'].join(', ');
 
@@ -92,28 +89,27 @@ export default class TechCrunchNewsScraper extends AbstractNewsScraper implement
 
     this._logger.info(`Going to URL ${url} ...`);
 
-    const page = await this.getPuppeteerPage();
-    await page.goto(url, {
+    await this.goToPage(url, {
       waitUntil: 'domcontentloaded',
     });
 
-    const $consentPageDiv = await page.evaluate(() => {
+    const $consentPageDiv = await this.evaluateInDocument(() => {
       return document.querySelector('#consent-page');
     });
     if ($consentPageDiv) {
-      await page.click('#consent-page .actions button[value="agree"]');
-      await page.goto(url, {
+      await this.clickOnPage('#consent-page .actions button[value="agree"]');
+      await this.goToPage(url, {
         waitUntil: 'domcontentloaded',
       });
     }
 
-    const shortlink = await page.evaluate(() => {
+    const shortlink = await this.evaluateInDocument(() => {
       return document.querySelector('head link[rel="shortlink"]')?.getAttribute('href') ?? '';
     });
 
     const newsSiteArticleId = shortlink.replace('https://techcrunch.com/?p=', '');
 
-    const linkedDataText = await page.evaluate(() => {
+    const linkedDataText = await this.evaluateInDocument(() => {
       return document.querySelector('head script[type="application/ld+json"]')?.innerHTML ?? '';
     });
     if (!linkedDataText) {
@@ -125,8 +121,8 @@ export default class TechCrunchNewsScraper extends AbstractNewsScraper implement
     const authorLinkedData = rawLinkedData['@graph'][5];
 
     // Content
-    await page.waitForSelector('.article-content p');
-    const content = await page.evaluate(() => {
+    await this.waitForSelectorOnPage('.article-content p');
+    const content = await this.evaluateInDocument(() => {
       return Array.from(document.querySelectorAll('.article-content p'))
         .map((element) => {
           return element.innerHTML;

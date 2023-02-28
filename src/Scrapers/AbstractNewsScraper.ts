@@ -1,5 +1,5 @@
 import { JSDOM } from 'jsdom';
-import puppeteer, { Browser, Page, PuppeteerLaunchOptions, PuppeteerLifeCycleEvent } from 'puppeteer';
+import puppeteer, { Browser, Page, PuppeteerLaunchOptions, WaitForOptions } from 'puppeteer';
 
 import { Logger } from '../Services/Logger';
 import { PUPPETEER_EXECUTABLE_PATH } from '../Utils/Environment';
@@ -55,17 +55,6 @@ export abstract class AbstractNewsScraper {
     return page;
   }
 
-  async terminate(force: boolean = false) {
-    if (this._puppeteerPreventClose && !force) {
-      return;
-    }
-
-    await this._puppeteerBrowser?.close();
-
-    this._puppeteerBrowser = undefined;
-    this._puppteerPagesMap.clear();
-  }
-
   getPuppeteerPagesMap() {
     return this._puppteerPagesMap;
   }
@@ -92,28 +81,36 @@ export abstract class AbstractNewsScraper {
     return this;
   }
 
-  /***** DOM *****/
-  async getDocumentFromUrl(url: string) {
+  /***** JSDom *****/
+  async getJSDOMDocumentFromUrl(url: string) {
     const dom = await JSDOM.fromURL(url);
 
     return dom.window.document;
   }
 
   /***** Helpers *****/
-  async goToPage(url: string, waitUntil?: PuppeteerLifeCycleEvent) {
+  async goToPage(url: string, args?: WaitForOptions) {
     const page = await this.getPuppeteerPage();
 
-    await page.goto(url, {
-      waitUntil,
-    });
-
-    return page;
+    return page.goto(url, args);
   }
 
-  async evaluateInDocument(callback: (document?: Document) => string) {
+  async evaluateInDocument<T>(callback: (document?: Document) => T) {
     const page = await this.getPuppeteerPage();
 
     return page.evaluate(callback);
+  }
+
+  async clickOnPage(selector: string) {
+    const page = await this.getPuppeteerPage();
+
+    return page.click(selector);
+  }
+
+  async waitForSelectorOnPage(selector: string) {
+    const page = await this.getPuppeteerPage();
+
+    return page.waitForSelector(selector);
   }
 
   getUniqueArray<T>(array: T[]) {
@@ -124,5 +121,16 @@ export abstract class AbstractNewsScraper {
     this._logger = logger;
 
     return this;
+  }
+
+  async terminate(force: boolean = false) {
+    if (this._puppeteerPreventClose && !force) {
+      return;
+    }
+
+    await this._puppeteerBrowser?.close();
+
+    this._puppeteerBrowser = undefined;
+    this._puppteerPagesMap.clear();
   }
 }

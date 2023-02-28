@@ -20,20 +20,18 @@ export default class CointelegraphNewsScraper extends AbstractNewsScraper implem
     const basicArticles: NewsBasicArticleType[] = [];
     const recentArticleListUrls = Array.isArray(urls) ? urls : this.recentArticleListUrls;
 
-    const page = await this.getPuppeteerPage();
-
     this._logger.info(`Starting to scrape the recent articles on Cointelegraph ...`);
 
     for (const recentArticleListUrl of recentArticleListUrls) {
       this._logger.info(`Going to URL ${recentArticleListUrl} ...`);
 
       await sleep(1000);
-      await page.goto(recentArticleListUrl, {
+      await this.goToPage(recentArticleListUrl, {
         waitUntil: 'networkidle2',
       });
 
       const articleUrls = this.getUniqueArray(
-        await page.evaluate(() => {
+        await this.evaluateInDocument(() => {
           // Get all the possible (anchor) elements that have the links to articles
           const querySelector = [
             '.category-page li.posts-listing__item a.post-card-inline__title-link',
@@ -81,20 +79,19 @@ export default class CointelegraphNewsScraper extends AbstractNewsScraper implem
 
     this._logger.info(`Going to URL ${url} ...`);
 
-    const page = await this.getPuppeteerPage();
-    await page.goto(url, {
+    await this.goToPage(url, {
       waitUntil: 'domcontentloaded',
     });
 
-    const newsSiteArticleId = await page.evaluate(() => {
+    const newsSiteArticleId = await this.evaluateInDocument(() => {
       return document.querySelector('article.post__article')?.getAttribute('id')?.replace('article-', '') ?? '';
     });
 
-    const languageCode = await page.evaluate(() => {
+    const languageCode = await this.evaluateInDocument(() => {
       return document.querySelector('html')?.getAttribute('lang') ?? '';
     });
 
-    const linkedDataText = await page.evaluate(() => {
+    const linkedDataText = await this.evaluateInDocument(() => {
       return document.querySelector('head script[type="application/ld+json"]')?.innerHTML ?? '';
     });
     if (!linkedDataText) {
@@ -104,7 +101,7 @@ export default class CointelegraphNewsScraper extends AbstractNewsScraper implem
     const linkedData = JSON.parse(linkedDataText);
 
     // Content
-    const content = await page.evaluate(() => {
+    const content = await this.evaluateInDocument(() => {
       return Array.from(document.querySelectorAll('article .post-content'))
         .map((element) => {
           return element.innerHTML;

@@ -26,20 +26,18 @@ export default class NPRNewsScraper extends AbstractNewsScraper implements NewsS
     const basicArticles: NewsBasicArticleType[] = [];
     const recentArticleListUrls = Array.isArray(urls) ? urls : this.recentArticleListUrls;
 
-    const page = await this.getPuppeteerPage();
-
     this._logger.info(`Starting to scrape the recent articles on NPR ...`);
 
     for (const recentArticleListUrl of recentArticleListUrls) {
       this._logger.info(`Going to URL ${recentArticleListUrl} ...`);
 
       await sleep(1000);
-      await page.goto(recentArticleListUrl, {
+      await this.goToPage(recentArticleListUrl, {
         waitUntil: 'networkidle2',
       });
 
       const articleUrls = this.getUniqueArray(
-        await page.evaluate(() => {
+        await this.evaluateInDocument(() => {
           // Get all the possible (anchor) elements that have the links to articles
           const querySelector = ['#main-section .story-text a', '#main-section .item-info a'].join(', ');
 
@@ -79,16 +77,15 @@ export default class NPRNewsScraper extends AbstractNewsScraper implements NewsS
 
     this._logger.info(`Going to URL ${url} ...`);
 
-    const page = await this.getPuppeteerPage();
-    await page.goto(url, {
+    await this.goToPage(url, {
       waitUntil: 'networkidle2',
     });
 
-    const newsSiteArticleId = await page.evaluate(() => {
+    const newsSiteArticleId = await this.evaluateInDocument(() => {
       return document.querySelector('.story .storytitle input:first-child')?.getAttribute('id') ?? '';
     });
 
-    const categories = await page.evaluate(() => {
+    const categories = await this.evaluateInDocument(() => {
       return Array.from(document.querySelectorAll(['#main-section article.story .slug-wrap .slug a'].join(', '))).map(
         ($a) => {
           return {
@@ -99,7 +96,7 @@ export default class NPRNewsScraper extends AbstractNewsScraper implements NewsS
       );
     });
 
-    const authors = await page.evaluate(() => {
+    const authors = await this.evaluateInDocument(() => {
       return Array.from(document.querySelectorAll(['#storybyline .byline__name a'].join(', '))).map(($a) => {
         return {
           name: ($a.innerHTML ?? '').trim(),
@@ -108,11 +105,11 @@ export default class NPRNewsScraper extends AbstractNewsScraper implements NewsS
       });
     });
 
-    const languageCode = await page.evaluate(() => {
+    const languageCode = await this.evaluateInDocument(() => {
       return document.querySelector('html')?.getAttribute('lang') ?? '';
     });
 
-    const linkedDataText = await page.evaluate(() => {
+    const linkedDataText = await this.evaluateInDocument(() => {
       return document.querySelector('head script[type="application/ld+json"]')?.innerHTML ?? '';
     });
     if (!linkedDataText) {
@@ -122,7 +119,7 @@ export default class NPRNewsScraper extends AbstractNewsScraper implements NewsS
     const linkedData = JSON.parse(linkedDataText);
 
     // Content
-    const content = await page.evaluate(() => {
+    const content = await this.evaluateInDocument(() => {
       return Array.from(document.querySelectorAll('.storytext p'))
         .map((element) => {
           return element.innerHTML;

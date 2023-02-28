@@ -27,20 +27,18 @@ export default class SeekingAlphaNewsScraper extends AbstractNewsScraper impleme
     const basicArticles: NewsBasicArticleType[] = [];
     const recentArticleListUrls = Array.isArray(urls) ? urls : this.recentArticleListUrls;
 
-    const page = await this.getPuppeteerPage();
-
     this._logger.info(`Starting to scrape the recent articles on Seeking Alpha ...`);
 
     for (const recentArticleListUrl of recentArticleListUrls) {
       this._logger.info(`Going to URL ${recentArticleListUrl} ...`);
 
       await sleep(1000);
-      await page.goto(recentArticleListUrl, {
+      await this.goToPage(recentArticleListUrl, {
         waitUntil: 'networkidle2',
       });
 
       const articleUrls = this.getUniqueArray(
-        await page.evaluate(() => {
+        await this.evaluateInDocument(() => {
           // Get all the possible (anchor) elements that have the links to articles
           const querySelector = [
             'div[data-test-id="trending-news-cards-body"] a[data-test-id="post-list-item-title"]',
@@ -88,8 +86,7 @@ export default class SeekingAlphaNewsScraper extends AbstractNewsScraper impleme
 
     this._logger.info(`Going to URL ${url} ...`);
 
-    const page = await this.getPuppeteerPage();
-    await page.goto(url, {
+    await this.goToPage(url, {
       waitUntil: 'networkidle2',
     });
 
@@ -99,7 +96,7 @@ export default class SeekingAlphaNewsScraper extends AbstractNewsScraper impleme
 
     const newsSiteArticleId = slugSplit[0];
 
-    const linkedDataText = await page.evaluate(() => {
+    const linkedDataText = await this.evaluateInDocument(() => {
       return document.querySelector('body script[type="application/ld+json"]:nth-child(2)')?.innerHTML ?? '';
     });
     if (!linkedDataText) {
@@ -109,7 +106,7 @@ export default class SeekingAlphaNewsScraper extends AbstractNewsScraper impleme
     const linkedData = JSON.parse(linkedDataText);
 
     // Content
-    const content = await page.evaluate(() => {
+    const content = await this.evaluateInDocument(() => {
       return Array.from(document.querySelectorAll('div[class^="paywall-full-"]'))
         .map((element) => {
           return element.innerHTML;

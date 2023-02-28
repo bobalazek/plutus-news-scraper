@@ -23,30 +23,28 @@ export default class YahooFinanceNewsScraper extends AbstractNewsScraper impleme
     const basicArticles: NewsBasicArticleType[] = [];
     const recentArticleListUrls = Array.isArray(urls) ? urls : this.recentArticleListUrls;
 
-    const page = await this.getPuppeteerPage();
-
     this._logger.info(`Starting to scrape the recent articles on Yahoo ...`);
 
     for (const recentArticleListUrl of recentArticleListUrls) {
       this._logger.info(`Going to URL ${recentArticleListUrl} ...`);
 
       await sleep(1000);
-      await page.goto(recentArticleListUrl, {
+      await this.goToPage(recentArticleListUrl, {
         waitUntil: 'domcontentloaded',
       });
 
-      const $consentPageDiv = await page.evaluate(() => {
+      const $consentPageDiv = await this.evaluateInDocument(() => {
         return document.querySelector('#consent-page');
       });
       if ($consentPageDiv) {
-        await page.click('#consent-page .actions button[value="agree"]');
-        await page.goto(recentArticleListUrl, {
+        await this.clickOnPage('#consent-page .actions button[value="agree"]');
+        await this.goToPage(recentArticleListUrl, {
           waitUntil: 'domcontentloaded',
         });
       }
 
       const articleUrls = this.getUniqueArray(
-        await page.evaluate(() => {
+        await this.evaluateInDocument(() => {
           // Get all the possible (anchor) elements that have the links to articles
           const querySelector = [
             '.article-cluster-boundary a',
@@ -94,17 +92,16 @@ export default class YahooFinanceNewsScraper extends AbstractNewsScraper impleme
 
     this._logger.info(`Going to URL ${url} ...`);
 
-    const page = await this.getPuppeteerPage();
-    await page.goto(url, {
+    await this.goToPage(url, {
       waitUntil: 'domcontentloaded',
     });
 
-    const $consentPageDiv = await page.evaluate(() => {
+    const $consentPageDiv = await this.evaluateInDocument(() => {
       return document.querySelector('#consent-page');
     });
     if ($consentPageDiv) {
-      await page.click('#consent-page .actions button[value="agree"]');
-      await page.goto(url, {
+      await this.clickOnPage('#consent-page .actions button[value="agree"]');
+      await this.goToPage(url, {
         waitUntil: 'networkidle2',
       });
     }
@@ -116,11 +113,11 @@ export default class YahooFinanceNewsScraper extends AbstractNewsScraper impleme
     const slugLastPart = slugSplit[slugSplit.length - 1];
     const newsSiteArticleId = slugLastPart.replace('.html', '');
 
-    const languageCode = await page.evaluate(() => {
+    const languageCode = await this.evaluateInDocument(() => {
       return document.querySelector('html')?.getAttribute('lang') ?? '';
     });
 
-    const linkedDataText = await page.evaluate(() => {
+    const linkedDataText = await this.evaluateInDocument(() => {
       return document.querySelector('script[type="application/ld+json"]')?.innerHTML ?? '';
     });
     if (!linkedDataText) {
@@ -130,7 +127,7 @@ export default class YahooFinanceNewsScraper extends AbstractNewsScraper impleme
     const linkedData = JSON.parse(linkedDataText);
 
     // Content
-    const content = await page.evaluate(() => {
+    const content = await this.evaluateInDocument(() => {
       return Array.from(document.querySelectorAll('article .caas-body p'))
         .map((element) => {
           return element.innerHTML;
