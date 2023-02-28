@@ -96,7 +96,9 @@ export default class ViceNewsNewsScraper extends AbstractNewsScraper implements 
       throw new NewsArticleDataNotFoundError(`Linked data not found for URL ${url}`);
     }
 
-    const linkedData = JSON.parse(linkedDataText);
+    const rawLinkedData = JSON.parse(linkedDataText);
+    const linkedData = rawLinkedData['@graph'][1];
+    const categoryLinkedData = rawLinkedData['@graph'][0];
 
     // Content
     const content = await this.evaluateInDocument((document) => {
@@ -109,17 +111,17 @@ export default class ViceNewsNewsScraper extends AbstractNewsScraper implements 
 
     const article: NewsArticleType = {
       url: url,
-      title: linkedData['@graph'][1].headline,
+      title: linkedData.headline,
       multimediaType: NewsArticleMultimediaTypeEnum.TEXT,
       content: convert(content, {
         wordwrap: false,
       }),
       newsSiteArticleId: newsSiteArticleId,
-      publishedAt: new Date(linkedData['@graph'][1].datePublished),
-      modifiedAt: new Date(linkedData['@graph'][1].dateModified),
-      authors: [linkedData['@graph'][1].author],
-      categories: [linkedData['@graph'][0].itemListElement[1]],
-      imageUrl: linkedData['@graph'][1].image[0],
+      publishedAt: new Date(linkedData.datePublished),
+      modifiedAt: new Date(linkedData.dateModified),
+      authors: [linkedData.author],
+      categories: [categoryLinkedData.itemListElement[1]],
+      imageUrl: linkedData.image[0],
       languageCode: languageCode,
     };
 
