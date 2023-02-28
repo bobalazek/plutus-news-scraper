@@ -1,6 +1,5 @@
-import fetch from 'node-fetch';
-import { parse } from 'node-html-parser';
-import puppeteer, { Browser, Page, PuppeteerLaunchOptions } from 'puppeteer';
+import { JSDOM } from 'jsdom';
+import puppeteer, { Browser, Page, PuppeteerLaunchOptions, PuppeteerLifeCycleEvent } from 'puppeteer';
 
 import { Logger } from '../Services/Logger';
 import { PUPPETEER_EXECUTABLE_PATH } from '../Utils/Environment';
@@ -94,14 +93,29 @@ export abstract class AbstractNewsScraper {
   }
 
   /***** DOM *****/
-  async getDOMFromUrl(url: string) {
-    const response = await fetch(url);
-    const responseHtml = await response.text();
+  async getDocumentFromUrl(url: string) {
+    const dom = await JSDOM.fromURL(url);
 
-    return parse(responseHtml);
+    return dom.window.document;
   }
 
   /***** Helpers *****/
+  async goToPage(url: string, waitUntil?: PuppeteerLifeCycleEvent) {
+    const page = await this.getPuppeteerPage();
+
+    await page.goto(url, {
+      waitUntil,
+    });
+
+    return page;
+  }
+
+  async evaluateInDocument(callback: (document?: Document) => string) {
+    const page = await this.getPuppeteerPage();
+
+    return page.evaluate(callback);
+  }
+
   getUniqueArray<T>(array: T[]) {
     return [...new Set<T>(array)];
   }

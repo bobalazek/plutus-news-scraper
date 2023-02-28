@@ -5,6 +5,7 @@ import { NewsArticleType } from '../Schemas/NewsArticleSchema';
 import { NewsBasicArticleType } from '../Schemas/NewsBasicArticleSchema';
 import { NewsArticleMultimediaTypeEnum } from '../Types/NewsArticleMultimediaTypeEnum';
 import { NewsScraperInterface } from '../Types/NewsScraperInterface';
+import { sleep } from '../Utils/Helpers';
 import { AbstractNewsScraper } from './AbstractNewsScraper';
 
 export default class TheGuardianNewsScraper extends AbstractNewsScraper implements NewsScraperInterface {
@@ -34,7 +35,7 @@ export default class TheGuardianNewsScraper extends AbstractNewsScraper implemen
     for (const recentArticleListUrl of recentArticleListUrls) {
       this._logger.info(`Going to URL ${recentArticleListUrl} ...`);
 
-      await page.waitForTimeout(1000);
+      await sleep(1000);
       await page.goto(recentArticleListUrl, {
         waitUntil: 'domcontentloaded',
       });

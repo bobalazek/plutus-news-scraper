@@ -5,6 +5,7 @@ import { NewsArticleType } from '../Schemas/NewsArticleSchema';
 import { NewsBasicArticleType } from '../Schemas/NewsBasicArticleSchema';
 import { NewsArticleMultimediaTypeEnum } from '../Types/NewsArticleMultimediaTypeEnum';
 import { NewsScraperInterface } from '../Types/NewsScraperInterface';
+import { sleep } from '../Utils/Helpers';
 import { AbstractNewsScraper } from './AbstractNewsScraper';
 
 export default class TechCrunchNewsScraper extends AbstractNewsScraper implements NewsScraperInterface {
@@ -30,7 +31,7 @@ export default class TechCrunchNewsScraper extends AbstractNewsScraper implement
     for (const recentArticleListUrl of recentArticleListUrls) {
       this._logger.info(`Going to URL ${recentArticleListUrl} ...`);
 
-      await page.waitForTimeout(1000);
+      await sleep(1000);
       await page.goto(recentArticleListUrl, {
         waitUntil: 'domcontentloaded',
       });
@@ -41,7 +42,6 @@ export default class TechCrunchNewsScraper extends AbstractNewsScraper implement
       if ($consentPageDiv) {
         await page.click('#consent-page .actions button[value="agree"]');
 
-        await page.waitForTimeout(1000);
         await page.goto(recentArticleListUrl, {
           waitUntil: 'domcontentloaded',
         });
@@ -102,8 +102,6 @@ export default class TechCrunchNewsScraper extends AbstractNewsScraper implement
     });
     if ($consentPageDiv) {
       await page.click('#consent-page .actions button[value="agree"]');
-
-      const page = await this.getPuppeteerPage();
       await page.goto(url, {
         waitUntil: 'domcontentloaded',
       });
