@@ -5,7 +5,7 @@ import { NewsArticleType } from '../Schemas/NewsArticleSchema';
 import { NewsBasicArticleType } from '../Schemas/NewsBasicArticleSchema';
 import { NewsArticleMultimediaTypeEnum } from '../Types/NewsArticleMultimediaTypeEnum';
 import { NewsScraperInterface } from '../Types/NewsScraperInterface';
-import { sleep } from '../Utils/Helpers';
+import { getUniqueArray, sleep } from '../Utils/Helpers';
 import { AbstractNewsScraper } from './AbstractNewsScraper';
 
 export default class BarronsNewsScraper extends AbstractNewsScraper implements NewsScraperInterface {
@@ -48,7 +48,7 @@ export default class BarronsNewsScraper extends AbstractNewsScraper implements N
         waitUntil: 'domcontentloaded',
       });
 
-      const articleUrls = this.getUniqueArray(
+      const articleUrls = getUniqueArray(
         await this.evaluateInDocument((document) => {
           // Get all the possible (anchor) elements that have the links to articles
           const querySelector = [
@@ -85,7 +85,7 @@ export default class BarronsNewsScraper extends AbstractNewsScraper implements N
       }
     }
 
-    return Promise.resolve(this.getUniqueArray(basicArticles));
+    return Promise.resolve(getUniqueArray(basicArticles));
   }
 
   async scrapeArticle(basicArticle: NewsBasicArticleType): Promise<NewsArticleType> {

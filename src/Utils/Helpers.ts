@@ -41,3 +41,7 @@ export const getHashForNewsSiteAndQueue = (newsSite: string, queue: NewsScraperM
     )
     .digest('hex');
 };
+
+export const getUniqueArray = <T>(array: T[]) => {
+  return [...new Set<T>(array)];
+};

@@ -166,11 +166,6 @@ export abstract class AbstractNewsScraper {
     await page.waitForSelector(selector);
   }
 
-  // TODO: move that to the helpers
-  getUniqueArray<T>(array: T[]) {
-    return [...new Set<T>(array)];
-  }
-
   setLogger(logger: Logger) {
     this._logger = logger;
 
