@@ -8,32 +8,16 @@ import { NewsScraperInterface } from '../Types/NewsScraperInterface';
 import { sleep } from '../Utils/Helpers';
 import { AbstractNewsScraper } from './AbstractNewsScraper';
 
-export default class BloombergNewsScraper extends AbstractNewsScraper implements NewsScraperInterface {
-  key: string = 'bloomberg';
-  domain: string = 'www.bloomberg.com';
-  recentArticleListUrls: string[] = [
-    'https://www.bloomberg.com/',
-    'https://www.bloomberg.com/europe',
-    'https://www.bloomberg.com/uk',
-    'https://www.bloomberg.com/asia',
-    'https://www.bloomberg.com/middleeast',
-    'https://www.bloomberg.com/africa',
-    'https://www.bloomberg.com/markets',
-    'https://www.bloomberg.com/economics',
-    'https://www.bloomberg.com/industries',
-    'https://www.bloomberg.com/technology',
-    'https://www.bloomberg.com/politics',
-    'https://www.bloomberg.com/wealth',
-    'https://www.bloomberg.com/pursuits',
-    'https://www.bloomberg.com/green',
-    'https://www.bloomberg.com/crypto',
-  ];
+export default class HuffPostNewsScraper extends AbstractNewsScraper implements NewsScraperInterface {
+  key: string = 'huffpost';
+  domain: string = 'www.huffpost.com';
+  recentArticleListUrls: string[] = ['https://www.huffpost.com/news/', 'https://www.huffpost.com/news/politics'];
 
   async scrapeRecentArticles(urls?: string[]): Promise<NewsBasicArticleType[]> {
     const basicArticles: NewsBasicArticleType[] = [];
     const recentArticleListUrls = Array.isArray(urls) ? urls : this.recentArticleListUrls;
 
-    this._logger.info(`Starting to scrape the recent articles on Bloomberg ...`);
+    this._logger.info(`Starting to scrape the recent articles on  HuffPost...`);
 
     for (const recentArticleListUrl of recentArticleListUrls) {
       this._logger.info(`Going to URL ${recentArticleListUrl} ...`);
@@ -46,11 +30,7 @@ export default class BloombergNewsScraper extends AbstractNewsScraper implements
       const articleUrls = this.getUniqueArray(
         await this.evaluateInDocument((document) => {
           // Get all the possible (anchor) elements that have the links to articles
-          const querySelector = [
-            '.single-story-module article .single-story-module__info a.single-story-module__headline-link',
-            '.story-list-module .story-list-story .story-list-story__info__headline a.story-list-story__info__headline-link',
-            '.hub-zone-switch__content .story-package-module__story a.story-package-module__story__headline-link',
-          ].join(', ');
+          const querySelector = ['.a-page__content .card a.card__headline'].join(', ');
 
           // Fetch those with the .querySelectoAll() and convert it to an array
           const $elements = Array.from(document.querySelectorAll(querySelector));
@@ -60,13 +40,9 @@ export default class BloombergNewsScraper extends AbstractNewsScraper implements
             return $el.getAttribute('href') ?? ''; // Needs to have a '' (empty string) as a fallback, because otherwise it could be null, which we don't want
           });
         })
-      )
-        .filter((href) => {
-          return href !== ''; // Now we want to filter out any links that are '', just in case
-        })
-        .map((uri) => {
-          return `https://www.bloomberg.com${uri}`;
-        });
+      ).filter((href) => {
+        return href !== ''; // Now we want to filter out any links that are '', just in case
+      });
 
       this._logger.info(`Found ${articleUrls.length} articles on this page`);
 
@@ -96,11 +72,10 @@ export default class BloombergNewsScraper extends AbstractNewsScraper implements
       waitUntil: 'domcontentloaded',
     });
 
-    const newsSiteArticleId = url;
+    const urlSplit = url.split('_');
+    const urlId = urlSplit[urlSplit.length - 1];
 
-    const languageCode = await this.evaluateInDocument((document) => {
-      return document.querySelector('html')?.getAttribute('lang') ?? '';
-    });
+    const newsSiteArticleId = urlId ?? url;
 
     const linkedDataText = await this.evaluateInDocument((document) => {
       return document.querySelector('head script[type="application/ld+json"]')?.innerHTML ?? '';
@@ -113,7 +88,7 @@ export default class BloombergNewsScraper extends AbstractNewsScraper implements
 
     // Content
     const content = await this.evaluateInDocument((document) => {
-      return Array.from(document.querySelectorAll('article .body-content p'))
+      return Array.from(document.querySelectorAll('.entry__content-list-container .entry__content-list'))
         .map((element) => {
           return element.innerHTML;
         })
@@ -130,10 +105,10 @@ export default class BloombergNewsScraper extends AbstractNewsScraper implements
       newsSiteArticleId: newsSiteArticleId,
       publishedAt: new Date(linkedData.datePublished),
       modifiedAt: new Date(linkedData.dateModified),
-      authors: linkedData.author,
-      categories: linkedData.mentions,
-      imageUrl: linkedData.image[0],
-      languageCode: languageCode,
+      authors: [linkedData.author],
+      categories: [{ name: linkedData.articleSection }],
+      imageUrl: linkedData.image.url,
+      languageCode: linkedData.inLanguage,
     };
 
     return Promise.resolve(article);
