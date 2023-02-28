@@ -33,7 +33,7 @@ export default class CNETNewsScraper extends AbstractNewsScraper implements News
       });
 
       const articleUrls = this.getUniqueArray(
-        await this.evaluateInDocument(() => {
+        await this.evaluateInDocument((document) => {
           // Get all the possible (anchor) elements that have the links to articles
           const querySelector = [
             '.c-tileList a.o-linkOverlay',
@@ -89,11 +89,11 @@ export default class CNETNewsScraper extends AbstractNewsScraper implements News
       waitUntil: 'networkidle2',
     });
 
-    const newsSiteArticleId = await this.evaluateInDocument(() => {
+    const newsSiteArticleId = await this.evaluateInDocument((document) => {
       return document.querySelector('head meta[property="postId"]')?.getAttribute('content') ?? '';
     });
 
-    const categories = await this.evaluateInDocument(() => {
+    const categories = await this.evaluateInDocument((document) => {
       return Array.from(document.querySelectorAll(['#rbWrapper .contentWrap .c-head_breadcrumbs a'].join(', '))).map(
         ($a) => {
           return {
@@ -104,11 +104,11 @@ export default class CNETNewsScraper extends AbstractNewsScraper implements News
       );
     });
 
-    const languageCode = await this.evaluateInDocument(() => {
+    const languageCode = await this.evaluateInDocument((document) => {
       return document.querySelector('html')?.getAttribute('lang') ?? '';
     });
 
-    const linkedDataText = await this.evaluateInDocument(() => {
+    const linkedDataText = await this.evaluateInDocument((document) => {
       return document.querySelector('head script[type="application/ld+json"]')?.innerHTML ?? '';
     });
     if (!linkedDataText) {
@@ -118,7 +118,7 @@ export default class CNETNewsScraper extends AbstractNewsScraper implements News
     const linkedData = JSON.parse(linkedDataText);
 
     // Content
-    const content = await this.evaluateInDocument(() => {
+    const content = await this.evaluateInDocument((document) => {
       return Array.from(document.querySelectorAll('#article-body .article-main-body'))
         .map((element) => {
           return element.innerHTML;

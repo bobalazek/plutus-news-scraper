@@ -35,7 +35,7 @@ export default class TheEconomicTimesNewsScraper extends AbstractNewsScraper imp
       await this.goToPage(recentArticleListUrl, { waitUntil: 'domcontentloaded' });
 
       const articleUrls = this.getUniqueArray(
-        await this.evaluateInDocument(() => {
+        await this.evaluateInDocument((document) => {
           // Get all the possible (anchor) elements that have the links to articles
           const querySelector = [
             '.newsList li a',
@@ -99,11 +99,11 @@ export default class TheEconomicTimesNewsScraper extends AbstractNewsScraper imp
     const urlId = urlSplit[urlSplit.length - 1];
     const newsSiteArticleId = urlId.replace('.cms', '');
 
-    const languageCode = await this.evaluateInDocument(() => {
+    const languageCode = await this.evaluateInDocument((document) => {
       return document.querySelector('html')?.getAttribute('lang') ?? '';
     });
 
-    const linkedDataText = await this.evaluateInDocument(() => {
+    const linkedDataText = await this.evaluateInDocument((document) => {
       return document.querySelectorAll('body script[type="application/ld+json"]')[1].innerHTML ?? '';
     });
     if (!linkedDataText) {
@@ -113,7 +113,7 @@ export default class TheEconomicTimesNewsScraper extends AbstractNewsScraper imp
     const linkedData = JSON.parse(linkedDataText);
 
     // Content
-    const content = await this.evaluateInDocument(() => {
+    const content = await this.evaluateInDocument((document) => {
       return Array.from(document.querySelectorAll('.article_wrap .pageContent'))
         .map((element) => {
           return element.innerHTML;

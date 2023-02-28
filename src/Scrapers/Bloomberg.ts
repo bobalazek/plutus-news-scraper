@@ -44,7 +44,7 @@ export default class BloombergNewsScraper extends AbstractNewsScraper implements
       });
 
       const articleUrls = this.getUniqueArray(
-        await this.evaluateInDocument(() => {
+        await this.evaluateInDocument((document) => {
           // Get all the possible (anchor) elements that have the links to articles
           const querySelector = [
             '.single-story-module article .single-story-module__info a.single-story-module__headline-link',
@@ -98,7 +98,7 @@ export default class BloombergNewsScraper extends AbstractNewsScraper implements
 
     const newsSiteArticleId = url;
 
-    const linkedDataText = await this.evaluateInDocument(() => {
+    const linkedDataText = await this.evaluateInDocument((document) => {
       return document.querySelector('head script[type="application/ld+json"]')?.innerHTML ?? '';
     });
     if (!linkedDataText) {
@@ -108,7 +108,7 @@ export default class BloombergNewsScraper extends AbstractNewsScraper implements
     const linkedData = JSON.parse(linkedDataText);
 
     // Content
-    const content = await this.evaluateInDocument(() => {
+    const content = await this.evaluateInDocument((document) => {
       return Array.from(document.querySelectorAll('article .body-content p'))
         .map((element) => {
           return element.innerHTML;

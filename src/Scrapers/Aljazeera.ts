@@ -35,7 +35,7 @@ export default class AljazeeraNewsScraper extends AbstractNewsScraper implements
       });
 
       const articleUrls = this.getUniqueArray(
-        await this.evaluateInDocument(() => {
+        await this.evaluateInDocument((document) => {
           // Get all the possible (anchor) elements that have the links to articles
           const querySelector = ['#featured-news-container article a', '#news-feed-container article a'].join(', ');
 
@@ -83,11 +83,11 @@ export default class AljazeeraNewsScraper extends AbstractNewsScraper implements
       waitUntil: 'domcontentloaded',
     });
 
-    const newsSiteArticleId = await this.evaluateInDocument(() => {
+    const newsSiteArticleId = await this.evaluateInDocument((document) => {
       return document.querySelector('head meta[name="postID"]')?.getAttribute('content') ?? '';
     });
 
-    const categories = await this.evaluateInDocument(() => {
+    const categories = await this.evaluateInDocument((document) => {
       return Array.from(document.querySelectorAll(['#main-content-area .article-header .topics a'].join(', '))).map(
         ($a) => {
           return {
@@ -98,11 +98,11 @@ export default class AljazeeraNewsScraper extends AbstractNewsScraper implements
       );
     });
 
-    const languageCode = await this.evaluateInDocument(() => {
+    const languageCode = await this.evaluateInDocument((document) => {
       return document.querySelector('html')?.getAttribute('lang') ?? '';
     });
 
-    const linkedDataText = await this.evaluateInDocument(() => {
+    const linkedDataText = await this.evaluateInDocument((document) => {
       return document.querySelector('head script[type="application/ld+json"]')?.innerHTML ?? '';
     });
     if (!linkedDataText) {
@@ -112,7 +112,7 @@ export default class AljazeeraNewsScraper extends AbstractNewsScraper implements
     const linkedData = JSON.parse(linkedDataText);
 
     // Content
-    const content = await this.evaluateInDocument(() => {
+    const content = await this.evaluateInDocument((document) => {
       return Array.from(document.querySelectorAll('#main-content-area p'))
         .map((element) => {
           return element.innerHTML;

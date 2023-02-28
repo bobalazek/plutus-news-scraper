@@ -35,7 +35,7 @@ export default class MorningstarNewsScraper extends AbstractNewsScraper implemen
       });
 
       const articleUrls = this.getUniqueArray(
-        await this.evaluateInDocument(() => {
+        await this.evaluateInDocument((document) => {
           // Get all the possible (anchor) elements that have the links to articles
           const querySelector = [
             '.market-moment .mdc-carousel-item a.mdc-link',
@@ -90,17 +90,17 @@ export default class MorningstarNewsScraper extends AbstractNewsScraper implemen
     const urlId = urlSplit[urlSplit.length - 2];
     const newsSiteArticleId = urlId;
 
-    const title = await this.evaluateInDocument(() => {
+    const title = await this.evaluateInDocument((document) => {
       return document.querySelector('head meta[property="og:title"]')?.getAttribute('content') ?? '';
     });
-    const datePublished = await this.evaluateInDocument(() => {
+    const datePublished = await this.evaluateInDocument((document) => {
       return document.querySelector('head meta[property="og:article:published_time"]')?.getAttribute('content') ?? '';
     });
-    const dateModified = await this.evaluateInDocument(() => {
+    const dateModified = await this.evaluateInDocument((document) => {
       return document.querySelector('head meta[property="og:article:modified_time"]')?.getAttribute('content') ?? '';
     });
 
-    const authors = await this.evaluateInDocument(() => {
+    const authors = await this.evaluateInDocument((document) => {
       return Array.from(document.querySelectorAll(['.article__article-info .article__author a'].join(', '))).map(
         ($a) => {
           return {
@@ -110,16 +110,16 @@ export default class MorningstarNewsScraper extends AbstractNewsScraper implemen
         }
       );
     });
-    const imageUrl = await this.evaluateInDocument(() => {
+    const imageUrl = await this.evaluateInDocument((document) => {
       return document.querySelector('head meta[property="og:image"]')?.getAttribute('content') ?? '';
     });
 
-    const languageCode = await this.evaluateInDocument(() => {
+    const languageCode = await this.evaluateInDocument((document) => {
       return document.querySelector('html')?.getAttribute('lang') ?? '';
     });
 
     // Content
-    const content = await this.evaluateInDocument(() => {
+    const content = await this.evaluateInDocument((document) => {
       return Array.from(document.querySelectorAll('.article__container .article__body'))
         .map((element) => {
           return element.innerHTML;

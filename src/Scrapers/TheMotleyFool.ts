@@ -28,7 +28,7 @@ export default class TheMotleyFoolNewsScraper extends AbstractNewsScraper implem
       });
 
       const articleUrls = this.getUniqueArray(
-        await this.evaluateInDocument(() => {
+        await this.evaluateInDocument((document) => {
           // Get all the possible (anchor) elements that have the links to articles
           const querySelector = ['#main-content article a', '.content-container div a:has(h5)'].join(', ');
 
@@ -76,19 +76,19 @@ export default class TheMotleyFoolNewsScraper extends AbstractNewsScraper implem
       waitUntil: 'domcontentloaded',
     });
 
-    const newsSiteArticleId = await this.evaluateInDocument(() => {
+    const newsSiteArticleId = await this.evaluateInDocument((document) => {
       return document.querySelector('head meta[name="article_uuid"]')?.getAttribute('content') ?? '';
     });
 
-    const categoryName = await this.evaluateInDocument(() => {
+    const categoryName = await this.evaluateInDocument((document) => {
       return document.querySelector('head meta[property="article:section"]')?.getAttribute('content') ?? '';
     });
 
-    const languageCode = await this.evaluateInDocument(() => {
+    const languageCode = await this.evaluateInDocument((document) => {
       return document.querySelector('html')?.getAttribute('lang') ?? '';
     });
 
-    const linkedDataText = await this.evaluateInDocument(() => {
+    const linkedDataText = await this.evaluateInDocument((document) => {
       return document.querySelector('head script[type="application/ld+json"]')?.innerHTML ?? '';
     });
     if (!linkedDataText) {
@@ -98,7 +98,7 @@ export default class TheMotleyFoolNewsScraper extends AbstractNewsScraper implem
     const linkedData = JSON.parse(linkedDataText);
 
     // Content
-    const content = await this.evaluateInDocument(() => {
+    const content = await this.evaluateInDocument((document) => {
       return Array.from(document.querySelectorAll('.content-container .tailwind-article-body'))
         .map((element) => {
           return element.innerHTML;

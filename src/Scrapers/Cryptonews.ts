@@ -32,7 +32,7 @@ export default class CryptonewsNewsScraper extends AbstractNewsScraper implement
       });
 
       const articleUrls = this.getUniqueArray(
-        await this.evaluateInDocument(() => {
+        await this.evaluateInDocument((document) => {
           // Get all the possible (anchor) elements that have the links to articles
           const querySelector = [
             '.category_contents_details a.article__title',
@@ -85,7 +85,7 @@ export default class CryptonewsNewsScraper extends AbstractNewsScraper implement
 
     const newsSiteArticleId = url;
 
-    const categories = await this.evaluateInDocument(() => {
+    const categories = await this.evaluateInDocument((document) => {
       return Array.from(document.querySelectorAll(['main .container .breadcrumbs a:nth-child(2)'].join(', '))).map(
         ($a) => {
           return {
@@ -96,11 +96,11 @@ export default class CryptonewsNewsScraper extends AbstractNewsScraper implement
       );
     });
 
-    const languageCode = await this.evaluateInDocument(() => {
+    const languageCode = await this.evaluateInDocument((document) => {
       return document.querySelector('html')?.getAttribute('lang') ?? '';
     });
 
-    const linkedDataText = await this.evaluateInDocument(() => {
+    const linkedDataText = await this.evaluateInDocument((document) => {
       return document.querySelectorAll('body script[type="application/ld+json"]')[1].innerHTML ?? '';
     });
     if (!linkedDataText) {
@@ -110,7 +110,7 @@ export default class CryptonewsNewsScraper extends AbstractNewsScraper implement
     const linkedData = JSON.parse(linkedDataText);
 
     // Content
-    const content = await this.evaluateInDocument(() => {
+    const content = await this.evaluateInDocument((document) => {
       return Array.from(document.querySelectorAll('.article-single__content p'))
         .map((element) => {
           return element.innerHTML;

@@ -33,7 +33,7 @@ export default class ForbesNewsScraper extends AbstractNewsScraper implements Ne
       });
 
       const articleUrls = this.getUniqueArray(
-        await this.evaluateInDocument(() => {
+        await this.evaluateInDocument((document) => {
           // Get all the possible (anchor) elements that have the links to articles
           const querySelector = [
             '.channel__content .card a.headlink',
@@ -79,21 +79,21 @@ export default class ForbesNewsScraper extends AbstractNewsScraper implements Ne
       waitUntil: 'networkidle2',
     });
 
-    const newsSiteArticleId = await this.evaluateInDocument(() => {
+    const newsSiteArticleId = await this.evaluateInDocument((document) => {
       const articleId = document.querySelector('head meta[property="article:id"]')?.getAttribute('content') ?? '';
       const articleIdSplit = articleId.split('/');
       return articleIdSplit[articleIdSplit.length - 1];
     });
 
-    const categoryUrl = await this.evaluateInDocument(() => {
+    const categoryUrl = await this.evaluateInDocument((document) => {
       return document.querySelector('head meta[property="article:section_url"]')?.getAttribute('content') ?? '';
     });
 
-    const languageCode = await this.evaluateInDocument(() => {
+    const languageCode = await this.evaluateInDocument((document) => {
       return document.querySelector('html')?.getAttribute('lang') ?? '';
     });
 
-    const linkedDataText = await this.evaluateInDocument(() => {
+    const linkedDataText = await this.evaluateInDocument((document) => {
       return document.querySelector('head script[type="application/ld+json"]')?.innerHTML ?? '';
     });
     if (!linkedDataText) {
@@ -103,7 +103,7 @@ export default class ForbesNewsScraper extends AbstractNewsScraper implements Ne
     const linkedData = JSON.parse(linkedDataText);
 
     // Content
-    const content = await this.evaluateInDocument(() => {
+    const content = await this.evaluateInDocument((document) => {
       return Array.from(document.querySelectorAll('.article-body p'))
         .map((element) => {
           return element.innerHTML;

@@ -31,7 +31,7 @@ export default class CointelegraphNewsScraper extends AbstractNewsScraper implem
       });
 
       const articleUrls = this.getUniqueArray(
-        await this.evaluateInDocument(() => {
+        await this.evaluateInDocument((document) => {
           // Get all the possible (anchor) elements that have the links to articles
           const querySelector = [
             '.category-page li.posts-listing__item a.post-card-inline__title-link',
@@ -83,15 +83,15 @@ export default class CointelegraphNewsScraper extends AbstractNewsScraper implem
       waitUntil: 'domcontentloaded',
     });
 
-    const newsSiteArticleId = await this.evaluateInDocument(() => {
+    const newsSiteArticleId = await this.evaluateInDocument((document) => {
       return document.querySelector('article.post__article')?.getAttribute('id')?.replace('article-', '') ?? '';
     });
 
-    const languageCode = await this.evaluateInDocument(() => {
+    const languageCode = await this.evaluateInDocument((document) => {
       return document.querySelector('html')?.getAttribute('lang') ?? '';
     });
 
-    const linkedDataText = await this.evaluateInDocument(() => {
+    const linkedDataText = await this.evaluateInDocument((document) => {
       return document.querySelector('head script[type="application/ld+json"]')?.innerHTML ?? '';
     });
     if (!linkedDataText) {
@@ -101,7 +101,7 @@ export default class CointelegraphNewsScraper extends AbstractNewsScraper implem
     const linkedData = JSON.parse(linkedDataText);
 
     // Content
-    const content = await this.evaluateInDocument(() => {
+    const content = await this.evaluateInDocument((document) => {
       return Array.from(document.querySelectorAll('article .post-content'))
         .map((element) => {
           return element.innerHTML;

@@ -37,7 +37,7 @@ export default class DWNewsScraper extends AbstractNewsScraper implements NewsSc
       });
 
       const articleUrls = this.getUniqueArray(
-        await this.evaluateInDocument(() => {
+        await this.evaluateInDocument((document) => {
           // Get all the possible (anchor) elements that have the links to articles
           const querySelector = [
             '.content-blocks section[id^="top-story-"] h3 a',
@@ -97,11 +97,11 @@ export default class DWNewsScraper extends AbstractNewsScraper implements NewsSc
 
     const newsSiteArticleId = urlId ?? url;
 
-    const languageCode = await this.evaluateInDocument(() => {
+    const languageCode = await this.evaluateInDocument((document) => {
       return document.querySelector('html')?.getAttribute('lang') ?? '';
     });
 
-    const linkedDataText = await this.evaluateInDocument(() => {
+    const linkedDataText = await this.evaluateInDocument((document) => {
       return document.querySelector('head script[type="application/ld+json"]')?.innerHTML ?? '';
     });
     if (!linkedDataText) {
@@ -111,7 +111,7 @@ export default class DWNewsScraper extends AbstractNewsScraper implements NewsSc
     const linkedData = JSON.parse(linkedDataText);
 
     // Content
-    const content = await this.evaluateInDocument(() => {
+    const content = await this.evaluateInDocument((document) => {
       return Array.from(document.querySelectorAll('article .page .content-area'))
         .map((element) => {
           return element.innerHTML;

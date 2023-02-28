@@ -31,7 +31,7 @@ export default class TheStreetNewsScraper extends AbstractNewsScraper implements
       });
 
       const articleUrls = this.getUniqueArray(
-        await this.evaluateInDocument(() => {
+        await this.evaluateInDocument((document) => {
           // Get all the possible (anchor) elements that have the links to articles
           const querySelector = [
             '.featured-categories .featured-categories__item a',
@@ -91,11 +91,11 @@ export default class TheStreetNewsScraper extends AbstractNewsScraper implements
     const categoryUrlSplit = url;
     const categoryUrl = categoryUrlSplit.substring(0, url.lastIndexOf('/'));
 
-    const languageCode = await this.evaluateInDocument(() => {
+    const languageCode = await this.evaluateInDocument((document) => {
       return document.querySelector('html')?.getAttribute('lang') ?? '';
     });
 
-    const linkedDataText = await this.evaluateInDocument(() => {
+    const linkedDataText = await this.evaluateInDocument((document) => {
       return document.querySelector('head script[type="application/ld+json"]')?.innerHTML ?? '';
     });
     if (!linkedDataText) {

@@ -39,7 +39,7 @@ export default class TheWallStreetJournalNewsScraper extends AbstractNewsScraper
       });
 
       const articleUrls = this.getUniqueArray(
-        await this.evaluateInDocument(() => {
+        await this.evaluateInDocument((document) => {
           // Get all the possible (anchor) elements that have the links to articles
           const querySelector = [
             '#top-news div[class^="WSJTheme--headline--"] a',
@@ -92,7 +92,7 @@ export default class TheWallStreetJournalNewsScraper extends AbstractNewsScraper
 
     const newsSiteArticleId = slugSplit[slugSplit.length - 1];
 
-    const categories = await this.evaluateInDocument(() => {
+    const categories = await this.evaluateInDocument((document) => {
       return Array.from(
         document.querySelectorAll(['.article_header .category li.article-breadCrumb a'].join(', '))
       ).map(($a) => {
@@ -103,11 +103,11 @@ export default class TheWallStreetJournalNewsScraper extends AbstractNewsScraper
       });
     });
 
-    const languageCode = await this.evaluateInDocument(() => {
+    const languageCode = await this.evaluateInDocument((document) => {
       return document.querySelector('html')?.getAttribute('lang') ?? '';
     });
 
-    const linkedDataText = await this.evaluateInDocument(() => {
+    const linkedDataText = await this.evaluateInDocument((document) => {
       return document.querySelector('head script[type="application/ld+json"]')?.innerHTML ?? '';
     });
     if (!linkedDataText) {
@@ -117,7 +117,7 @@ export default class TheWallStreetJournalNewsScraper extends AbstractNewsScraper
     const linkedData = JSON.parse(linkedDataText)[0];
 
     // Content
-    const content = await this.evaluateInDocument(() => {
+    const content = await this.evaluateInDocument((document) => {
       return Array.from(document.querySelectorAll('#main .wsj-snippet-body p'))
         .map((element) => {
           return element.innerHTML;

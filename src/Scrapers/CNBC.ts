@@ -32,7 +32,7 @@ export default class CNBCNewsScraper extends AbstractNewsScraper implements News
       });
 
       const articleUrls = this.getUniqueArray(
-        await this.evaluateInDocument(() => {
+        await this.evaluateInDocument((document) => {
           // Get all the possible (anchor) elements that have the links to articles
           const querySelector = ['.Card-textContent a.Card-title'].join(', ');
 
@@ -76,22 +76,22 @@ export default class CNBCNewsScraper extends AbstractNewsScraper implements News
       waitUntil: 'networkidle2',
     });
 
-    const newsSiteArticleId = await this.evaluateInDocument(() => {
+    const newsSiteArticleId = await this.evaluateInDocument((document) => {
       return document.querySelector('head meta[property="pageNodeId"]')?.getAttribute('content') ?? '';
     });
-    const datePublished = await this.evaluateInDocument(() => {
+    const datePublished = await this.evaluateInDocument((document) => {
       return document.querySelector('head meta[itemprop="dateCreated"]')?.getAttribute('content') ?? '';
     });
-    const dateModified = await this.evaluateInDocument(() => {
+    const dateModified = await this.evaluateInDocument((document) => {
       return document.querySelector('head meta[itemprop="dateModified"]')?.getAttribute('content') ?? '';
     });
-    const title = await this.evaluateInDocument(() => {
+    const title = await this.evaluateInDocument((document) => {
       return document.querySelector('head meta[property="og:title"]')?.getAttribute('content') ?? '';
     });
-    const authorName = await this.evaluateInDocument(() => {
+    const authorName = await this.evaluateInDocument((document) => {
       return document.querySelector('meta[name="author"]')?.getAttribute('content') ?? '';
     });
-    const authorUrl = await this.evaluateInDocument(() => {
+    const authorUrl = await this.evaluateInDocument((document) => {
       return (
         document
           .querySelector(['.ArticleHeader-author .Author-authorNameAndSocial a.Author-authorName'].join(', '))
@@ -100,7 +100,7 @@ export default class CNBCNewsScraper extends AbstractNewsScraper implements News
     });
 
     //TODO categories appear empty
-    const categories = await this.evaluateInDocument(() => {
+    const categories = await this.evaluateInDocument((document) => {
       return Array.from(
         document.querySelectorAll(
           ['.ArticleHeader-headerContentContainer .ArticleHeader-wrapper a.articleHeader-eyebrow'].join(', ')
@@ -112,16 +112,16 @@ export default class CNBCNewsScraper extends AbstractNewsScraper implements News
         };
       });
     });
-    const imageUrl = await this.evaluateInDocument(() => {
+    const imageUrl = await this.evaluateInDocument((document) => {
       return document.querySelector('head meta[property="og:image"]')?.getAttribute('content') ?? '';
     });
 
-    const languageCode = await this.evaluateInDocument(() => {
+    const languageCode = await this.evaluateInDocument((document) => {
       return document.querySelector('html')?.getAttribute('lang') ?? '';
     });
 
     // Content
-    const content = await this.evaluateInDocument(() => {
+    const content = await this.evaluateInDocument((document) => {
       return Array.from(document.querySelectorAll('.PageBuilder-article .ArticleBody-articleBody'))
         .map((element) => {
           return element.innerHTML;

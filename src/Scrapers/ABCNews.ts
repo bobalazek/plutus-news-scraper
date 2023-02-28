@@ -36,7 +36,7 @@ export default class ABCNewsNewsScraper extends AbstractNewsScraper implements N
       });
 
       const articleUrls = this.getUniqueArray(
-        await this.evaluateInDocument(() => {
+        await this.evaluateInDocument((document) => {
           // Get all the possible (anchor) elements that have the links to articles
           const querySelector = [
             '.ContentList a.AnchorLink',
@@ -91,11 +91,11 @@ export default class ABCNewsNewsScraper extends AbstractNewsScraper implements N
     const urlId = urlSplit[urlSplit.length - 1];
     const newsSiteArticleId = urlId.includes('?id=') ? urlId.split('?id=')[1] : urlId;
 
-    const languageCode = await this.evaluateInDocument(() => {
+    const languageCode = await this.evaluateInDocument((document) => {
       return document.querySelector('html')?.getAttribute('lang') ?? '';
     });
 
-    const linkedDataText = await this.evaluateInDocument(() => {
+    const linkedDataText = await this.evaluateInDocument((document) => {
       return document.querySelector('head script[type="application/ld+json"]')?.innerHTML ?? '';
     });
     if (!linkedDataText) {
@@ -105,7 +105,7 @@ export default class ABCNewsNewsScraper extends AbstractNewsScraper implements N
     const linkedData = JSON.parse(linkedDataText);
 
     // Content
-    const content = await this.evaluateInDocument(() => {
+    const content = await this.evaluateInDocument((document) => {
       return Array.from(document.querySelectorAll('article[data-testid="prism-article-body"] p'))
         .map((element) => {
           return element.innerHTML;

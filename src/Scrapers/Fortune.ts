@@ -38,7 +38,7 @@ export default class FortuneNewsScraper extends AbstractNewsScraper implements N
       });
 
       const articleUrls = this.getUniqueArray(
-        await this.evaluateInDocument(() => {
+        await this.evaluateInDocument((document) => {
           // Get all the possible (anchor) elements that have the links to articles
           const querySelector = ['a[aria-label^="Go to full article"]'].join(', ');
 
@@ -82,11 +82,11 @@ export default class FortuneNewsScraper extends AbstractNewsScraper implements N
       waitUntil: 'networkidle2',
     });
 
-    const languageCode = await this.evaluateInDocument(() => {
+    const languageCode = await this.evaluateInDocument((document) => {
       return document.querySelector('html')?.getAttribute('lang') ?? '';
     });
 
-    const linkedDataText = await this.evaluateInDocument(() => {
+    const linkedDataText = await this.evaluateInDocument((document) => {
       return document.querySelector('head script[type="application/ld+json"]')?.innerHTML ?? '';
     });
     if (!linkedDataText) {
@@ -97,7 +97,7 @@ export default class FortuneNewsScraper extends AbstractNewsScraper implements N
 
     const newsSiteArticleId = linkedData.identifier + ''; // .identifier in this case is a number, so we convert it into a string
 
-    const nextDataText = await this.evaluateInDocument(() => {
+    const nextDataText = await this.evaluateInDocument((document) => {
       return document.querySelector('body script#__NEXT_DATA__')?.innerHTML ?? '';
     });
     if (!nextDataText) {
@@ -107,7 +107,7 @@ export default class FortuneNewsScraper extends AbstractNewsScraper implements N
     const nextData = JSON.parse(nextDataText);
 
     // Content
-    const content = await this.evaluateInDocument(() => {
+    const content = await this.evaluateInDocument((document) => {
       return Array.from(document.querySelectorAll('#content p'))
         .map((element) => {
           return element.innerHTML;

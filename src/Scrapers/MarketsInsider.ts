@@ -35,7 +35,7 @@ export default class MarketsInsiderNewsScraper extends AbstractNewsScraper imple
       });
 
       const articleUrls = this.getUniqueArray(
-        await this.evaluateInDocument(() => {
+        await this.evaluateInDocument((document) => {
           // Get all the possible (anchor) elements that have the links to articles
           const querySelector = [
             '.top-story .top-story__story a.top-story__link',
@@ -88,11 +88,11 @@ export default class MarketsInsiderNewsScraper extends AbstractNewsScraper imple
       waitUntil: 'networkidle2',
     });
 
-    const newsSiteArticleId = await this.evaluateInDocument(() => {
+    const newsSiteArticleId = await this.evaluateInDocument((document) => {
       return document.querySelector('head meta[name="viking-id"]')?.getAttribute('value') ?? '';
     });
 
-    const categories = await this.evaluateInDocument(() => {
+    const categories = await this.evaluateInDocument((document) => {
       return Array.from(document.querySelectorAll(['.post-meta .post-breadcrumbs a:last-child'].join(', '))).map(
         ($a) => {
           return {
@@ -103,11 +103,11 @@ export default class MarketsInsiderNewsScraper extends AbstractNewsScraper imple
       );
     });
 
-    const languageCode = await this.evaluateInDocument(() => {
+    const languageCode = await this.evaluateInDocument((document) => {
       return document.querySelector('html')?.getAttribute('lang') ?? '';
     });
 
-    const linkedDataText = await this.evaluateInDocument(() => {
+    const linkedDataText = await this.evaluateInDocument((document) => {
       return document.querySelector('head script[type="application/ld+json"]')?.innerHTML ?? '';
     });
     if (!linkedDataText) {

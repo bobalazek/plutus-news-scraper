@@ -32,7 +32,7 @@ export default class NewYorkPostNewsScraper extends AbstractNewsScraper implemen
       });
 
       const articleUrls = this.getUniqueArray(
-        await this.evaluateInDocument(() => {
+        await this.evaluateInDocument((document) => {
           // Get all the possible (anchor) elements that have the links to articles
           const querySelector = ['.story h2 a', '.the-latest__stories .story a'].join(', ');
 
@@ -76,7 +76,7 @@ export default class NewYorkPostNewsScraper extends AbstractNewsScraper implemen
       waitUntil: 'domcontentloaded',
     });
 
-    const parsleyMetadataText = await this.evaluateInDocument(() => {
+    const parsleyMetadataText = await this.evaluateInDocument((document) => {
       return document.querySelector('head meta[name="parsely-metadata"]')?.getAttribute('content') ?? '';
     });
     if (!parsleyMetadataText) {
@@ -87,15 +87,15 @@ export default class NewYorkPostNewsScraper extends AbstractNewsScraper implemen
 
     const newsSiteArticleId = parsleyMetadata.post_id.replace('nypost-', '');
 
-    const categoryUrl = await this.evaluateInDocument(() => {
+    const categoryUrl = await this.evaluateInDocument((document) => {
       return document.querySelector('.article-header a')?.getAttribute('href') ?? '';
     });
 
-    const languageCode = await this.evaluateInDocument(() => {
+    const languageCode = await this.evaluateInDocument((document) => {
       return document.querySelector('html')?.getAttribute('lang') ?? '';
     });
 
-    const linkedDataText = await this.evaluateInDocument(() => {
+    const linkedDataText = await this.evaluateInDocument((document) => {
       return document.querySelector('head script[type="application/ld+json"]')?.innerHTML ?? '';
     });
     if (!linkedDataText) {
@@ -105,7 +105,7 @@ export default class NewYorkPostNewsScraper extends AbstractNewsScraper implemen
     const linkedData = JSON.parse(linkedDataText);
 
     // Content
-    const content = await this.evaluateInDocument(() => {
+    const content = await this.evaluateInDocument((document) => {
       return Array.from(document.querySelectorAll('#main .single__content'))
         .map((element) => {
           return element.innerHTML;

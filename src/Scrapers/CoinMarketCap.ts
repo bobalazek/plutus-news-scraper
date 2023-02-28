@@ -29,7 +29,7 @@ export default class CoinMarketCapNewsScraper extends AbstractNewsScraper implem
       });
 
       const articleUrls = this.getUniqueArray(
-        await this.evaluateInDocument(() => {
+        await this.evaluateInDocument((document) => {
           // Get all the possible (anchor) elements that have the links to articles
           const querySelector = ['#__next .hero main a[href^="/community/articles/"]'].join(', ');
 
@@ -81,19 +81,19 @@ export default class CoinMarketCapNewsScraper extends AbstractNewsScraper implem
     const urlId = urlSplit[urlSplit.length - 2];
     const newsSiteArticleId = urlId;
 
-    const headline = await this.evaluateInDocument(() => {
+    const headline = await this.evaluateInDocument((document) => {
       return document.querySelector('head meta[property="og:title"]')?.getAttribute('content') ?? '';
     });
 
-    const datePublished = await this.evaluateInDocument(() => {
+    const datePublished = await this.evaluateInDocument((document) => {
       return document.querySelector('body')?.getAttribute('data-commit-time') ?? '';
     });
 
-    const dateModified = await this.evaluateInDocument(() => {
+    const dateModified = await this.evaluateInDocument((document) => {
       return document.querySelector('body')?.getAttribute('data-commit-time') ?? '';
     });
 
-    const authors = await this.evaluateInDocument(() => {
+    const authors = await this.evaluateInDocument((document) => {
       return Array.from(document.querySelectorAll(['body a > a.name'].join(', '))).map(($a) => {
         return {
           name: $a.innerHTML ?? '',
@@ -102,16 +102,16 @@ export default class CoinMarketCapNewsScraper extends AbstractNewsScraper implem
       });
     });
 
-    const imageUrl = await this.evaluateInDocument(() => {
+    const imageUrl = await this.evaluateInDocument((document) => {
       return document.querySelector('head meta[property="og:image"]')?.getAttribute('content') ?? '';
     });
 
-    const languageCode = await this.evaluateInDocument(() => {
+    const languageCode = await this.evaluateInDocument((document) => {
       return document.querySelector('html')?.getAttribute('lang') ?? '';
     });
 
     // Content
-    const content = await this.evaluateInDocument(() => {
+    const content = await this.evaluateInDocument((document) => {
       return Array.from(document.querySelectorAll('#__next article'))
         .map((element) => {
           return element.innerHTML;

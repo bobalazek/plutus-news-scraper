@@ -36,7 +36,7 @@ export default class TheNewYorkTimesNewsScraper extends AbstractNewsScraper impl
       });
 
       const articleUrls = this.getUniqueArray(
-        await this.evaluateInDocument(() => {
+        await this.evaluateInDocument((document) => {
           // Get all the possible (anchor) elements that have the links to articles
           const querySelector = [
             '#site-content .story-wrapper a',
@@ -88,19 +88,19 @@ export default class TheNewYorkTimesNewsScraper extends AbstractNewsScraper impl
       waitUntil: 'domcontentloaded',
     });
 
-    const newsSiteArticleId = await this.evaluateInDocument(() => {
+    const newsSiteArticleId = await this.evaluateInDocument((document) => {
       return document.querySelector('head meta[name="articleid"]')?.getAttribute('content') ?? '';
     });
 
-    const categoryName = await this.evaluateInDocument(() => {
+    const categoryName = await this.evaluateInDocument((document) => {
       return document.querySelector('head meta[property="article:section"]')?.getAttribute('content') ?? '';
     });
 
-    const languageCode = await this.evaluateInDocument(() => {
+    const languageCode = await this.evaluateInDocument((document) => {
       return document.querySelector('html')?.getAttribute('lang') ?? '';
     });
 
-    const linkedDataText = await this.evaluateInDocument(() => {
+    const linkedDataText = await this.evaluateInDocument((document) => {
       return document.querySelector('head script[type="application/ld+json"]')?.innerHTML ?? '';
     });
     if (!linkedDataText) {
@@ -110,7 +110,7 @@ export default class TheNewYorkTimesNewsScraper extends AbstractNewsScraper impl
     const linkedData = JSON.parse(linkedDataText);
 
     // Content
-    const content = await this.evaluateInDocument(() => {
+    const content = await this.evaluateInDocument((document) => {
       return Array.from(document.querySelectorAll('article p'))
         .map((element) => {
           return element.innerHTML;

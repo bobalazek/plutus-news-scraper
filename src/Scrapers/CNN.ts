@@ -32,7 +32,7 @@ export default class CNNNewsScraper extends AbstractNewsScraper implements NewsS
       });
 
       const articleUrls = this.getUniqueArray(
-        await this.evaluateInDocument(() => {
+        await this.evaluateInDocument((document) => {
           // Get all the possible (anchor) elements that have the links to articles
           const querySelector = ['.layout__main  .card a', '.zn__containers article a'].join(', ');
 
@@ -80,7 +80,7 @@ export default class CNNNewsScraper extends AbstractNewsScraper implements NewsS
       waitUntil: 'networkidle2',
     });
 
-    const linkedDataText = await this.evaluateInDocument(() => {
+    const linkedDataText = await this.evaluateInDocument((document) => {
       return document.querySelector('head script[type="application/ld+json"]')?.innerHTML ?? '';
     });
     if (!linkedDataText) {

@@ -38,7 +38,7 @@ export default class SeekingAlphaNewsScraper extends AbstractNewsScraper impleme
       });
 
       const articleUrls = this.getUniqueArray(
-        await this.evaluateInDocument(() => {
+        await this.evaluateInDocument((document) => {
           // Get all the possible (anchor) elements that have the links to articles
           const querySelector = [
             'div[data-test-id="trending-news-cards-body"] a[data-test-id="post-list-item-title"]',
@@ -96,7 +96,7 @@ export default class SeekingAlphaNewsScraper extends AbstractNewsScraper impleme
 
     const newsSiteArticleId = slugSplit[0];
 
-    const linkedDataText = await this.evaluateInDocument(() => {
+    const linkedDataText = await this.evaluateInDocument((document) => {
       return document.querySelector('body script[type="application/ld+json"]:nth-child(2)')?.innerHTML ?? '';
     });
     if (!linkedDataText) {
@@ -106,7 +106,7 @@ export default class SeekingAlphaNewsScraper extends AbstractNewsScraper impleme
     const linkedData = JSON.parse(linkedDataText);
 
     // Content
-    const content = await this.evaluateInDocument(() => {
+    const content = await this.evaluateInDocument((document) => {
       return Array.from(document.querySelectorAll('div[class^="paywall-full-"]'))
         .map((element) => {
           return element.innerHTML;

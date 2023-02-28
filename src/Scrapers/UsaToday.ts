@@ -35,7 +35,7 @@ export default class UsaTodayNewsScraper extends AbstractNewsScraper implements 
       });
 
       const articleUrls = this.getUniqueArray(
-        await this.evaluateInDocument(() => {
+        await this.evaluateInDocument((document) => {
           // Get all the possible (anchor) elements that have the links to articles
           const querySelector = ['#header #heroStoryContainer a', '.page-main-content-container a'].join(', ');
 
@@ -87,7 +87,7 @@ export default class UsaTodayNewsScraper extends AbstractNewsScraper implements 
     const urlId = urlSplit[urlSplit.length - 2];
     const newsSiteArticleId = urlId;
 
-    const categories = await this.evaluateInDocument(() => {
+    const categories = await this.evaluateInDocument((document) => {
       return Array.from(document.querySelectorAll(['#content .story story-emphasis'].join(', '))).map(($a) => {
         return {
           name: $a.getAttribute('section') ?? '',
@@ -96,11 +96,11 @@ export default class UsaTodayNewsScraper extends AbstractNewsScraper implements 
       });
     });
 
-    const languageCode = await this.evaluateInDocument(() => {
+    const languageCode = await this.evaluateInDocument((document) => {
       return document.querySelector('html')?.getAttribute('lang') ?? '';
     });
 
-    const linkedDataText = await this.evaluateInDocument(() => {
+    const linkedDataText = await this.evaluateInDocument((document) => {
       return document.querySelector('head script[type="application/ld+json"]')?.innerHTML ?? '';
     });
     if (!linkedDataText) {
@@ -110,7 +110,7 @@ export default class UsaTodayNewsScraper extends AbstractNewsScraper implements 
     const linkedData = JSON.parse(linkedDataText);
 
     // Content
-    const content = await this.evaluateInDocument(() => {
+    const content = await this.evaluateInDocument((document) => {
       return Array.from(document.querySelectorAll('#content article.story p'))
         .map((element) => {
           return element.innerHTML;

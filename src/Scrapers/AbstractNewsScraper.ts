@@ -5,11 +5,15 @@ import { Logger } from '../Services/Logger';
 import { PUPPETEER_EXECUTABLE_PATH } from '../Utils/Environment';
 
 export abstract class AbstractNewsScraper {
+  public useJSDOM: boolean = false;
+
   protected _logger!: Logger;
+
   private _puppeteerBrowser?: Browser;
   private _puppteerPagesMap: Map<string, Page> = new Map();
   private _puppeteerHeadful: boolean = false;
   private _puppeteerPreventClose: boolean = false;
+  private _jsdomDocument: Document | null = null;
 
   /***** Puppeteer ******/
   async getPuppeteerBrowser(options?: PuppeteerLaunchOptions) {
@@ -89,30 +93,80 @@ export abstract class AbstractNewsScraper {
   }
 
   /***** Helpers *****/
-  async goToPage(url: string, args?: WaitForOptions) {
+  async goToPage(url: string, args?: WaitForOptions): Promise<void> {
+    if (this.useJSDOM) {
+      this._jsdomDocument = await this.getJSDOMDocumentFromUrl(url);
+
+      return;
+    }
+
     const page = await this.getPuppeteerPage();
 
-    return page.goto(url, args);
+    await page.goto(url, args);
   }
 
-  async evaluateInDocument<T>(callback: (document?: Document) => T) {
+  async evaluateInDocument<T>(callback: (document: Document) => T): Promise<Awaited<T>> {
+    if (this.useJSDOM) {
+      if (!this._jsdomDocument) {
+        throw new Error(`You will need to call the this.goToPage() first, before being able to call this`);
+      }
+
+      return Promise.resolve(
+        (async (document) => {
+          return await callback(document);
+        })(this._jsdomDocument)
+      );
+    }
+
     const page = await this.getPuppeteerPage();
 
-    return page.evaluate(callback);
+    const documentHandle = await page.evaluateHandle(() => document);
+    const callbackString = `(${callback.toString()})(document)`;
+    const resultHandle = await page.evaluateHandle(callbackString, documentHandle);
+    const result = await resultHandle.jsonValue();
+    await resultHandle.dispose();
+    await documentHandle.dispose();
+
+    return result as Awaited<T>;
   }
 
-  async clickOnPage(selector: string) {
+  async clickOnPage(selector: string): Promise<void> {
+    if (this.useJSDOM) {
+      if (!this._jsdomDocument) {
+        throw new Error(`You will need to call the this.goToPage() first, before being able to call this`);
+      }
+
+      const event = new Event('click', { bubbles: false, cancelable: false, composed: false });
+      const element = this._jsdomDocument.querySelector(selector);
+      if (!element) {
+        throw new Error(`Click element not found`);
+      }
+
+      element.dispatchEvent(event);
+
+      return;
+    }
+
     const page = await this.getPuppeteerPage();
 
     return page.click(selector);
   }
 
-  async waitForSelectorOnPage(selector: string) {
+  async waitForSelectorOnPage(selector: string): Promise<void> {
+    if (this.useJSDOM) {
+      if (!this._jsdomDocument) {
+        throw new Error(`You will need to call the this.goToPage() first, before being able to call this`);
+      }
+
+      return;
+    }
+
     const page = await this.getPuppeteerPage();
 
-    return page.waitForSelector(selector);
+    await page.waitForSelector(selector);
   }
 
+  // TODO: move that to the helpers
   getUniqueArray<T>(array: T[]) {
     return [...new Set<T>(array)];
   }

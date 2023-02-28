@@ -35,7 +35,7 @@ export default class FinancialTimesNewsScraper extends AbstractNewsScraper imple
       });
 
       const articleUrls = this.getUniqueArray(
-        await this.evaluateInDocument(() => {
+        await this.evaluateInDocument((document) => {
           // Get all the possible (anchor) elements that have the links to articles
           const querySelector = ['.o-teaser-collection a.js-teaser-heading-link'].join(', ');
 
@@ -88,11 +88,11 @@ export default class FinancialTimesNewsScraper extends AbstractNewsScraper imple
 
     const newsSiteArticleId = urlId ?? url;
 
-    const languageCode = await this.evaluateInDocument(() => {
+    const languageCode = await this.evaluateInDocument((document) => {
       return document.querySelector('html')?.getAttribute('lang') ?? '';
     });
 
-    const linkedDataText = await this.evaluateInDocument(() => {
+    const linkedDataText = await this.evaluateInDocument((document) => {
       return document.querySelector('head script[type="application/ld+json"]')?.innerHTML ?? '';
     });
     if (!linkedDataText) {

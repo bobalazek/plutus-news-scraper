@@ -32,7 +32,7 @@ export default class BusinessInsiderNewsScraper extends AbstractNewsScraper impl
       });
 
       const articleUrls = this.getUniqueArray(
-        await this.evaluateInDocument(() => {
+        await this.evaluateInDocument((document) => {
           // Get all the possible (anchor) elements that have the links to articles
           const querySelector = [
             '.vertical-content .top-vertical-trio a.tout-title-link',
@@ -85,7 +85,7 @@ export default class BusinessInsiderNewsScraper extends AbstractNewsScraper impl
 
     const newsSiteArticleId = url;
 
-    const categories = await this.evaluateInDocument(() => {
+    const categories = await this.evaluateInDocument((document) => {
       return Array.from(document.querySelectorAll(['.post-meta .post-breadcrumbs a:last-child'].join(', '))).map(
         ($a) => {
           return {
@@ -96,11 +96,11 @@ export default class BusinessInsiderNewsScraper extends AbstractNewsScraper impl
       );
     });
 
-    const languageCode = await this.evaluateInDocument(() => {
+    const languageCode = await this.evaluateInDocument((document) => {
       return document.querySelector('html')?.getAttribute('lang') ?? '';
     });
 
-    const linkedDataText = await this.evaluateInDocument(() => {
+    const linkedDataText = await this.evaluateInDocument((document) => {
       return document.querySelector('head script[type="application/ld+json"]')?.innerHTML ?? '';
     });
     if (!linkedDataText) {
