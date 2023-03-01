@@ -3,7 +3,7 @@ import { injectable } from 'inversify';
 import { DataSource } from 'typeorm';
 
 import { container } from '../DI/Container';
-import { TYPES } from '../DI/ContainerTypes';
+import { CONTAINER_TYPES } from '../DI/ContainerTypes';
 import { ScrapeRun } from '../Entitites/ScrapeRun';
 import { NewsArticleMultimediaTypeEnum } from '../Types/NewsArticleMultimediaTypeEnum';
 import { NewsScraperMessageBrokerQueuesEnum } from '../Types/NewsMessageBrokerQueues';
@@ -84,11 +84,11 @@ describe('Services/NewsScraperTaskDispatcher.ts', () => {
   let newsScraperDatabase: NewsScraperDatabase;
 
   beforeAll(() => {
-    container.rebind<NewsScraperManager>(TYPES.NewsScraperManager).to(MockNewsScraperManager);
-    container.rebind<MockNewsScraperDatabase>(TYPES.NewsScraperDatabase).to(MockNewsScraperDatabase);
+    container.rebind<NewsScraperManager>(CONTAINER_TYPES.NewsScraperManager).to(MockNewsScraperManager);
+    container.rebind<MockNewsScraperDatabase>(CONTAINER_TYPES.NewsScraperDatabase).to(MockNewsScraperDatabase);
 
-    newsScraperTaskDispatcher = container.get<NewsScraperTaskDispatcher>(TYPES.NewsScraperTaskDispatcher);
-    newsScraperDatabase = container.get<MockNewsScraperDatabase>(TYPES.NewsScraperDatabase);
+    newsScraperTaskDispatcher = container.get<NewsScraperTaskDispatcher>(CONTAINER_TYPES.NewsScraperTaskDispatcher);
+    newsScraperDatabase = container.get<MockNewsScraperDatabase>(CONTAINER_TYPES.NewsScraperDatabase);
   });
 
   it.each<{ testName: string; scrapeRuns: ScrapeRun[]; result: string[] }>([

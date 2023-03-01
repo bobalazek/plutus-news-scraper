@@ -2,7 +2,7 @@ import { readdirSync } from 'fs';
 import { inject, injectable } from 'inversify';
 import { join } from 'path';
 
-import { TYPES } from '../DI/ContainerTypes';
+import { CONTAINER_TYPES } from '../DI/ContainerTypes';
 import { NewsArticlesNotFoundError } from '../Errors/NewsArticlesNotFoundError';
 import { NewsArticleExtendedSchema, NewsArticleExtendedType } from '../Schemas/NewsArticleSchema';
 import { NewsBasicArticleExtendedSchema, NewsBasicArticleExtendedType } from '../Schemas/NewsBasicArticleSchema';
@@ -21,7 +21,7 @@ export class NewsScraperManager {
   private _headful: boolean = false;
   private _preventClose: boolean = false;
 
-  constructor(@inject(TYPES.Logger) private _logger: Logger) {}
+  constructor(@inject(CONTAINER_TYPES.Logger) private _logger: Logger) {}
 
   async scrapeArticle(url: string, headful?: boolean, preventClose?: boolean): Promise<NewsArticleExtendedType> {
     const startTime = performance.now();

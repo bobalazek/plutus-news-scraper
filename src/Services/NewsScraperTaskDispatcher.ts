@@ -1,7 +1,7 @@
 import { inject, injectable } from 'inversify';
 import { Repository } from 'typeorm';
 
-import { TYPES } from '../DI/ContainerTypes';
+import { CONTAINER_TYPES } from '../DI/ContainerTypes';
 import { ScrapeRun } from '../Entitites/ScrapeRun';
 import { LifecycleStatusEnum } from '../Types/LifecycleStatusEnum';
 import { NewsMessageBrokerQueuesDataType, NewsScraperMessageBrokerQueuesEnum } from '../Types/NewsMessageBrokerQueues';
@@ -30,12 +30,12 @@ export class NewsScraperTaskDispatcher {
   private _messageQueuesMonitoringIntervalTimer?: ReturnType<typeof setInterval>;
 
   constructor(
-    @inject(TYPES.Logger) private _logger: Logger,
-    @inject(TYPES.NewsScraperManager) private _newsScraperManager: NewsScraperManager,
-    @inject(TYPES.NewsScraperMessageBroker) private _newsScraperMessageBroker: NewsScraperMessageBroker,
-    @inject(TYPES.NewsScraperDatabase) private _newsScraperDatabase: NewsScraperDatabase,
-    @inject(TYPES.HTTPServerService) private _httpServerService: HTTPServerService,
-    @inject(TYPES.PrometheusService) private _prometheusService: PrometheusService
+    @inject(CONTAINER_TYPES.Logger) private _logger: Logger,
+    @inject(CONTAINER_TYPES.NewsScraperManager) private _newsScraperManager: NewsScraperManager,
+    @inject(CONTAINER_TYPES.NewsScraperMessageBroker) private _newsScraperMessageBroker: NewsScraperMessageBroker,
+    @inject(CONTAINER_TYPES.NewsScraperDatabase) private _newsScraperDatabase: NewsScraperDatabase,
+    @inject(CONTAINER_TYPES.HTTPServerService) private _httpServerService: HTTPServerService,
+    @inject(CONTAINER_TYPES.PrometheusService) private _prometheusService: PrometheusService
   ) {}
 
   async start(httpServerPort?: number) {

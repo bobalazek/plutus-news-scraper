@@ -1,7 +1,7 @@
 import { Command } from 'commander';
 
 import { container } from '../DI/Container';
-import { TYPES } from '../DI/ContainerTypes';
+import { CONTAINER_TYPES } from '../DI/ContainerTypes';
 import { Logger } from '../Services/Logger';
 import { NewsScraperManager } from '../Services/NewsScraperManager';
 
@@ -19,8 +19,8 @@ export const addNewsScraperRecentArticlesScrapeCommand = (program: Command) => {
       const headful = options.headful;
       const preventClose = options.preventClose;
 
-      const logger = container.get<Logger>(TYPES.Logger);
-      const newsScraperManager = container.get<NewsScraperManager>(TYPES.NewsScraperManager);
+      const logger = container.get<Logger>(CONTAINER_TYPES.Logger);
+      const newsScraperManager = container.get<NewsScraperManager>(CONTAINER_TYPES.NewsScraperManager);
 
       try {
         await newsScraperManager.scrapeRecentArticles(newsSite, url ? [url] : undefined, headful, preventClose);

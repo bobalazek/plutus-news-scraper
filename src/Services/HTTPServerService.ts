@@ -2,7 +2,7 @@ import * as express from 'express';
 import { Server } from 'http';
 import { inject, injectable } from 'inversify';
 
-import { TYPES } from '../DI/ContainerTypes';
+import { CONTAINER_TYPES } from '../DI/ContainerTypes';
 import { checkIfPortIsInUse } from '../Utils/Helpers';
 import { Logger } from './Logger';
 
@@ -12,7 +12,7 @@ export class HTTPServerService {
   private _httpServer!: Server;
   private _status: 'NOT_READY' | 'READY' | 'TERMINATING' = 'NOT_READY';
 
-  constructor(@inject(TYPES.Logger) private _logger: Logger) {}
+  constructor(@inject(CONTAINER_TYPES.Logger) private _logger: Logger) {}
 
   async start(port: number, listenCallback?: () => void) {
     this._logger.info(`========== Starting the HTTP server... ==========`);

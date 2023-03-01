@@ -1,4 +1,4 @@
-export const TYPES = {
+export const CONTAINER_TYPES = {
   Logger: Symbol.for('Logger'),
   RedisService: Symbol.for('RedisService'),
   RabbitMQService: Symbol.for('RabbitMQService'),

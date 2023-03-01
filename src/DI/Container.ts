@@ -11,22 +11,22 @@ import { NewsScraperTaskWorker } from '../Services/NewsScraperTaskWorker';
 import { PrometheusService } from '../Services/PrometheusService';
 import { RabbitMQService } from '../Services/RabbitMQService';
 import { RedisService } from '../Services/RedisService';
-import { TYPES } from './ContainerTypes';
+import { CONTAINER_TYPES } from './ContainerTypes';
 
 const container = new Container({
   defaultScope: 'Singleton',
   autoBindInjectable: true,
 });
 
-container.bind<Logger>(TYPES.Logger).to(Logger);
-container.bind<RedisService>(TYPES.RedisService).to(RedisService);
-container.bind<RabbitMQService>(TYPES.RabbitMQService).to(RabbitMQService);
-container.bind<PrometheusService>(TYPES.PrometheusService).to(PrometheusService);
-container.bind<HTTPServerService>(TYPES.HTTPServerService).to(HTTPServerService);
-container.bind<NewsScraperManager>(TYPES.NewsScraperManager).to(NewsScraperManager);
-container.bind<NewsScraperTaskDispatcher>(TYPES.NewsScraperTaskDispatcher).to(NewsScraperTaskDispatcher);
-container.bind<NewsScraperTaskWorker>(TYPES.NewsScraperTaskWorker).to(NewsScraperTaskWorker);
-container.bind<NewsScraperDatabase>(TYPES.NewsScraperDatabase).to(NewsScraperDatabase);
-container.bind<NewsScraperMessageBroker>(TYPES.NewsScraperMessageBroker).to(NewsScraperMessageBroker);
+container.bind<Logger>(CONTAINER_TYPES.Logger).to(Logger);
+container.bind<RedisService>(CONTAINER_TYPES.RedisService).to(RedisService);
+container.bind<RabbitMQService>(CONTAINER_TYPES.RabbitMQService).to(RabbitMQService);
+container.bind<PrometheusService>(CONTAINER_TYPES.PrometheusService).to(PrometheusService);
+container.bind<HTTPServerService>(CONTAINER_TYPES.HTTPServerService).to(HTTPServerService);
+container.bind<NewsScraperManager>(CONTAINER_TYPES.NewsScraperManager).to(NewsScraperManager);
+container.bind<NewsScraperTaskDispatcher>(CONTAINER_TYPES.NewsScraperTaskDispatcher).to(NewsScraperTaskDispatcher);
+container.bind<NewsScraperTaskWorker>(CONTAINER_TYPES.NewsScraperTaskWorker).to(NewsScraperTaskWorker);
+container.bind<NewsScraperDatabase>(CONTAINER_TYPES.NewsScraperDatabase).to(NewsScraperDatabase);
+container.bind<NewsScraperMessageBroker>(CONTAINER_TYPES.NewsScraperMessageBroker).to(NewsScraperMessageBroker);
 
 export { container };

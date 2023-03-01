@@ -2,7 +2,7 @@ import * as amqplib from 'amqplib';
 import { inject, injectable } from 'inversify';
 import superjson from 'superjson';
 
-import { TYPES } from '../DI/ContainerTypes';
+import { CONTAINER_TYPES } from '../DI/ContainerTypes';
 import { NewsMessageBrokerQueuesDataType, NewsScraperMessageBrokerQueuesEnum } from '../Types/NewsMessageBrokerQueues';
 import { RabbitMQService } from './RabbitMQService';
 
@@ -10,7 +10,7 @@ import { RabbitMQService } from './RabbitMQService';
 export class NewsScraperMessageBroker {
   private _channelName: string = 'news_scraper';
 
-  constructor(@inject(TYPES.RabbitMQService) private _rabbitMQService: RabbitMQService) {}
+  constructor(@inject(CONTAINER_TYPES.RabbitMQService) private _rabbitMQService: RabbitMQService) {}
 
   async sendToQueue<T extends NewsScraperMessageBrokerQueuesEnum>(
     queueName: T,
