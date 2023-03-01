@@ -75,7 +75,7 @@ export abstract class AbstractNewsScraper {
   async getJSDOMDocumentFromUrl(url: string) {
     const virtualConsole = new VirtualConsole();
     virtualConsole.on('error', () => {
-      // No-op to skip console errors.
+      // Skip console errors
     });
 
     const dom = await JSDOM.fromURL(url, {
