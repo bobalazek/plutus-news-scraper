@@ -21,6 +21,8 @@ export default class InvestopediaNewsScraper extends AbstractNewsScraper impleme
     'https://www.investopedia.com/political-news-4689737',
   ];
 
+  useJSDOM: boolean = true;
+
   async scrapeRecentArticles(urls?: string[]): Promise<NewsBasicArticleType[]> {
     const basicArticles: NewsBasicArticleType[] = [];
     const recentArticleListUrls = Array.isArray(urls) ? urls : this.recentArticleListUrls;

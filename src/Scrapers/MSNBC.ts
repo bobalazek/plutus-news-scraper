@@ -13,6 +13,8 @@ export default class MSNBCNewsScraper extends AbstractNewsScraper implements New
   domain: string = 'www.msnbc.com';
   recentArticleListUrls: string[] = ['https://www.msnbc.com/', 'https://www.msnbc.com/opinion/columnists'];
 
+  useJSDOM: boolean = true;
+
   async scrapeRecentArticles(urls?: string[]): Promise<NewsBasicArticleType[]> {
     const basicArticles: NewsBasicArticleType[] = [];
     const recentArticleListUrls = Array.isArray(urls) ? urls : this.recentArticleListUrls;

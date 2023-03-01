@@ -16,6 +16,8 @@ export default class DailyFxNewsScraper extends AbstractNewsScraper implements N
     'https://www.dailyfx.com/technical-analysis',
   ];
 
+  useJSDOM: boolean = true;
+
   async scrapeRecentArticles(urls?: string[]): Promise<NewsBasicArticleType[]> {
     const basicArticles: NewsBasicArticleType[] = [];
     const recentArticleListUrls = Array.isArray(urls) ? urls : this.recentArticleListUrls;
@@ -47,10 +49,7 @@ export default class DailyFxNewsScraper extends AbstractNewsScraper implements N
             return $el.getAttribute('href') ?? ''; // Needs to have a '' (empty string) as a fallback, because otherwise it could be null, which we don't want
           });
         })
-      ).map((uri) => {
-        return `https://www.dailyfx.com${uri}`;
-      });
-
+      );
       this._logger.info(`Found ${articleUrls.length} articles on this page`);
 
       for (const articleUrl of articleUrls) {
@@ -97,7 +96,7 @@ export default class DailyFxNewsScraper extends AbstractNewsScraper implements N
       throw new NewsArticleDataNotFoundError(`Linked data not found for URL ${url}`);
     }
 
-    const linkedData = JSON.parse(linkedDataText)[1];
+    const linkedData = JSON.parse(linkedDataText)[0];
 
     // Content
     const content = await this.evaluateInDocument((document) => {

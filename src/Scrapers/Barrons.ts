@@ -34,6 +34,8 @@ export default class BarronsNewsScraper extends AbstractNewsScraper implements N
     'https://www.barrons.com/news',
   ];
 
+  useJSDOM: boolean = true;
+
   async scrapeRecentArticles(urls?: string[]): Promise<NewsBasicArticleType[]> {
     const basicArticles: NewsBasicArticleType[] = [];
     const recentArticleListUrls = Array.isArray(urls) ? urls : this.recentArticleListUrls;

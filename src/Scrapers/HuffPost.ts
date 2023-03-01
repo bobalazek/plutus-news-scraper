@@ -13,11 +13,13 @@ export default class HuffPostNewsScraper extends AbstractNewsScraper implements 
   domain: string = 'www.huffpost.com';
   recentArticleListUrls: string[] = ['https://www.huffpost.com/news/', 'https://www.huffpost.com/news/politics'];
 
+  useJSDOM: boolean = true;
+
   async scrapeRecentArticles(urls?: string[]): Promise<NewsBasicArticleType[]> {
     const basicArticles: NewsBasicArticleType[] = [];
     const recentArticleListUrls = Array.isArray(urls) ? urls : this.recentArticleListUrls;
 
-    this._logger.info(`Starting to scrape the recent articles on  HuffPost...`);
+    this._logger.info(`Starting to scrape the recent articles on HuffPost...`);
 
     for (const recentArticleListUrl of recentArticleListUrls) {
       this._logger.info(`Going to URL ${recentArticleListUrl} ...`);

@@ -16,6 +16,8 @@ export default class CointelegraphNewsScraper extends AbstractNewsScraper implem
     'https://cointelegraph.com/markets',
   ];
 
+  useJSDOM: boolean = true;
+
   async scrapeRecentArticles(urls?: string[]): Promise<NewsBasicArticleType[]> {
     const basicArticles: NewsBasicArticleType[] = [];
     const recentArticleListUrls = Array.isArray(urls) ? urls : this.recentArticleListUrls;

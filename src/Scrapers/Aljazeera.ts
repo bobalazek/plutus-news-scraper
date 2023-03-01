@@ -20,6 +20,8 @@ export default class AljazeeraNewsScraper extends AbstractNewsScraper implements
     'https://www.aljazeera.com/investigations/',
   ];
 
+  useJSDOM: boolean = true;
+
   async scrapeRecentArticles(urls?: string[]): Promise<NewsBasicArticleType[]> {
     const basicArticles: NewsBasicArticleType[] = [];
     const recentArticleListUrls = Array.isArray(urls) ? urls : this.recentArticleListUrls;

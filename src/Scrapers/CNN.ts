@@ -17,6 +17,8 @@ export default class CNNNewsScraper extends AbstractNewsScraper implements NewsS
     'https://edition.cnn.com/business/investing',
   ];
 
+  useJSDOM: boolean = true;
+
   async scrapeRecentArticles(urls?: string[]): Promise<NewsBasicArticleType[]> {
     const basicArticles: NewsBasicArticleType[] = [];
     const recentArticleListUrls = Array.isArray(urls) ? urls : this.recentArticleListUrls;
