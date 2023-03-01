@@ -1,4 +1,4 @@
-import { JSDOM } from 'jsdom';
+import { JSDOM, VirtualConsole } from 'jsdom';
 import puppeteer, { Browser, Page, PuppeteerLaunchOptions, WaitForOptions } from 'puppeteer';
 
 import { Logger } from '../Services/Logger';
@@ -73,8 +73,15 @@ export abstract class AbstractNewsScraper {
 
   /***** JSDom *****/
   async getJSDOMDocumentFromUrl(url: string) {
+    const virtualConsole = new VirtualConsole();
+    virtualConsole.on('error', () => {
+      // No-op to skip console errors.
+    });
+
     const dom = await JSDOM.fromURL(url, {
       userAgent: this._jsdomUserAgent,
+      runScripts: 'dangerously',
+      virtualConsole,
     });
 
     return dom.window.document;
