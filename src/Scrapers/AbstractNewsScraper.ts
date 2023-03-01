@@ -14,6 +14,7 @@ export abstract class AbstractNewsScraper {
   private _puppeteerHeadful: boolean = false;
   private _puppeteerPreventClose: boolean = false;
   private _jsdomDocument: Document | null = null;
+  private _jsdomUserAgent?: string;
 
   /***** Puppeteer ******/
   async getPuppeteerBrowser(options?: PuppeteerLaunchOptions) {
@@ -36,25 +37,10 @@ export abstract class AbstractNewsScraper {
 
       page = await browser.newPage();
 
-      await this.setPuppeteerUserAgent(page);
+      await this.setUserAgent();
 
       this._puppteerPagesMap.set(key, page);
     }
-
-    return page;
-  }
-
-  /**
-   * @param page
-   * @param userAgent if set to null, it will set it to the default string provided
-   */
-  async setPuppeteerUserAgent(page: Page, userAgent?: string | null) {
-    if (!userAgent) {
-      userAgent =
-        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36';
-    }
-
-    await page.setUserAgent(userAgent as string);
 
     return page;
   }
@@ -87,7 +73,9 @@ export abstract class AbstractNewsScraper {
 
   /***** JSDom *****/
   async getJSDOMDocumentFromUrl(url: string) {
-    const dom = await JSDOM.fromURL(url);
+    const dom = await JSDOM.fromURL(url, {
+      userAgent: this._jsdomUserAgent,
+    });
 
     return dom.window.document;
   }
@@ -164,6 +152,28 @@ export abstract class AbstractNewsScraper {
     const page = await this.getPuppeteerPage();
 
     await page.waitForSelector(selector);
+  }
+
+  /**
+   * @param userAgent if set to null, it will set it to the default string provided
+   */
+  async setUserAgent(userAgent?: string) {
+    if (!userAgent) {
+      userAgent =
+        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36';
+    }
+
+    if (this.useJSDOM) {
+      this._jsdomUserAgent = userAgent;
+
+      return;
+    }
+
+    const page = await this.getPuppeteerPage();
+
+    await page.setUserAgent(userAgent);
+
+    return page;
   }
 
   setLogger(logger: Logger) {
