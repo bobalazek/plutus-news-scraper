@@ -37,7 +37,6 @@ export default class ABCNewsNewsScraper extends AbstractNewsScraper implements N
 
       const articleUrls = getUniqueArray(
         await this.evaluateInDocument((document) => {
-          // Get all the possible (anchor) elements that have the links to articles
           const querySelector = [
             '.ContentList a.AnchorLink',
             '.ContentRoll a.AnchorLink',
@@ -47,17 +46,13 @@ export default class ABCNewsNewsScraper extends AbstractNewsScraper implements N
             '.VideoCarousel__Container a.AnchorLink',
           ].join(', ');
 
-          // Fetch those with the .querySelectoAll() and convert it to an array
           const $elements = Array.from(document.querySelectorAll(querySelector));
 
-          // Loop/map through those elements and get the href artibute
           return $elements.map(($el) => {
-            return $el.getAttribute('href') ?? ''; // Needs to have a '' (empty string) as a fallback, because otherwise it could be null, which we don't want
+            return $el.getAttribute('href') ?? '';
           });
         })
-      ).filter((href) => {
-        return href !== ''; // Now we want to filter out any links that are '', just in case
-      });
+      );
 
       this._logger.info(`Found ${articleUrls.length} articles on this page`);
 

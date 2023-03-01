@@ -43,5 +43,11 @@ export const getHashForNewsSiteAndQueue = (newsSite: string, queue: NewsScraperM
 };
 
 export const getUniqueArray = <T>(array: T[]) => {
-  return [...new Set<T>(array)];
+  return [
+    ...new Set<T>(
+      array.filter((val) => {
+        return !!val;
+      })
+    ),
+  ];
 };
