@@ -1,8 +1,12 @@
 import { JSDOM, VirtualConsole } from 'jsdom';
-import puppeteer, { Browser, Page, PuppeteerLaunchOptions, WaitForOptions } from 'puppeteer';
+import { Browser, Page, PuppeteerLaunchOptions, WaitForOptions } from 'puppeteer';
+import puppeteer from 'puppeteer-extra';
+import StealthPlugin from 'puppeteer-extra-plugin-stealth';
 
 import { Logger } from '../Services/Logger';
 import { PUPPETEER_EXECUTABLE_PATH } from '../Utils/Environment';
+
+puppeteer.use(StealthPlugin());
 
 export abstract class AbstractNewsScraper {
   public useJSDOM: boolean = false;
