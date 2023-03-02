@@ -20,6 +20,8 @@ export default class FinancialTimesNewsScraper extends AbstractNewsScraper imple
     'https://www.ft.com/climate-capital',
   ];
 
+  useJSDOM: boolean = true;
+
   async scrapeRecentArticles(urls?: string[]): Promise<NewsBasicArticleType[]> {
     const basicArticles: NewsBasicArticleType[] = [];
     const recentArticleListUrls = Array.isArray(urls) ? urls : this.recentArticleListUrls;

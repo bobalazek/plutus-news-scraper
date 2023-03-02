@@ -22,6 +22,8 @@ export default class BBCNewsScraper extends AbstractNewsScraper implements NewsS
     'https://www.bbc.com/news/science_and_environment',
   ];
 
+  useJSDOM: boolean = true;
+
   async scrapeRecentArticles(urls?: string[]): Promise<NewsBasicArticleType[]> {
     const basicArticles: NewsBasicArticleType[] = [];
     const recentArticleListUrls = Array.isArray(urls) ? urls : this.recentArticleListUrls;
@@ -128,7 +130,7 @@ export default class BBCNewsScraper extends AbstractNewsScraper implements NewsS
       newsSiteArticleId: newsSiteArticleId,
       publishedAt: new Date(linkedData.datePublished),
       modifiedAt: new Date(linkedData.dateModified),
-      authors: linkedData.author,
+      authors: [linkedData.author],
       categories: [{ name: categoryName }],
       imageUrl: linkedData.image.url,
       languageCode: languageCode,

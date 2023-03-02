@@ -1,3 +1,4 @@
+//TODO - This scraper doesn't work - Press and hold button when you come to the site
 import { convert } from 'html-to-text';
 
 import { NewsArticleDataNotFoundError } from '../Errors/NewsArticleDataNotFoundError';
@@ -28,6 +29,8 @@ export default class BloombergNewsScraper extends AbstractNewsScraper implements
     'https://www.bloomberg.com/green',
     'https://www.bloomberg.com/crypto',
   ];
+
+  useJSDOM: boolean = true;
 
   async scrapeRecentArticles(urls?: string[]): Promise<NewsBasicArticleType[]> {
     const basicArticles: NewsBasicArticleType[] = [];

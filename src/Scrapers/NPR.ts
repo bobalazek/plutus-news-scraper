@@ -22,6 +22,8 @@ export default class NPRNewsScraper extends AbstractNewsScraper implements NewsS
     'https://www.npr.org/sections/climate/',
   ];
 
+  useJSDOM: boolean = true;
+
   async scrapeRecentArticles(urls?: string[]): Promise<NewsBasicArticleType[]> {
     const basicArticles: NewsBasicArticleType[] = [];
     const recentArticleListUrls = Array.isArray(urls) ? urls : this.recentArticleListUrls;
@@ -79,9 +81,10 @@ export default class NPRNewsScraper extends AbstractNewsScraper implements NewsS
       waitUntil: 'networkidle2',
     });
 
-    const newsSiteArticleId = await this.evaluateInDocument((document) => {
-      return document.querySelector('.story .storytitle input:first-child')?.getAttribute('id') ?? '';
-    });
+    const urlSplit = url.split('/');
+    const urlId = urlSplit[urlSplit.length - 2];
+
+    const newsSiteArticleId = urlId ?? url;
 
     const categories = await this.evaluateInDocument((document) => {
       return Array.from(document.querySelectorAll(['#main-section article.story .slug-wrap .slug a'].join(', '))).map(

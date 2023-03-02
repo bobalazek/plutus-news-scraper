@@ -14,6 +14,8 @@ export default class CoinMarketCapNewsScraper extends AbstractNewsScraper implem
     'https://coinmarketcap.com/community/articles/browse/?sort=-publishedOn&page=1&category=',
   ];
 
+  useJSDOM: boolean = false;
+
   async scrapeRecentArticles(urls?: string[]): Promise<NewsBasicArticleType[]> {
     const basicArticles: NewsBasicArticleType[] = [];
     const recentArticleListUrls = Array.isArray(urls) ? urls : this.recentArticleListUrls;

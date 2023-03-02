@@ -21,6 +21,8 @@ export default class ABCNewsNewsScraper extends AbstractNewsScraper implements N
     'https://abcnews.go.com/Health',
   ];
 
+  useJSDOM: boolean = true;
+
   async scrapeRecentArticles(urls?: string[]): Promise<NewsBasicArticleType[]> {
     const basicArticles: NewsBasicArticleType[] = [];
     const recentArticleListUrls = Array.isArray(urls) ? urls : this.recentArticleListUrls;
@@ -122,7 +124,7 @@ export default class ABCNewsNewsScraper extends AbstractNewsScraper implements N
       authors: linkedData.author.map((author: any) => {
         return {
           ...author,
-          url: author.url.startsWith('/') ? `https://abcnews.go.com${author.url}` : author.url,
+          url: (author.url.startsWith('/') ? `https://abcnews.go.com${author.url}` : author.url) || undefined,
         };
       }),
       imageUrl: linkedData.image.url,

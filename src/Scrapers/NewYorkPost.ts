@@ -17,6 +17,8 @@ export default class NewYorkPostNewsScraper extends AbstractNewsScraper implemen
     'https://nypost.com/real-estate',
   ];
 
+  useJSDOM: boolean = true;
+
   async scrapeRecentArticles(urls?: string[]): Promise<NewsBasicArticleType[]> {
     const basicArticles: NewsBasicArticleType[] = [];
     const recentArticleListUrls = Array.isArray(urls) ? urls : this.recentArticleListUrls;

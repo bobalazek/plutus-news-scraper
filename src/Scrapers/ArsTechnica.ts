@@ -20,6 +20,8 @@ export default class ArsTechnicaNewsScraper extends AbstractNewsScraper implemen
     'https://arstechnica.com/cars/',
   ];
 
+  useJSDOM: boolean = true;
+
   async scrapeRecentArticles(urls?: string[]): Promise<NewsBasicArticleType[]> {
     const basicArticles: NewsBasicArticleType[] = [];
     const recentArticleListUrls = Array.isArray(urls) ? urls : this.recentArticleListUrls;

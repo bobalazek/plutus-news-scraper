@@ -20,6 +20,8 @@ export default class MorningstarNewsScraper extends AbstractNewsScraper implemen
     'https://www.morningstar.com/markets',
   ];
 
+  useJSDOM: boolean = true;
+
   async scrapeRecentArticles(urls?: string[]): Promise<NewsBasicArticleType[]> {
     const basicArticles: NewsBasicArticleType[] = [];
     const recentArticleListUrls = Array.isArray(urls) ? urls : this.recentArticleListUrls;
@@ -132,7 +134,7 @@ export default class MorningstarNewsScraper extends AbstractNewsScraper implemen
       }),
       newsSiteArticleId: newsSiteArticleId,
       publishedAt: new Date(datePublished),
-      modifiedAt: new Date(dateModified),
+      modifiedAt: new Date(dateModified || datePublished),
       authors: authors,
       imageUrl: imageUrl,
       languageCode: languageCode,

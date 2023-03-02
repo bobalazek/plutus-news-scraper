@@ -17,6 +17,8 @@ export default class CNBCNewsScraper extends AbstractNewsScraper implements News
     'https://www.cnbc.com/politics/',
   ];
 
+  useJSDOM: boolean = true;
+
   async scrapeRecentArticles(urls?: string[]): Promise<NewsBasicArticleType[]> {
     const basicArticles: NewsBasicArticleType[] = [];
     const recentArticleListUrls = Array.isArray(urls) ? urls : this.recentArticleListUrls;

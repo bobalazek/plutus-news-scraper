@@ -17,6 +17,8 @@ export default class BusinessInsiderNewsScraper extends AbstractNewsScraper impl
     'https://www.businessinsider.com/healthcare',
   ];
 
+  useJSDOM: boolean = true;
+
   async scrapeRecentArticles(urls?: string[]): Promise<NewsBasicArticleType[]> {
     const basicArticles: NewsBasicArticleType[] = [];
     const recentArticleListUrls = Array.isArray(urls) ? urls : this.recentArticleListUrls;

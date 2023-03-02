@@ -23,6 +23,8 @@ export default class FortuneNewsScraper extends AbstractNewsScraper implements N
     'https://fortune.com/crypto/',
   ];
 
+  useJSDOM: boolean = true;
+
   async scrapeRecentArticles(urls?: string[]): Promise<NewsBasicArticleType[]> {
     const basicArticles: NewsBasicArticleType[] = [];
     const recentArticleListUrls = Array.isArray(urls) ? urls : this.recentArticleListUrls;

@@ -18,6 +18,8 @@ export default class CNETNewsScraper extends AbstractNewsScraper implements News
     'https://www.cnet.com/science/',
   ];
 
+  useJSDOM: boolean = true;
+
   async scrapeRecentArticles(urls?: string[]): Promise<NewsBasicArticleType[]> {
     const basicArticles: NewsBasicArticleType[] = [];
     const recentArticleListUrls = Array.isArray(urls) ? urls : this.recentArticleListUrls;

@@ -22,6 +22,8 @@ export default class DWNewsScraper extends AbstractNewsScraper implements NewsSc
     'https://www.dw.com/en/environment/s-11798',
   ];
 
+  useJSDOM: boolean = true;
+
   async scrapeRecentArticles(urls?: string[]): Promise<NewsBasicArticleType[]> {
     const basicArticles: NewsBasicArticleType[] = [];
     const recentArticleListUrls = Array.isArray(urls) ? urls : this.recentArticleListUrls;
