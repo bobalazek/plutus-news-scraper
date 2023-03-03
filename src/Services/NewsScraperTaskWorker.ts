@@ -107,10 +107,6 @@ export class NewsScraperTaskWorker {
       NewsScraperMessageBrokerQueuesEnum.NEWS_SCRAPER_RECENT_ARTICLES_SCRAPE_QUEUE,
       async (data, acknowledgeMessageCallback, negativeAcknowledgeMessageCallback) => {
         if (this._terminationStarted) {
-          await this._newsScraperMessageBroker.deleteQueue(
-            NewsScraperMessageBrokerQueuesEnum.NEWS_SCRAPER_RECENT_ARTICLES_SCRAPE_QUEUE
-          );
-
           return;
         }
 

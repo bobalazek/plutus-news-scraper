@@ -53,7 +53,8 @@ export class NewsScraperTaskDispatcher {
 
     await this._registerMetrics();
 
-    this._startRecentArticlesScraping();
+    this._startRecentArticlesScrape();
+    this._startRecentArticlesStatusUpdateQueueConsumption();
     this._startMessageQueuesMonitoring();
 
     await this._sendStatusUpdate(LifecycleStatusEnum.STARTED);
@@ -152,13 +153,15 @@ export class NewsScraperTaskDispatcher {
     return scrapers;
   }
 
-  private _startRecentArticlesScraping() {
+  private _startRecentArticlesScrape() {
     this._dispatchRecentArticlesScrape();
 
     this._dispatchRecentArticlesScrapeIntervalTimer = setInterval(() => {
       this._dispatchRecentArticlesScrape();
     }, this._scrapeInterval);
+  }
 
+  private _startRecentArticlesStatusUpdateQueueConsumption() {
     this._newsScraperMessageBroker.consumeFromQueue(
       NewsScraperMessageBrokerQueuesEnum.NEWS_SCRAPER_RECENT_ARTICLES_SCRAPE_STATUS_UPDATE_QUEUE,
       async (data, acknowledgeMessageCallback) => {
