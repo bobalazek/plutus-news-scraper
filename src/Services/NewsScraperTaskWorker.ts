@@ -43,13 +43,13 @@ export class NewsScraperTaskWorker {
 
     this._registerTerminate();
 
-    await this._sendWorkerStatusUpdate(LifecycleStatusEnum.STARTING);
+    await this._sendStatusUpdate(LifecycleStatusEnum.STARTING);
 
     await this._registerMetrics();
 
     this._startConsumption();
 
-    await this._sendWorkerStatusUpdate(LifecycleStatusEnum.STARTED);
+    await this._sendStatusUpdate(LifecycleStatusEnum.STARTED);
 
     await new Promise(() => {
       // Together forever and never apart ...
@@ -65,14 +65,9 @@ export class NewsScraperTaskWorker {
 
     this._terminationStarted = true;
 
-    await this._newsScraperMessageBroker.sendToQueue(
-      NewsScraperMessageBrokerQueuesEnum.NEWS_SCRAPER_TASK_WORKER_STATUS_UPDATE_QUEUE,
-      {
-        status: errorMessage ? LifecycleStatusEnum.ERRORED : LifecycleStatusEnum.CLOSING,
-        id: this._id,
-        httpServerPort: this._httpServerPort,
-        errorMessage,
-      }
+    await this._sendStatusUpdate(
+      errorMessage ? LifecycleStatusEnum.ERRORED : LifecycleStatusEnum.CLOSING,
+      errorMessage
     );
 
     await new Promise((resolve) => {
@@ -96,6 +91,8 @@ export class NewsScraperTaskWorker {
     await this._newsScraperMessageBroker.terminate();
     await this._httpServerService.terminate();
     await this._newsScraperDatabase.terminate();
+
+    await this._sendStatusUpdate(LifecycleStatusEnum.CLOSED);
 
     // Make sure we give out logger enough time to send the last batch of logs
     await sleep(LOKI_PINO_BATCH_INTERVAL_SECONDS * 1000 * 1.2 /* a bit of buffer accounting for network latency */);
@@ -212,25 +209,12 @@ export class NewsScraperTaskWorker {
           { ...data, status: ProcessingStatusEnum.PROCESSING }
         );
 
-        const newsScraper = await this._newsScraperManager.getForUrl(data.url);
-        if (!newsScraper) {
-          const errorMessage = `[Worker ${this._id}][Article Queue] News scraper for URL "${data.url}" not found. Skipping ...`;
-
-          this._logger.error(errorMessage);
-
-          negativeAcknowledgeMessageCallback();
-
-          await this._newsScraperMessageBroker.sendToQueue(
-            NewsScraperMessageBrokerQueuesEnum.NEWS_SCRAPER_ARTICLE_SCRAPE_STATUS_UPDATE_QUEUE,
-            { ...data, status: ProcessingStatusEnum.FAILED, errorMessage }
-          );
-
-          this._articleConsumptionInProgress = false;
-
-          return;
-        }
-
         try {
+          const newsScraper = await this._newsScraperManager.getForUrl(data.url);
+          if (!newsScraper) {
+            throw new Error(`News scraper for URL "${data.url}" not found. Skipping ...`);
+          }
+
           const article = await newsScraper.scrapeArticle(data);
 
           const newsArticle = newsArticleRepository.create(article);
@@ -288,10 +272,10 @@ export class NewsScraperTaskWorker {
     }
   }
 
-  private async _sendWorkerStatusUpdate(status: LifecycleStatusEnum) {
+  private async _sendStatusUpdate(status: LifecycleStatusEnum, errorMessage?: string) {
     return this._newsScraperMessageBroker.sendToQueue(
       NewsScraperMessageBrokerQueuesEnum.NEWS_SCRAPER_TASK_WORKER_STATUS_UPDATE_QUEUE,
-      { status, id: this._id, httpServerPort: this._httpServerPort }
+      { status, errorMessage, id: this._id, httpServerPort: this._httpServerPort }
     );
   }
 }

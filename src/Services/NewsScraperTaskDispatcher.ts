@@ -49,14 +49,14 @@ export class NewsScraperTaskDispatcher {
 
     await this._purgeQueues();
 
-    await this._sendDispatcherStatusUpdate(LifecycleStatusEnum.STARTING);
+    await this._sendStatusUpdate(LifecycleStatusEnum.STARTING);
 
     await this._registerMetrics();
 
     this._startRecentArticlesScraping();
     this._startMessageQueuesMonitoring();
 
-    await this._sendDispatcherStatusUpdate(LifecycleStatusEnum.STARTED);
+    await this._sendStatusUpdate(LifecycleStatusEnum.STARTED);
 
     await new Promise(() => {
       // Together forever and never apart ...
@@ -73,18 +73,16 @@ export class NewsScraperTaskDispatcher {
     clearInterval(this._dispatchRecentArticlesScrapeIntervalTimer);
     clearInterval(this._messageQueuesMonitoringIntervalTimer);
 
-    await this._newsScraperMessageBroker.sendToQueue(
-      NewsScraperMessageBrokerQueuesEnum.NEWS_SCRAPER_TASK_DISPATCHER_STATUS_UPDATE_QUEUE,
-      {
-        status: errorMessage ? LifecycleStatusEnum.ERRORED : LifecycleStatusEnum.CLOSING,
-        httpServerPort: this._httpServerPort,
-        errorMessage,
-      }
+    await this._sendStatusUpdate(
+      errorMessage ? LifecycleStatusEnum.ERRORED : LifecycleStatusEnum.CLOSING,
+      errorMessage
     );
 
     await this._newsScraperMessageBroker.terminate();
     await this._httpServerService.terminate();
     await this._newsScraperDatabase.terminate();
+
+    await this._sendStatusUpdate(LifecycleStatusEnum.CLOSED);
 
     // Make sure we give out logger enough time to send the last batch of logs
     await sleep(LOKI_PINO_BATCH_INTERVAL_SECONDS * 1000 * 1.2 /* a bit of buffer accounting for network latency */);
@@ -226,13 +224,6 @@ export class NewsScraperTaskDispatcher {
     }
   }
 
-  private async _sendDispatcherStatusUpdate(status: LifecycleStatusEnum) {
-    return this._newsScraperMessageBroker.sendToQueue(
-      NewsScraperMessageBrokerQueuesEnum.NEWS_SCRAPER_TASK_DISPATCHER_STATUS_UPDATE_QUEUE,
-      { status, httpServerPort: this._httpServerPort }
-    );
-  }
-
   private async _dispatchRecentArticlesScrape() {
     this._logger.info(`Dispatch news article events for scrapers ...`);
 
@@ -273,5 +264,12 @@ export class NewsScraperTaskDispatcher {
         { durable: true }
       );
     }
+  }
+
+  private async _sendStatusUpdate(status: LifecycleStatusEnum, errorMessage?: string) {
+    return this._newsScraperMessageBroker.sendToQueue(
+      NewsScraperMessageBrokerQueuesEnum.NEWS_SCRAPER_TASK_DISPATCHER_STATUS_UPDATE_QUEUE,
+      { status, errorMessage, httpServerPort: this._httpServerPort }
+    );
   }
 }
