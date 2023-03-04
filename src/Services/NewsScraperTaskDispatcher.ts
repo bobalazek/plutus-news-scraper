@@ -1,8 +1,6 @@
 import { inject, injectable } from 'inversify';
-import { Repository } from 'typeorm';
 
 import { CONTAINER_TYPES } from '../DI/ContainerTypes';
-import { ScrapeRun } from '../Entitites/ScrapeRun';
 import { LifecycleStatusEnum } from '../Types/LifecycleStatusEnum';
 import { NewsMessageBrokerQueuesDataType, NewsScraperMessageBrokerQueuesEnum } from '../Types/NewsMessageBrokerQueues';
 import { NewsScraperInterface } from '../Types/NewsScraperInterface';
@@ -14,6 +12,7 @@ import { Logger } from './Logger';
 import { NewsScraperDatabase } from './NewsScraperDatabase';
 import { NewsScraperManager } from './NewsScraperManager';
 import { NewsScraperMessageBroker } from './NewsScraperMessageBroker';
+import { NewsScraperScrapeRunManager } from './NewsScraperScrapeRunManager';
 import { PrometheusService } from './PrometheusService';
 
 @injectable()
@@ -25,7 +24,6 @@ export class NewsScraperTaskDispatcher {
   private _messageQueuesMonitoringInterval: number = 5000;
   private _scrapeRecentArticlesExpirationTime: number = 30000; // After how long do we want to expire this message?
 
-  private _scrapeRunRepository!: Repository<ScrapeRun>;
   private _dispatchRecentArticlesScrapeIntervalTimer?: ReturnType<typeof setInterval>;
   private _messageQueuesMonitoringIntervalTimer?: ReturnType<typeof setInterval>;
 
@@ -34,6 +32,8 @@ export class NewsScraperTaskDispatcher {
     @inject(CONTAINER_TYPES.NewsScraperManager) private _newsScraperManager: NewsScraperManager,
     @inject(CONTAINER_TYPES.NewsScraperMessageBroker) private _newsScraperMessageBroker: NewsScraperMessageBroker,
     @inject(CONTAINER_TYPES.NewsScraperDatabase) private _newsScraperDatabase: NewsScraperDatabase,
+    @inject(CONTAINER_TYPES.NewsScraperScrapeRunManager)
+    private _newsScraperScrapeRunManager: NewsScraperScrapeRunManager,
     @inject(CONTAINER_TYPES.HTTPServerService) private _httpServerService: HTTPServerService,
     @inject(CONTAINER_TYPES.PrometheusService) private _prometheusService: PrometheusService
   ) {}
@@ -44,8 +44,6 @@ export class NewsScraperTaskDispatcher {
     this._logger.info(`========== Starting the task dispatcher ... ==========`);
 
     this._registerTerminate();
-
-    await this.prepare();
 
     await this._purgeQueues();
 
@@ -91,43 +89,29 @@ export class NewsScraperTaskDispatcher {
     process.exit(errorMessage ? 1 : 0);
   }
 
-  /* Technically all of the methods below should be private, but we use them in our tests, so ... */
-  async prepare() {
-    const dataSource = await this._newsScraperDatabase.getDataSource();
-
-    this._scrapeRunRepository = dataSource.getRepository(ScrapeRun);
-    this._newsScrapers = await this._newsScraperManager.getAll();
-  }
-
-  async getSortedScrapers() {
+  /**
+   * Technically this method is private, but we use them in our tests, so do NOT set them to private!
+   */
+  async _getSortedScrapers() {
     const scrapers: NewsScraperInterface[] = [];
 
-    const lastScrapeRuns = await this._scrapeRunRepository
-      .createQueryBuilder('scrapeRun')
-      .select('scrapeRun.status')
-      .addSelect('scrapeRun.arguments')
-      .addSelect('MAX(scrapeRun.createdAt)')
-      .distinct(true)
-      .where('scrapeRun.type = :type')
-      .setParameters({
-        type: NewsScraperMessageBrokerQueuesEnum.NEWS_SCRAPER_RECENT_ARTICLES_SCRAPE_QUEUE,
-      })
-      .orderBy('scrapeRun.updatedAt', 'ASC')
-      .groupBy('scrapeRun.hash') // Hash will include the queue and newsSite
-      .getMany();
+    const lastScrapeRuns = await this._newsScraperScrapeRunManager.getLastRunsByType(
+      NewsScraperMessageBrokerQueuesEnum.NEWS_SCRAPER_RECENT_ARTICLES_SCRAPE_QUEUE
+    );
 
     const scrapeRunsscraperKeys = lastScrapeRuns.map((scrapeRun) => {
       return scrapeRun.arguments?.newsSite;
     });
 
+    const newsScrapers = await this._getNewsScrapers();
     const newsScrapersMap = new Map<string, NewsScraperInterface>(
-      this._newsScrapers.map((newsScraper) => {
+      newsScrapers.map((newsScraper) => {
         return [newsScraper.key, newsScraper];
       })
     );
 
-    if (this._newsScrapers.length) {
-      for (const newsScraper of this._newsScrapers) {
+    if (newsScrapers.length > 0) {
+      for (const newsScraper of newsScrapers) {
         if (scrapeRunsscraperKeys.includes(newsScraper.key)) {
           continue;
         }
@@ -153,6 +137,14 @@ export class NewsScraperTaskDispatcher {
     return scrapers;
   }
 
+  async _getNewsScrapers() {
+    if (this._newsScrapers.length === 0) {
+      this._newsScrapers = await this._newsScraperManager.getAll();
+    }
+
+    return this._newsScrapers;
+  }
+
   private _startRecentArticlesScrape() {
     this._dispatchRecentArticlesScrape();
 
@@ -165,11 +157,7 @@ export class NewsScraperTaskDispatcher {
     this._newsScraperMessageBroker.consumeFromQueue(
       NewsScraperMessageBrokerQueuesEnum.NEWS_SCRAPER_RECENT_ARTICLES_SCRAPE_STATUS_UPDATE_QUEUE,
       async (data, acknowledgeMessageCallback) => {
-        const scrapeRun = data.scrapeRunId
-          ? await this._scrapeRunRepository.findOneBy({
-              id: data.scrapeRunId,
-            })
-          : null;
+        const scrapeRun = data.scrapeRunId ? await this._newsScraperScrapeRunManager.getById(data.scrapeRunId) : null;
         if (scrapeRun) {
           scrapeRun.status = data.status;
 
@@ -182,7 +170,7 @@ export class NewsScraperTaskDispatcher {
             scrapeRun.failedErrorMessage = data.errorMessage;
           }
 
-          await this._scrapeRunRepository.save(scrapeRun);
+          await this._newsScraperScrapeRunManager.save(scrapeRun);
         }
 
         acknowledgeMessageCallback();
@@ -230,7 +218,7 @@ export class NewsScraperTaskDispatcher {
   private async _dispatchRecentArticlesScrape() {
     this._logger.info(`Dispatch news article events for scrapers ...`);
 
-    const scrapers = await this.getSortedScrapers();
+    const scrapers = await this._getSortedScrapers();
     if (scrapers.length === 0) {
       this._logger.info(`Scrapers not found. Skipping ...`);
 
@@ -247,13 +235,13 @@ export class NewsScraperTaskDispatcher {
       };
       const hash = getHashForNewsSiteAndQueue(args.newsSite, queue);
 
-      const scrapeRun = this._scrapeRunRepository.create({
+      const scrapeRun = await this._newsScraperScrapeRunManager.create({
         type: queue,
         status: ProcessingStatusEnum.PENDING,
         arguments: args,
         hash,
       });
-      await this._scrapeRunRepository.save(scrapeRun);
+      await this._newsScraperScrapeRunManager.save(scrapeRun);
 
       args = {
         ...args,

@@ -9,4 +9,5 @@ export const CONTAINER_TYPES = {
   NewsScraperTaskWorker: Symbol.for('NewsScraperTaskWorker'),
   NewsScraperDatabase: Symbol.for('NewsScraperDatabase'),
   NewsScraperMessageBroker: Symbol.for('NewsScraperMessageBroker'),
+  NewsScraperScrapeRunManager: Symbol.for('NewsScraperScrapeRunManager'),
 };

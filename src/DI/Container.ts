@@ -6,6 +6,7 @@ import { Logger } from '../Services/Logger';
 import { NewsScraperDatabase } from '../Services/NewsScraperDatabase';
 import { NewsScraperManager } from '../Services/NewsScraperManager';
 import { NewsScraperMessageBroker } from '../Services/NewsScraperMessageBroker';
+import { NewsScraperScrapeRunManager } from '../Services/NewsScraperScrapeRunManager';
 import { NewsScraperTaskDispatcher } from '../Services/NewsScraperTaskDispatcher';
 import { NewsScraperTaskWorker } from '../Services/NewsScraperTaskWorker';
 import { PrometheusService } from '../Services/PrometheusService';
@@ -28,5 +29,8 @@ container.bind<NewsScraperTaskDispatcher>(CONTAINER_TYPES.NewsScraperTaskDispatc
 container.bind<NewsScraperTaskWorker>(CONTAINER_TYPES.NewsScraperTaskWorker).to(NewsScraperTaskWorker);
 container.bind<NewsScraperDatabase>(CONTAINER_TYPES.NewsScraperDatabase).to(NewsScraperDatabase);
 container.bind<NewsScraperMessageBroker>(CONTAINER_TYPES.NewsScraperMessageBroker).to(NewsScraperMessageBroker);
+container
+  .bind<NewsScraperScrapeRunManager>(CONTAINER_TYPES.NewsScraperScrapeRunManager)
+  .to(NewsScraperScrapeRunManager);
 
 export { container };
