@@ -88,11 +88,12 @@ export class NewsScraperTaskWorker {
 
     await this._newsScraperManager.terminate(true);
 
-    await this._newsScraperMessageBroker.terminate();
     await this._httpServerService.terminate();
     await this._newsScraperDatabase.terminate();
 
     await this._sendStatusUpdate(LifecycleStatusEnum.CLOSED);
+
+    await this._newsScraperMessageBroker.terminate();
 
     // Make sure we give out logger enough time to send the last batch of logs
     await sleep(LOKI_PINO_BATCH_INTERVAL_SECONDS * 1000 * 1.2 /* a bit of buffer accounting for network latency */);
@@ -103,10 +104,13 @@ export class NewsScraperTaskWorker {
   private async _startRecentArticlesQueueConsumption() {
     this._logger.info(`[Worker ${this._id}] Starting to consume recent articles scrape queue ...`);
 
+    // TODO: should we have separate channels for each queue?
     return this._newsScraperMessageBroker.consumeFromQueueOneAtTime(
       NewsScraperMessageBrokerQueuesEnum.NEWS_SCRAPER_RECENT_ARTICLES_SCRAPE_QUEUE,
       async (data, acknowledgeMessageCallback, negativeAcknowledgeMessageCallback) => {
         if (this._terminationStarted) {
+          await this._newsScraperMessageBroker.cancelChannel();
+
           return;
         }
 
@@ -183,13 +187,12 @@ export class NewsScraperTaskWorker {
     const dataSource = await this._newsScraperDatabase.getDataSource();
     const newsArticleRepository = dataSource.getRepository(NewsArticle);
 
+    // TODO: should we have separate channels for each queue?
     return this._newsScraperMessageBroker.consumeFromQueueOneAtTime(
       NewsScraperMessageBrokerQueuesEnum.NEWS_SCRAPER_ARTICLE_SCRAPE_QUEUE,
       async (data, acknowledgeMessageCallback, negativeAcknowledgeMessageCallback) => {
         if (this._terminationStarted) {
-          await this._newsScraperMessageBroker.deleteQueue(
-            NewsScraperMessageBrokerQueuesEnum.NEWS_SCRAPER_ARTICLE_SCRAPE_QUEUE
-          );
+          await this._newsScraperMessageBroker.cancelChannel();
 
           return;
         }

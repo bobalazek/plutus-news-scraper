@@ -94,13 +94,19 @@ export class NewsScraperMessageBroker {
     return this._rabbitMQService.getMessageCountInQueue(queueName);
   }
 
-  async getMessageCountInAllQueues() {
-    const data = {} as Record<NewsScraperMessageBrokerQueuesEnum, number>;
+  async cancelChannel() {
+    return this._rabbitMQService.cancelChannel('cancel', this._channelName);
+  }
 
-    for (const queue of [
+  async getMessageCountInAllQueues(
+    queues: NewsScraperMessageBrokerQueuesEnum[] = [
       NewsScraperMessageBrokerQueuesEnum.NEWS_SCRAPER_RECENT_ARTICLES_SCRAPE_QUEUE,
       NewsScraperMessageBrokerQueuesEnum.NEWS_SCRAPER_ARTICLE_SCRAPE_QUEUE,
-    ]) {
+    ]
+  ) {
+    const data = {} as Record<NewsScraperMessageBrokerQueuesEnum, number>;
+
+    for (const queue of queues) {
       const count = await this.getMessageCountInQueue(queue);
 
       data[queue] = count;

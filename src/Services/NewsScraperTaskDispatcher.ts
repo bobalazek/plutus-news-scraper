@@ -77,11 +77,12 @@ export class NewsScraperTaskDispatcher {
       errorMessage
     );
 
-    await this._newsScraperMessageBroker.terminate();
     await this._httpServerService.terminate();
     await this._newsScraperDatabase.terminate();
 
     await this._sendStatusUpdate(LifecycleStatusEnum.CLOSED);
+
+    await this._newsScraperMessageBroker.terminate();
 
     // Make sure we give out logger enough time to send the last batch of logs
     await sleep(LOKI_PINO_BATCH_INTERVAL_SECONDS * 1000 * 1.2 /* a bit of buffer accounting for network latency */);

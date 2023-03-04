@@ -6,7 +6,7 @@ import { RABBITMQ_URL } from '../Utils/Environment';
 
 @injectable()
 export class RabbitMQService {
-  DEFAULT_CHANNEL_NAME: string = '__DEFAULT';
+  public DEFAULT_CHANNEL_NAME: string = '__DEFAULT';
 
   private _connection?: amqplib.Connection;
   private _channelsMap: Map<string, amqplib.Channel> = new Map();
@@ -28,6 +28,12 @@ export class RabbitMQService {
     }
 
     return channel;
+  }
+
+  async cancelChannel(consumerTag: string, channelName?: string) {
+    const channel = await this.getChannel(channelName);
+
+    return channel.cancel(consumerTag);
   }
 
   async addQueueToChannel(queueName: string, assertQueueOptions?: amqplib.Options.AssertQueue, channelName?: string) {
