@@ -1,5 +1,5 @@
 import { createHash } from 'crypto';
-import * as express from 'express';
+import express from 'express';
 
 import { NewsScraperMessageBrokerQueuesEnum } from '../Types/NewsMessageBrokerQueues';
 

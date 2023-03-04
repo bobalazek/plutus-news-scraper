@@ -3,6 +3,8 @@ import { DeepPartial, Repository } from 'typeorm';
 
 import { CONTAINER_TYPES } from '../DI/ContainerTypes';
 import { ScrapeRun } from '../Entitites/ScrapeRun';
+import { NewsScraperMessageBrokerQueuesEnum } from '../Types/NewsMessageBrokerQueues';
+import { getHashForNewsSiteAndQueue } from '../Utils/Helpers';
 import { NewsScraperDatabase } from './NewsScraperDatabase';
 
 @injectable()
@@ -37,10 +39,15 @@ export class NewsScraperScrapeRunManager {
       .getMany();
   }
 
-  async create<T extends DeepPartial<ScrapeRun>>(scrapeRun: T) {
+  async create(scrapeRun: DeepPartial<ScrapeRun>) {
     const repository = await this.getRepository();
 
-    return repository.create(scrapeRun);
+    const hash =
+      typeof scrapeRun.arguments?.newsSite === 'string'
+        ? getHashForNewsSiteAndQueue(scrapeRun.arguments.newsSite, scrapeRun.type as NewsScraperMessageBrokerQueuesEnum)
+        : undefined;
+
+    return repository.create({ ...scrapeRun, hash });
   }
 
   async save(scrapeRun: ScrapeRun) {

@@ -6,7 +6,7 @@ import { NewsMessageBrokerQueuesDataType, NewsScraperMessageBrokerQueuesEnum } f
 import { NewsScraperInterface } from '../Types/NewsScraperInterface';
 import { ProcessingStatusEnum } from '../Types/ProcessingStatusEnum';
 import { LOKI_PINO_BATCH_INTERVAL_SECONDS } from '../Utils/Environment';
-import { getHashForNewsSiteAndQueue, sleep } from '../Utils/Helpers';
+import { sleep } from '../Utils/Helpers';
 import { HTTPServerService } from './HTTPServerService';
 import { Logger } from './Logger';
 import { NewsScraperDatabase } from './NewsScraperDatabase';
@@ -233,13 +233,11 @@ export class NewsScraperTaskDispatcher {
       let args: NewsMessageBrokerQueuesDataType[typeof queue] = {
         newsSite: scraper.key,
       };
-      const hash = getHashForNewsSiteAndQueue(args.newsSite, queue);
 
       const scrapeRun = await this._newsScraperScrapeRunManager.create({
         type: queue,
         status: ProcessingStatusEnum.PENDING,
         arguments: args,
-        hash,
       });
       await this._newsScraperScrapeRunManager.save(scrapeRun);
 
