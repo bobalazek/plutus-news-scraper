@@ -130,7 +130,7 @@ export class NewsScraperTaskWorker {
 
         const scrapeRun = data.scrapeRunId ? await this._newsScraperScrapeRunManager.getById(data.scrapeRunId) : null;
         if (scrapeRun) {
-          this._saveRecentArticlesScrapeRun(scrapeRun, ProcessingStatusEnum.PROCESSING);
+          this._saveScrapeRun(scrapeRun, ProcessingStatusEnum.PROCESSING);
         }
 
         try {
@@ -185,7 +185,7 @@ export class NewsScraperTaskWorker {
           acknowledgeMessageCallback();
 
           if (scrapeRun) {
-            this._saveRecentArticlesScrapeRun(scrapeRun, ProcessingStatusEnum.PROCESSED);
+            this._saveScrapeRun(scrapeRun, ProcessingStatusEnum.PROCESSED);
           }
         } catch (err) {
           this._logger.error(`[Worker ${this._id}][Recent Articles Queue] Error: ${err.message}`);
@@ -193,7 +193,7 @@ export class NewsScraperTaskWorker {
           negativeAcknowledgeMessageCallback();
 
           if (scrapeRun) {
-            this._saveRecentArticlesScrapeRun(scrapeRun, ProcessingStatusEnum.FAILED, err.message);
+            this._saveScrapeRun(scrapeRun, ProcessingStatusEnum.FAILED, err.message);
           }
         } finally {
           this._recentArticlesConsumptionInProgress = false;
@@ -224,10 +224,10 @@ export class NewsScraperTaskWorker {
 
         this._articleConsumptionInProgress = true;
 
-        await this._newsScraperMessageBroker.sendToQueue(
-          NewsScraperMessageBrokerQueuesEnum.NEWS_SCRAPER_ARTICLE_SCRAPE_STATUS_UPDATE_QUEUE,
-          { ...data, status: ProcessingStatusEnum.PROCESSING }
-        );
+        const scrapeRun = data.scrapeRunId ? await this._newsScraperScrapeRunManager.getById(data.scrapeRunId) : null;
+        if (scrapeRun) {
+          this._saveScrapeRun(scrapeRun, ProcessingStatusEnum.PROCESSING);
+        }
 
         try {
           const newsScraper = await this._newsScraperManager.getForUrl(data.url);
@@ -242,19 +242,17 @@ export class NewsScraperTaskWorker {
 
           acknowledgeMessageCallback();
 
-          await this._newsScraperMessageBroker.sendToQueue(
-            NewsScraperMessageBrokerQueuesEnum.NEWS_SCRAPER_ARTICLE_SCRAPE_STATUS_UPDATE_QUEUE,
-            { ...data, status: ProcessingStatusEnum.PROCESSED }
-          );
+          if (scrapeRun) {
+            this._saveScrapeRun(scrapeRun, ProcessingStatusEnum.PROCESSED);
+          }
         } catch (err) {
           this._logger.error(`[Worker ${this._id}][Article Queue] Error: ${err.message}`);
 
           negativeAcknowledgeMessageCallback();
 
-          await this._newsScraperMessageBroker.sendToQueue(
-            NewsScraperMessageBrokerQueuesEnum.NEWS_SCRAPER_ARTICLE_SCRAPE_STATUS_UPDATE_QUEUE,
-            { ...data, status: ProcessingStatusEnum.FAILED, errorMessage: err.message }
-          );
+          if (scrapeRun) {
+            this._saveScrapeRun(scrapeRun, ProcessingStatusEnum.FAILED, err.message);
+          }
         } finally {
           this._articleConsumptionInProgress = false;
         }
@@ -292,11 +290,7 @@ export class NewsScraperTaskWorker {
     }
   }
 
-  private async _saveRecentArticlesScrapeRun(
-    scrapeRun: ScrapeRun,
-    status: ProcessingStatusEnum,
-    failedErrorMessage?: string
-  ) {
+  private async _saveScrapeRun(scrapeRun: ScrapeRun, status: ProcessingStatusEnum, failedErrorMessage?: string) {
     scrapeRun.status = status;
 
     if (status === ProcessingStatusEnum.PROCESSING) {
