@@ -9,7 +9,7 @@ import { NewsArticleMultimediaTypeEnum } from '../Types/NewsArticleMultimediaTyp
 import { NewsScraperMessageBrokerQueuesEnum } from '../Types/NewsMessageBrokerQueues';
 import { NewsScraperInterface } from '../Types/NewsScraperInterface';
 import { ProcessingStatusEnum } from '../Types/ProcessingStatusEnum';
-import { getHashForNewsSiteAndQueue } from '../Utils/Helpers';
+import { generateHash } from '../Utils/Helpers';
 import { NewsScraperDatabase } from './NewsScraperDatabase';
 import { NewsScraperManager } from './NewsScraperManager';
 import { NewsScraperTaskDispatcher } from './NewsScraperTaskDispatcher';
@@ -107,7 +107,7 @@ describe('Services/NewsScraperTaskDispatcher.ts', () => {
           arguments: {
             newsSite: 'test_scraper_1',
           },
-          hash: getHashForNewsSiteAndQueue('test_scraper_1', queue),
+          hash: generateHash({ queue, newsSite: 'test_scraper_1' }),
           startedAt: new Date('2020-01-01 12:00:00'),
           completedAt: null,
           failedAt: null,
@@ -122,7 +122,7 @@ describe('Services/NewsScraperTaskDispatcher.ts', () => {
           arguments: {
             newsSite: 'test_scraper_2',
           },
-          hash: getHashForNewsSiteAndQueue('test_scraper_2', queue),
+          hash: generateHash({ queue, newsSite: 'test_scraper_2' }),
           startedAt: null,
           completedAt: null,
           failedAt: null,
@@ -137,7 +137,7 @@ describe('Services/NewsScraperTaskDispatcher.ts', () => {
           arguments: {
             newsSite: 'test_scraper_3',
           },
-          hash: getHashForNewsSiteAndQueue('test_scraper_3', queue),
+          hash: generateHash({ queue, newsSite: 'test_scraper_3' }),
           startedAt: null,
           completedAt: null,
           failedAt: null,
@@ -152,7 +152,7 @@ describe('Services/NewsScraperTaskDispatcher.ts', () => {
           arguments: {
             newsSite: 'test_scraper_4',
           },
-          hash: getHashForNewsSiteAndQueue('test_scraper_4', queue),
+          hash: generateHash({ queue, newsSite: 'test_scraper_4' }),
           startedAt: null,
           completedAt: null,
           failedAt: null,
@@ -173,7 +173,7 @@ describe('Services/NewsScraperTaskDispatcher.ts', () => {
           arguments: {
             newsSite: 'test_scraper_1',
           },
-          hash: getHashForNewsSiteAndQueue('test_scraper_1', queue),
+          hash: generateHash({ queue, newsSite: 'test_scraper_1' }),
           startedAt: new Date('2020-01-01 12:00:00'),
           completedAt: new Date('2020-01-01 12:00:10'),
           failedAt: null,
@@ -188,7 +188,7 @@ describe('Services/NewsScraperTaskDispatcher.ts', () => {
           arguments: {
             newsSite: 'test_scraper_2',
           },
-          hash: getHashForNewsSiteAndQueue('test_scraper_2', queue),
+          hash: generateHash({ queue, newsSite: 'test_scraper_2' }),
           startedAt: new Date('2020-01-01 12:00:11'),
           completedAt: null,
           failedAt: null,
@@ -203,7 +203,7 @@ describe('Services/NewsScraperTaskDispatcher.ts', () => {
           arguments: {
             newsSite: 'test_scraper_3',
           },
-          hash: getHashForNewsSiteAndQueue('test_scraper_3', queue),
+          hash: generateHash({ queue, newsSite: 'test_scraper_3' }),
           startedAt: null,
           completedAt: null,
           failedAt: null,
@@ -218,7 +218,7 @@ describe('Services/NewsScraperTaskDispatcher.ts', () => {
           arguments: {
             newsSite: 'test_scraper_4',
           },
-          hash: getHashForNewsSiteAndQueue('test_scraper_4', queue),
+          hash: generateHash({ queue, newsSite: 'test_scraper_4' }),
           startedAt: null,
           completedAt: null,
           failedAt: null,
@@ -239,7 +239,7 @@ describe('Services/NewsScraperTaskDispatcher.ts', () => {
           arguments: {
             newsSite: 'test_scraper_1',
           },
-          hash: getHashForNewsSiteAndQueue('test_scraper_1', queue),
+          hash: generateHash({ queue, newsSite: 'test_scraper_1' }),
           startedAt: new Date('2020-01-01 12:00:00'),
           completedAt: new Date('2020-01-01 12:00:10'),
           failedAt: null,
@@ -254,7 +254,7 @@ describe('Services/NewsScraperTaskDispatcher.ts', () => {
           arguments: {
             newsSite: 'test_scraper_2',
           },
-          hash: getHashForNewsSiteAndQueue('test_scraper_2', queue),
+          hash: generateHash({ queue, newsSite: 'test_scraper_2' }),
           startedAt: new Date('2020-01-01 12:00:10'),
           completedAt: new Date('2020-01-01 12:00:20'),
           failedAt: null,
@@ -269,7 +269,7 @@ describe('Services/NewsScraperTaskDispatcher.ts', () => {
           arguments: {
             newsSite: 'test_scraper_3',
           },
-          hash: getHashForNewsSiteAndQueue('test_scraper_3', queue),
+          hash: generateHash({ queue, newsSite: 'test_scraper_3' }),
           startedAt: new Date('2020-01-01 12:00:20'),
           completedAt: new Date('2020-01-01 12:00:30'),
           failedAt: null,
@@ -284,7 +284,7 @@ describe('Services/NewsScraperTaskDispatcher.ts', () => {
           arguments: {
             newsSite: 'test_scraper_4',
           },
-          hash: getHashForNewsSiteAndQueue('test_scraper_4', queue),
+          hash: generateHash({ queue, newsSite: 'test_scraper_4' }),
           startedAt: new Date('2020-01-01 12:00:30'),
           completedAt: new Date('2020-01-01 12:00:40'),
           failedAt: null,
@@ -305,7 +305,7 @@ describe('Services/NewsScraperTaskDispatcher.ts', () => {
           arguments: {
             newsSite: 'test_scraper_1',
           },
-          hash: getHashForNewsSiteAndQueue('test_scraper_1', queue),
+          hash: generateHash({ queue, newsSite: 'test_scraper_1' }),
           startedAt: new Date('2020-01-01 12:00:00'),
           completedAt: new Date('2020-01-01 12:00:25'),
           failedAt: null,
@@ -320,7 +320,7 @@ describe('Services/NewsScraperTaskDispatcher.ts', () => {
           arguments: {
             newsSite: 'test_scraper_2',
           },
-          hash: getHashForNewsSiteAndQueue('test_scraper_2', queue),
+          hash: generateHash({ queue, newsSite: 'test_scraper_2' }),
           startedAt: new Date('2020-01-01 12:00:10'),
           completedAt: new Date('2020-01-01 12:00:20'),
           failedAt: null,
@@ -335,7 +335,7 @@ describe('Services/NewsScraperTaskDispatcher.ts', () => {
           arguments: {
             newsSite: 'test_scraper_3',
           },
-          hash: getHashForNewsSiteAndQueue('test_scraper_3', queue),
+          hash: generateHash({ queue, newsSite: 'test_scraper_3' }),
           startedAt: new Date('2020-01-01 12:00:20'),
           completedAt: new Date('2020-01-01 12:00:30'),
           failedAt: null,
@@ -350,7 +350,7 @@ describe('Services/NewsScraperTaskDispatcher.ts', () => {
           arguments: {
             newsSite: 'test_scraper_4',
           },
-          hash: getHashForNewsSiteAndQueue('test_scraper_4', queue),
+          hash: generateHash({ queue, newsSite: 'test_scraper_4' }),
           startedAt: new Date('2020-01-01 12:00:30'),
           completedAt: new Date('2020-01-01 12:00:40'),
           failedAt: null,
@@ -371,7 +371,7 @@ describe('Services/NewsScraperTaskDispatcher.ts', () => {
           arguments: {
             newsSite: 'test_scraper_1',
           },
-          hash: getHashForNewsSiteAndQueue('test_scraper_1', queue),
+          hash: generateHash({ queue, newsSite: 'test_scraper_1' }),
           startedAt: new Date('2020-01-01 12:00:00'),
           completedAt: new Date('2020-01-01 12:00:10'),
           failedAt: null,
@@ -386,7 +386,7 @@ describe('Services/NewsScraperTaskDispatcher.ts', () => {
           arguments: {
             newsSite: 'test_scraper_2',
           },
-          hash: getHashForNewsSiteAndQueue('test_scraper_2', queue),
+          hash: generateHash({ queue, newsSite: 'test_scraper_2' }),
           startedAt: new Date('2020-01-01 12:00:10'),
           completedAt: new Date('2020-01-01 12:00:20'),
           failedAt: null,
@@ -401,7 +401,7 @@ describe('Services/NewsScraperTaskDispatcher.ts', () => {
           arguments: {
             newsSite: 'test_scraper_3',
           },
-          hash: getHashForNewsSiteAndQueue('test_scraper_3', queue),
+          hash: generateHash({ queue, newsSite: 'test_scraper_3' }),
           startedAt: new Date('2020-01-01 12:00:20'),
           completedAt: null,
           failedAt: new Date('2020-01-01 12:00:50'),
@@ -416,7 +416,7 @@ describe('Services/NewsScraperTaskDispatcher.ts', () => {
           arguments: {
             newsSite: 'test_scraper_4',
           },
-          hash: getHashForNewsSiteAndQueue('test_scraper_4', queue),
+          hash: generateHash({ queue, newsSite: 'test_scraper_4' }),
           startedAt: new Date('2020-01-01 12:00:30'),
           completedAt: new Date('2020-01-01 12:00:40'),
           failedAt: null,
@@ -437,7 +437,7 @@ describe('Services/NewsScraperTaskDispatcher.ts', () => {
           arguments: {
             newsSite: 'test_scraper_1',
           },
-          hash: getHashForNewsSiteAndQueue('test_scraper_1', queue),
+          hash: generateHash({ queue, newsSite: 'test_scraper_1' }),
           startedAt: new Date('2020-01-01 12:00:00'),
           completedAt: new Date('2020-01-01 12:00:10'),
           failedAt: null,
@@ -452,7 +452,7 @@ describe('Services/NewsScraperTaskDispatcher.ts', () => {
           arguments: {
             newsSite: 'test_scraper_2',
           },
-          hash: getHashForNewsSiteAndQueue('test_scraper_2', queue),
+          hash: generateHash({ queue, newsSite: 'test_scraper_2' }),
           startedAt: new Date('2020-01-01 12:00:10'),
           completedAt: new Date('2020-01-01 12:00:20'),
           failedAt: null,
@@ -467,7 +467,7 @@ describe('Services/NewsScraperTaskDispatcher.ts', () => {
           arguments: {
             newsSite: 'test_scraper_3',
           },
-          hash: getHashForNewsSiteAndQueue('test_scraper_3', queue),
+          hash: generateHash({ queue, newsSite: 'test_scraper_3' }),
           startedAt: new Date('2020-01-01 12:00:05'),
           completedAt: null,
           failedAt: new Date('2020-01-01 12:00:08'),
@@ -482,7 +482,7 @@ describe('Services/NewsScraperTaskDispatcher.ts', () => {
           arguments: {
             newsSite: 'test_scraper_4',
           },
-          hash: getHashForNewsSiteAndQueue('test_scraper_4', queue),
+          hash: generateHash({ queue, newsSite: 'test_scraper_4' }),
           startedAt: new Date('2020-01-01 12:00:30'),
           completedAt: new Date('2020-01-01 12:00:40'),
           failedAt: null,
@@ -503,7 +503,7 @@ describe('Services/NewsScraperTaskDispatcher.ts', () => {
           arguments: {
             newsSite: 'test_scraper_1',
           },
-          hash: getHashForNewsSiteAndQueue('test_scraper_1', queue),
+          hash: generateHash({ queue, newsSite: 'test_scraper_1' }),
           startedAt: new Date('2020-01-01 12:00:00'),
           completedAt: new Date('2020-01-01 12:00:10'),
           failedAt: null,
@@ -518,7 +518,7 @@ describe('Services/NewsScraperTaskDispatcher.ts', () => {
           arguments: {
             newsSite: 'test_scraper_2',
           },
-          hash: getHashForNewsSiteAndQueue('test_scraper_2', queue),
+          hash: generateHash({ queue, newsSite: 'test_scraper_2' }),
           startedAt: new Date('2020-01-01 12:00:10'),
           completedAt: new Date('2020-01-01 12:00:20'),
           failedAt: null,
@@ -533,7 +533,7 @@ describe('Services/NewsScraperTaskDispatcher.ts', () => {
           arguments: {
             newsSite: 'test_scraper_3',
           },
-          hash: getHashForNewsSiteAndQueue('test_scraper_3', queue),
+          hash: generateHash({ queue, newsSite: 'test_scraper_3' }),
           startedAt: new Date('2020-01-01 12:00:05'),
           completedAt: null,
           failedAt: new Date('2020-01-01 12:00:08'),
@@ -548,7 +548,7 @@ describe('Services/NewsScraperTaskDispatcher.ts', () => {
           arguments: {
             newsSite: 'test_scraper_4',
           },
-          hash: getHashForNewsSiteAndQueue('test_scraper_4', queue),
+          hash: generateHash({ queue, newsSite: 'test_scraper_4' }),
           startedAt: new Date('2020-01-01 12:00:30'),
           completedAt: new Date('2020-01-01 12:00:40'),
           failedAt: null,
@@ -563,7 +563,7 @@ describe('Services/NewsScraperTaskDispatcher.ts', () => {
           arguments: {
             newsSite: 'test_scraper_3',
           },
-          hash: getHashForNewsSiteAndQueue('test_scraper_3', queue),
+          hash: generateHash({ queue, newsSite: 'test_scraper_3' }),
           startedAt: new Date('2020-01-01 12:00:25'),
           completedAt: new Date('2020-01-01 12:00:30'),
           failedAt: null,

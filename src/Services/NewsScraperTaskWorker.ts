@@ -2,6 +2,7 @@ import { inject, injectable } from 'inversify';
 
 import { CONTAINER_TYPES } from '../DI/ContainerTypes';
 import { NewsArticle } from '../Entitites/NewsArticle';
+import { ScrapeRun } from '../Entitites/ScrapeRun';
 import { LifecycleStatusEnum } from '../Types/LifecycleStatusEnum';
 import { NewsScraperMessageBrokerQueuesEnum } from '../Types/NewsMessageBrokerQueues';
 import { ProcessingStatusEnum } from '../Types/ProcessingStatusEnum';
@@ -12,6 +13,7 @@ import { Logger } from './Logger';
 import { NewsScraperDatabase } from './NewsScraperDatabase';
 import { NewsScraperManager } from './NewsScraperManager';
 import { NewsScraperMessageBroker } from './NewsScraperMessageBroker';
+import { NewsScraperScrapeRunManager } from './NewsScraperScrapeRunManager';
 import { PrometheusService } from './PrometheusService';
 
 @injectable()
@@ -30,6 +32,8 @@ export class NewsScraperTaskWorker {
     @inject(CONTAINER_TYPES.NewsScraperManager) private _newsScraperManager: NewsScraperManager,
     @inject(CONTAINER_TYPES.NewsScraperMessageBroker) private _newsScraperMessageBroker: NewsScraperMessageBroker,
     @inject(CONTAINER_TYPES.NewsScraperDatabase) private _newsScraperDatabase: NewsScraperDatabase,
+    @inject(CONTAINER_TYPES.NewsScraperScrapeRunManager)
+    private _newsScraperScrapeRunManager: NewsScraperScrapeRunManager,
     @inject(CONTAINER_TYPES.HTTPServerService) private _httpServerService: HTTPServerService,
     @inject(CONTAINER_TYPES.PrometheusService) private _prometheusService: PrometheusService
   ) {}
@@ -104,6 +108,8 @@ export class NewsScraperTaskWorker {
   private async _startRecentArticlesQueueConsumption() {
     this._logger.info(`[Worker ${this._id}] Starting to consume recent articles scrape queue ...`);
 
+    const queue = NewsScraperMessageBrokerQueuesEnum.NEWS_SCRAPER_ARTICLE_SCRAPE_QUEUE;
+
     // TODO: should we have separate channels for each queue?
     return this._newsScraperMessageBroker.consumeFromQueueOneAtTime(
       NewsScraperMessageBrokerQueuesEnum.NEWS_SCRAPER_RECENT_ARTICLES_SCRAPE_QUEUE,
@@ -122,38 +128,55 @@ export class NewsScraperTaskWorker {
 
         this._recentArticlesConsumptionInProgress = true;
 
-        await this._newsScraperMessageBroker.sendToQueue(
-          NewsScraperMessageBrokerQueuesEnum.NEWS_SCRAPER_RECENT_ARTICLES_SCRAPE_STATUS_UPDATE_QUEUE,
-          { ...data, status: ProcessingStatusEnum.PROCESSING }
-        );
-
-        const newsScraper = await this._newsScraperManager.get(data.newsSite);
-        if (!newsScraper) {
-          const errorMessage = `[Worker ${this._id}][Recent Articles Queue] News scraper "${data.newsSite}" not found. Skipping ...`;
-
-          this._logger.error(errorMessage);
-
-          negativeAcknowledgeMessageCallback();
-
-          await this._newsScraperMessageBroker.sendToQueue(
-            NewsScraperMessageBrokerQueuesEnum.NEWS_SCRAPER_RECENT_ARTICLES_SCRAPE_STATUS_UPDATE_QUEUE,
-            { ...data, status: ProcessingStatusEnum.FAILED, errorMessage }
-          );
-
-          this._recentArticlesConsumptionInProgress = false;
-
-          return;
+        const scrapeRun = data.scrapeRunId ? await this._newsScraperScrapeRunManager.getById(data.scrapeRunId) : null;
+        if (scrapeRun) {
+          this._saveRecentArticlesScrapeRun(scrapeRun, ProcessingStatusEnum.PROCESSING);
         }
 
         try {
-          const basicArticles = await newsScraper.scrapeRecentArticles();
+          const newsScraper = await this._newsScraperManager.get(data.newsSite);
+          if (!newsScraper) {
+            throw new Error(
+              `[Worker ${this._id}][Recent Articles Queue] News scraper "${data.newsSite}" not found. Skipping ...`
+            );
+          }
 
-          for (const basicArticle of basicArticles) {
-            // TODO: prevent deduplication
+          const basicArticles = await newsScraper.scrapeRecentArticles();
+          const basicArticlesMap = new Map(
+            basicArticles.map((basicArticle) => {
+              return [basicArticle.url, basicArticle];
+            })
+          );
+
+          // Deduplication - prevent adding scrape runs,
+          // when there is already a scrape run for the same url pending or in progress
+          const scrapeRunsPendingAndProcessing = await this._newsScraperScrapeRunManager.getAllPendingAndProcessing(
+            queue,
+            data.newsSite,
+            Array.from(basicArticlesMap.keys())
+          );
+          for (const scrapeRun of scrapeRunsPendingAndProcessing) {
+            if (typeof scrapeRun.arguments?.url !== 'string') {
+              continue;
+            }
+
+            basicArticlesMap.delete(scrapeRun.arguments?.url);
+          }
+
+          for (const url of basicArticlesMap.keys()) {
+            const scrapeRun = await this._newsScraperScrapeRunManager.create({
+              type: queue,
+              status: ProcessingStatusEnum.PENDING,
+              arguments: {
+                newsSite: data.newsSite,
+                url: url,
+              },
+            });
+            await this._newsScraperScrapeRunManager.save(scrapeRun);
 
             await this._newsScraperMessageBroker.sendToQueue(
-              NewsScraperMessageBrokerQueuesEnum.NEWS_SCRAPER_ARTICLE_SCRAPE_QUEUE,
-              basicArticle,
+              queue,
+              { url, scrapeRunId: scrapeRun.id },
               { expiration: this._scrapeArticleExpirationTime, persistent: true },
               { durable: true }
             );
@@ -161,19 +184,17 @@ export class NewsScraperTaskWorker {
 
           acknowledgeMessageCallback();
 
-          await this._newsScraperMessageBroker.sendToQueue(
-            NewsScraperMessageBrokerQueuesEnum.NEWS_SCRAPER_RECENT_ARTICLES_SCRAPE_STATUS_UPDATE_QUEUE,
-            { ...data, status: ProcessingStatusEnum.PROCESSED }
-          );
+          if (scrapeRun) {
+            this._saveRecentArticlesScrapeRun(scrapeRun, ProcessingStatusEnum.PROCESSED);
+          }
         } catch (err) {
           this._logger.error(`[Worker ${this._id}][Recent Articles Queue] Error: ${err.message}`);
 
           negativeAcknowledgeMessageCallback();
 
-          await this._newsScraperMessageBroker.sendToQueue(
-            NewsScraperMessageBrokerQueuesEnum.NEWS_SCRAPER_RECENT_ARTICLES_SCRAPE_STATUS_UPDATE_QUEUE,
-            { ...data, status: ProcessingStatusEnum.FAILED, errorMessage: err.message }
-          );
+          if (scrapeRun) {
+            this._saveRecentArticlesScrapeRun(scrapeRun, ProcessingStatusEnum.FAILED, err.message);
+          }
         } finally {
           this._recentArticlesConsumptionInProgress = false;
         }
@@ -269,6 +290,25 @@ export class NewsScraperTaskWorker {
         this._prometheusService.addMetricsEndpointToExpressApp(this._httpServerService.getExpressApp());
       });
     }
+  }
+
+  private async _saveRecentArticlesScrapeRun(
+    scrapeRun: ScrapeRun,
+    status: ProcessingStatusEnum,
+    failedErrorMessage?: string
+  ) {
+    scrapeRun.status = status;
+
+    if (status === ProcessingStatusEnum.PROCESSING) {
+      scrapeRun.startedAt = new Date();
+    } else if (status === ProcessingStatusEnum.PROCESSED) {
+      scrapeRun.completedAt = new Date();
+    } else if (status === ProcessingStatusEnum.FAILED) {
+      scrapeRun.failedAt = new Date();
+      scrapeRun.failedErrorMessage = failedErrorMessage;
+    }
+
+    await this._newsScraperScrapeRunManager.save(scrapeRun);
   }
 
   private async _sendStatusUpdate(status: LifecycleStatusEnum, errorMessage?: string) {

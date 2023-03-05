@@ -52,7 +52,6 @@ export class NewsScraperTaskDispatcher {
     await this._registerMetrics();
 
     this._startRecentArticlesScrape();
-    this._startRecentArticlesStatusUpdateQueueConsumption();
     this._startMessageQueuesMonitoring();
 
     await this._sendStatusUpdate(LifecycleStatusEnum.STARTED);
@@ -96,7 +95,7 @@ export class NewsScraperTaskDispatcher {
   async _getSortedScrapers() {
     const scrapers: NewsScraperInterface[] = [];
 
-    const lastScrapeRuns = await this._newsScraperScrapeRunManager.getLastRunsByType(
+    const lastScrapeRuns = await this._newsScraperScrapeRunManager.getAllNewestGroupByHash(
       NewsScraperMessageBrokerQueuesEnum.NEWS_SCRAPER_RECENT_ARTICLES_SCRAPE_QUEUE
     );
 

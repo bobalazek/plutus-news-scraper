@@ -30,16 +30,8 @@ export const sleep = (milliseconds: number): Promise<unknown> => {
   });
 };
 
-export const getHashForNewsSiteAndQueue = (newsSite: string, queue: NewsScraperMessageBrokerQueuesEnum): string => {
-  return createHash('sha256')
-    .update(
-      JSON.stringify({
-        queue,
-        newsSite,
-      }),
-      'utf8'
-    )
-    .digest('hex');
+export const generateHash = (obj: Record<string, string>): string => {
+  return createHash('sha256').update(JSON.stringify(obj), 'utf8').digest('hex');
 };
 
 export const getUniqueArray = <T>(array: T[]) => {
