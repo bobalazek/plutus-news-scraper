@@ -21,6 +21,8 @@ export default class ReutersNewsScraper extends AbstractNewsScraper implements N
     'https://www.reuters.com/technology',
   ];
 
+  useJSDOM: boolean = true;
+
   async scrapeRecentArticles(urls?: string[]): Promise<NewsBasicArticleType[]> {
     const basicArticles: NewsBasicArticleType[] = [];
     const recentArticleListUrls = Array.isArray(urls) ? urls : this.recentArticleListUrls;

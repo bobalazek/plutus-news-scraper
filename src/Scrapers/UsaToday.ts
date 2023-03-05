@@ -20,6 +20,8 @@ export default class UsaTodayNewsScraper extends AbstractNewsScraper implements 
     'https://eu.usatoday.com/money/investing/',
   ];
 
+  useJSDOM: boolean = true;
+
   async scrapeRecentArticles(urls?: string[]): Promise<NewsBasicArticleType[]> {
     const basicArticles: NewsBasicArticleType[] = [];
     const recentArticleListUrls = Array.isArray(urls) ? urls : this.recentArticleListUrls;

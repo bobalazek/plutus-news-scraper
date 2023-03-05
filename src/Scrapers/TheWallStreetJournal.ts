@@ -12,17 +12,19 @@ export default class TheWallStreetJournalNewsScraper extends AbstractNewsScraper
   key: string = 'wsj';
   domain: string = 'www.wsj.com';
   recentArticleListUrls: string[] = [
-    'https://www.wsj.com/news/world?mod=nav_top_section',
-    'https://www.wsj.com/news/us?mod=nav_top_section',
-    'https://www.wsj.com/news/politics?mod=nav_top_section',
-    'https://www.wsj.com/news/economy?mod=nav_top_section',
-    'https://www.wsj.com/news/business?mod=nav_top_section',
-    'https://www.wsj.com/news/technology?mod=nav_top_section',
-    'https://www.wsj.com/news/markets?mod=nav_top_section',
-    'https://www.wsj.com/news/opinion?mod=nav_top_section',
-    'https://www.wsj.com/news/books-arts?mod=nav_top_section',
-    'https://www.wsj.com/news/realestate?mod=nav_top_section',
+    'https://www.wsj.com/news/world',
+    'https://www.wsj.com/news/us',
+    'https://www.wsj.com/news/politics',
+    'https://www.wsj.com/news/economy',
+    'https://www.wsj.com/news/business',
+    'https://www.wsj.com/news/technology',
+    'https://www.wsj.com/news/markets',
+    'https://www.wsj.com/news/opinion',
+    'https://www.wsj.com/news/books-arts',
+    'https://www.wsj.com/news/realestate',
   ];
+
+  useJSDOM: boolean = true;
 
   async scrapeRecentArticles(urls?: string[]): Promise<NewsBasicArticleType[]> {
     const basicArticles: NewsBasicArticleType[] = [];

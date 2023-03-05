@@ -16,6 +16,8 @@ export default class TheStreetNewsScraper extends AbstractNewsScraper implements
     'https://realmoney.thestreet.com/today',
   ];
 
+  useJSDOM: boolean = true;
+
   async scrapeRecentArticles(urls?: string[]): Promise<NewsBasicArticleType[]> {
     const basicArticles: NewsBasicArticleType[] = [];
     const recentArticleListUrls = Array.isArray(urls) ? urls : this.recentArticleListUrls;

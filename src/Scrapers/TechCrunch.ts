@@ -20,6 +20,8 @@ export default class TechCrunchNewsScraper extends AbstractNewsScraper implement
     'https://techcrunch.com/category/apps/',
   ];
 
+  useJSDOM: boolean = false;
+
   async scrapeRecentArticles(urls?: string[]): Promise<NewsBasicArticleType[]> {
     const basicArticles: NewsBasicArticleType[] = [];
     const recentArticleListUrls = Array.isArray(urls) ? urls : this.recentArticleListUrls;

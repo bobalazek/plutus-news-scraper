@@ -12,7 +12,6 @@ export default class TheNewYorkTimesNewsScraper extends AbstractNewsScraper impl
   key: string = 'the_new_york_times';
   domain: string = 'www.nytimes.com';
   recentArticleListUrls: string[] = [
-    'https://www.nytimes.com/international/',
     'https://www.nytimes.com/international/section/world',
     'https://www.nytimes.com/international/section/us',
     'https://www.nytimes.com/international/section/politics',
@@ -20,6 +19,8 @@ export default class TheNewYorkTimesNewsScraper extends AbstractNewsScraper impl
     'https://www.nytimes.com/international/section/science',
     'https://www.nytimes.com/international/section/health',
   ];
+
+  useJSDOM: boolean = true;
 
   async scrapeRecentArticles(urls?: string[]): Promise<NewsBasicArticleType[]> {
     const basicArticles: NewsBasicArticleType[] = [];
@@ -124,7 +125,13 @@ export default class TheNewYorkTimesNewsScraper extends AbstractNewsScraper impl
       newsSiteArticleId: newsSiteArticleId,
       publishedAt: new Date(linkedData.datePublished),
       modifiedAt: new Date(linkedData.dateModified),
-      authors: linkedData.author,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      authors: linkedData.author.map((author: any) => {
+        return {
+          ...author,
+          url: author.url ? author.url : undefined,
+        };
+      }),
       categories: [{ name: categoryName }],
       imageUrl: linkedData.image.url,
       languageCode: languageCode,

@@ -41,7 +41,7 @@ export default class NPRNewsScraper extends AbstractNewsScraper implements NewsS
       const articleUrls = getUniqueArray(
         await this.evaluateInDocument((document) => {
           // Get all the possible (anchor) elements that have the links to articles
-          const querySelector = ['#main-section .story-text a', '#main-section .item-info a'].join(', ');
+          const querySelector = ['#main-section .story-text a', '#main-section .item-info h2 a'].join(', ');
 
           // Fetch those with the .querySelectoAll() and convert it to an array
           const $elements = Array.from(document.querySelectorAll(querySelector));

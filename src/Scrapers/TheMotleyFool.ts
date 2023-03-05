@@ -13,6 +13,8 @@ export default class TheMotleyFoolNewsScraper extends AbstractNewsScraper implem
   domain: string = 'www.fool.com';
   recentArticleListUrls: string[] = ['https://www.fool.com/', 'https://www.fool.com/investing-news/'];
 
+  useJSDOM: boolean = false;
+
   async scrapeRecentArticles(urls?: string[]): Promise<NewsBasicArticleType[]> {
     const basicArticles: NewsBasicArticleType[] = [];
     const recentArticleListUrls = Array.isArray(urls) ? urls : this.recentArticleListUrls;
@@ -30,13 +32,17 @@ export default class TheMotleyFoolNewsScraper extends AbstractNewsScraper implem
       const articleUrls = getUniqueArray(
         await this.evaluateInDocument((document) => {
           // Get all the possible (anchor) elements that have the links to articles
-          const querySelector = ['#main-content article a', '.content-container div a:has(h5)'].join(', ');
+          const querySelector = ['#main-content article a', '.content-container div a'].join(', ');
 
           // Fetch those with the .querySelectoAll() and convert it to an array
           const $elements = Array.from(document.querySelectorAll(querySelector));
 
           // Loop/map through those elements and get the href artibute
           return $elements.map(($el) => {
+            if ($el.querySelector('h3') === null && $el.querySelector('h5') === null) {
+              return '';
+            }
+
             return $el.getAttribute('href') ?? ''; // Needs to have a '' (empty string) as a fallback, because otherwise it could be null, which we don't want
           });
         })

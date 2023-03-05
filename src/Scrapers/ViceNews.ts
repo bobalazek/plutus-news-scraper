@@ -21,6 +21,8 @@ export default class ViceNewsNewsScraper extends AbstractNewsScraper implements 
     'https://www.vice.com/en/section/environment',
   ];
 
+  useJSDOM: boolean = false;
+
   async scrapeRecentArticles(urls?: string[]): Promise<NewsBasicArticleType[]> {
     const basicArticles: NewsBasicArticleType[] = [];
     const recentArticleListUrls = Array.isArray(urls) ? urls : this.recentArticleListUrls;
@@ -32,13 +34,16 @@ export default class ViceNewsNewsScraper extends AbstractNewsScraper implements 
 
       await sleep(1000);
       await this.goToPage(recentArticleListUrl, {
-        waitUntil: 'domcontentloaded',
+        waitUntil: 'networkidle2',
       });
 
       const articleUrls = getUniqueArray(
         await this.evaluateInDocument(() => {
           // Get all the possible (anchor) elements that have the links to articles
-          const querySelector = ['.section-page .vice-card__content a'].join(', ');
+          const querySelector = [
+            '.section-page .vice-card__content a',
+            '.section-page_rest .vice-card__content a',
+          ].join(', ');
 
           // Fetch those with the .querySelectoAll() and convert it to an array
           const $elements = Array.from(document.querySelectorAll(querySelector));

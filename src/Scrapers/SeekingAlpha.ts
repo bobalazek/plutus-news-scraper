@@ -23,6 +23,8 @@ export default class SeekingAlphaNewsScraper extends AbstractNewsScraper impleme
     'https://seekingalpha.com/market-news/crypto',
   ];
 
+  useJSDOM: boolean = false;
+
   async scrapeRecentArticles(urls?: string[]): Promise<NewsBasicArticleType[]> {
     const basicArticles: NewsBasicArticleType[] = [];
     const recentArticleListUrls = Array.isArray(urls) ? urls : this.recentArticleListUrls;

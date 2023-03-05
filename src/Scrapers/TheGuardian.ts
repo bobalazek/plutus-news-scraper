@@ -24,6 +24,8 @@ export default class TheGuardianNewsScraper extends AbstractNewsScraper implemen
     'https://www.theguardian.com/uk/business',
   ];
 
+  useJSDOM: boolean = true;
+
   async scrapeRecentArticles(urls?: string[]): Promise<NewsBasicArticleType[]> {
     const basicArticles: NewsBasicArticleType[] = [];
     const recentArticleListUrls = Array.isArray(urls) ? urls : this.recentArticleListUrls;

@@ -19,6 +19,8 @@ export default class YahooFinanceNewsScraper extends AbstractNewsScraper impleme
     'https://finance.yahoo.com/screener/predefined/ms_basic_materials/',
   ];
 
+  useJSDOM: boolean = false;
+
   async scrapeRecentArticles(urls?: string[]): Promise<NewsBasicArticleType[]> {
     const basicArticles: NewsBasicArticleType[] = [];
     const recentArticleListUrls = Array.isArray(urls) ? urls : this.recentArticleListUrls;
@@ -57,12 +59,19 @@ export default class YahooFinanceNewsScraper extends AbstractNewsScraper impleme
 
           // Loop/map through those elements and get the href artibute
           return $elements.map(($el) => {
-            return $el.getAttribute('href') ?? ''; // Needs to have a '' (empty string) as a fallback, because otherwise it could be null, which we don't want
+            const href = $el.getAttribute('href') ?? '';
+            if (href.startsWith('/')) {
+              return `https://finance.yahoo.com${href}`;
+            }
+
+            if (href.startsWith('https://finance.yahoo.com')) {
+              return href;
+            }
+
+            return '';
           });
         })
-      ).map((uri) => {
-        return `https://finance.yahoo.com${uri}`;
-      });
+      );
 
       this._logger.info(`Found ${articleUrls.length} articles on this page`);
 
@@ -89,7 +98,7 @@ export default class YahooFinanceNewsScraper extends AbstractNewsScraper impleme
     this._logger.info(`Going to URL ${url} ...`);
 
     await this.goToPage(url, {
-      waitUntil: 'domcontentloaded',
+      waitUntil: 'networkidle2',
     });
 
     const $consentPageDiv = await this.evaluateInDocument((document) => {
