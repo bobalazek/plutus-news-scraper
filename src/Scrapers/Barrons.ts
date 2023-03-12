@@ -1,10 +1,11 @@
 import { convert } from 'html-to-text';
+import { DateTime, Interval } from 'luxon';
 
 import { NewsArticleDataNotFoundError } from '../Errors/NewsArticleDataNotFoundError';
 import { NewsArticleType } from '../Schemas/NewsArticleSchema';
 import { NewsBasicArticleType } from '../Schemas/NewsBasicArticleSchema';
 import { NewsArticleMultimediaTypeEnum } from '../Types/NewsArticleMultimediaTypeEnum';
-import { NewsScraperInterface } from '../Types/NewsScraperInterface';
+import { NewsScraperGetArchivedArticlesOptionsInterface, NewsScraperInterface } from '../Types/NewsScraperInterface';
 import { getUniqueArray, sleep } from '../Utils/Helpers';
 import { AbstractNewsScraper } from './AbstractNewsScraper';
 
@@ -86,6 +87,126 @@ export default class BarronsNewsScraper extends AbstractNewsScraper implements N
     }
 
     return Promise.resolve(getUniqueArray(basicArticles));
+  }
+
+  async scrapeArchivedArticles(
+    options: NewsScraperGetArchivedArticlesOptionsInterface
+  ): Promise<NewsBasicArticleType[]> {
+    const basicArticles: NewsBasicArticleType[] = [];
+
+    // This will hold all the URLs for pages, that actually contain the article urls,
+    // for example: ['https://www.barrons.com/archive/1997/07/14', 'https://www.barrons.com/archive/1997/07/15', ...]
+    const dateUrls: string[] = [];
+
+    this._logger.info(`Starting to scrape the archived articles on Barrons ...`);
+
+    // Option 1:
+    // We can either scrape the years page first to get all the available months for each year,
+    // then we go to those pages and go to those pages and get the single date (2012-01-01) to determine
+    // which articles were found on that page
+    /*
+    const archiveYearsUrl = 'https://www.barrons.com/archive/years';
+    this._logger.info(`Going to URL ${archiveYearsUrl} ...`);
+    await this.goToPage(archiveYearsUrl, {
+      waitUntil: 'domcontentloaded',
+    });
+    const yearsData = (
+      await this.evaluateInDocument((document) => {
+        const $yearColumns = document.querySelectorAll('div[class^="BarronsTheme--year-contain--"]');
+
+        return (
+          Array.from($yearColumns)
+            .map(($yearColumn) => {
+              const $monthAnchors = $yearColumn.querySelectorAll('a');
+              return {
+                year: parseInt($yearColumn.querySelector('h2')?.innerHTML ?? '0'),
+                months: Array.from($monthAnchors).map(($monthAnchor) => {
+                  return {
+                    month: $monthAnchor.innerHTML?.trim(),
+                    url: `https://www.barrons.com${$monthAnchor.getAttribute('href')}`,
+                  };
+                }),
+              };
+            })
+            // There seem to be some empty columns at the end - those will always have a year of 0,
+            // so we just filter those out.
+            .filter((urlByYear) => {
+              return urlByYear.year !== 0;
+            })
+        );
+      })
+    ).reverse(); // Since on the website we get the from 2023 to 1997, we want to just reverse them, so it makes more sense
+
+    for (const yearData of yearsData) {
+      for (const monthData of yearData.months) {
+        this._logger.info(`Going to URL ${monthData.url} ...`);
+
+        await sleep(1000);
+        await this.goToPage(monthData.url, {
+          waitUntil: 'domcontentloaded',
+        });
+
+        const dateUrlsForMonth = await this.evaluateInDocument((document) => {
+          return Array.from(document.querySelectorAll('a[class^="BarronsTheme--day-link--"]')).map(($element) => {
+            return `https://www.barrons.com${$element.getAttribute('href')}`;
+          });
+        });
+
+        dateUrls.push(...dateUrlsForMonth);
+      }
+    }
+    */
+
+    // Option 2 - prefferable
+    // Since we already know exactly what the URL for all those final pages will be,
+    // for example: https://www.barrons.com/archive/1997/07/14 - which is: https://www.barrons.com/archive/{year}/{month}/{day}
+    // we can just skip all of the scraping above, and generate those URLs programatically.
+    // The only thing for that we just need to know is the start date, which we can easily figure out,
+    // if we go to the archives page
+    const interval = Interval.fromDateTimes(DateTime.utc(1997, 7, 14), DateTime.utc());
+    const dayIntervals = interval.splitBy({ days: 1 });
+
+    for (const dayInterval of dayIntervals) {
+      const year = dayInterval.start.toFormat('yyyy');
+      const month = dayInterval.start.toFormat('MM');
+      const day = dayInterval.start.toFormat('dd');
+
+      dateUrls.push(`https://www.barrons.com/archive/${year}/${month}/${day}`);
+    }
+
+    // Now go and visit each of those date pages, to get the actual article URLs
+    this._logger.info(`Found ${dateUrls.length} date urls. Starting to visit one-by-one to get the articles ...`);
+
+    for (const dateUrl of dateUrls) {
+      this._logger.info(`Going to URL ${dateUrl} ...`);
+
+      await sleep(1000);
+      await this.goToPage(dateUrl, {
+        waitUntil: 'domcontentloaded',
+      });
+
+      const articleUrls = getUniqueArray(
+        await this.evaluateInDocument((document) => {
+          return Array.from(document.querySelectorAll('a[class^="BarronsTheme--headline-link--"]')).map(($element) => {
+            return $element.getAttribute('href') ?? '';
+          });
+        })
+      );
+
+      basicArticles.push(
+        ...articleUrls.map((articleUrl) => {
+          // TODO: seems like a lot of the initial articles redirect to www.wsj.com,
+          // which is then redirected back to barrons.com. We could probably just check
+          // if the url contains www.wsj.com and get the ID, and then go back to the wsj.com page
+
+          return {
+            url: articleUrl,
+          };
+        })
+      );
+    }
+
+    return basicArticles;
   }
 
   async scrapeArticle(basicArticle: NewsBasicArticleType): Promise<NewsArticleType> {

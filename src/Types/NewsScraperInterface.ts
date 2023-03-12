@@ -48,10 +48,10 @@ export interface NewsScraperInterface {
    *
    * @param options NewsScraperGetArchivedArticlesOptionsInterface
    */
-  scrapeArchivedArticles?(options: NewsScraperGetArchivedArticlesOptionsInterface): Promise<NewsBasicArticleType[]>;
+  scrapeArchivedArticles?(options?: NewsScraperGetArchivedArticlesOptionsInterface): Promise<NewsBasicArticleType[]>;
 }
 
 export interface NewsScraperGetArchivedArticlesOptionsInterface {
-  from?: string | Date;
-  to?: string | Date;
+  from?: string;
+  to?: string;
 }

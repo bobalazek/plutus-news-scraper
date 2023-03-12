@@ -17,6 +17,7 @@ export abstract class AbstractNewsScraper {
   private _puppteerPagesMap: Map<string, Page> = new Map();
   private _puppeteerHeadful: boolean = false;
   private _puppeteerPreventClose: boolean = false;
+  private _jsdom: JSDOM | null = null;
   private _jsdomDocument: Document | null = null;
   private _jsdomUserAgent?: string;
 
@@ -88,13 +89,16 @@ export abstract class AbstractNewsScraper {
       virtualConsole,
     });
 
-    return dom.window.document;
+    this._jsdom = dom;
+    this._jsdomDocument = this._jsdom.window.document;
+
+    return this._jsdomDocument;
   }
 
   /***** Helpers *****/
   async goToPage(url: string, args?: WaitForOptions): Promise<void> {
     if (this.useJSDOM) {
-      this._jsdomDocument = await this.getJSDOMDocumentFromUrl(url);
+      await this.getJSDOMDocumentFromUrl(url);
 
       return;
     }
@@ -197,6 +201,10 @@ export abstract class AbstractNewsScraper {
   }
 
   async terminate(force: boolean = false) {
+    if (this.useJSDOM) {
+      this._jsdom?.window?.close();
+    }
+
     if (this._puppeteerPreventClose && !force) {
       return;
     }
