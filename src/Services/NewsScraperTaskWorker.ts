@@ -3,7 +3,6 @@ import { inject, injectable } from 'inversify';
 import { CONTAINER_TYPES } from '../DI/ContainerTypes';
 import { NewsArticle } from '../Entitites/NewsArticle';
 import { ScrapeRun } from '../Entitites/ScrapeRun';
-import { LifecycleStatusEnum } from '../Types/LifecycleStatusEnum';
 import { NewsScraperMessageBrokerQueuesEnum } from '../Types/NewsMessageBrokerQueues';
 import { ProcessingStatusEnum } from '../Types/ProcessingStatusEnum';
 import { LOKI_PINO_BATCH_INTERVAL_SECONDS } from '../Utils/Environment';
@@ -47,13 +46,9 @@ export class NewsScraperTaskWorker {
 
     this._registerTerminate();
 
-    await this._sendStatusUpdate(LifecycleStatusEnum.STARTING);
-
     await this._registerMetrics();
 
     this._startConsumption();
-
-    await this._sendStatusUpdate(LifecycleStatusEnum.STARTED);
 
     await new Promise(() => {
       // Together forever and never apart ...
@@ -68,11 +63,6 @@ export class NewsScraperTaskWorker {
     }
 
     this._terminationStarted = true;
-
-    await this._sendStatusUpdate(
-      errorMessage ? LifecycleStatusEnum.ERRORED : LifecycleStatusEnum.CLOSING,
-      errorMessage
-    );
 
     await new Promise((resolve) => {
       const consumptionInterval = setInterval(() => {
@@ -94,8 +84,6 @@ export class NewsScraperTaskWorker {
 
     await this._httpServerService.terminate();
     await this._newsScraperDatabase.terminate();
-
-    await this._sendStatusUpdate(LifecycleStatusEnum.CLOSED);
 
     await this._newsScraperMessageBroker.terminate();
 
@@ -303,12 +291,5 @@ export class NewsScraperTaskWorker {
     }
 
     await this._newsScraperScrapeRunManager.save(scrapeRun);
-  }
-
-  private async _sendStatusUpdate(status: LifecycleStatusEnum, errorMessage?: string) {
-    return this._newsScraperMessageBroker.sendToQueue(
-      NewsScraperMessageBrokerQueuesEnum.NEWS_SCRAPER_TASK_WORKER_STATUS_UPDATE_QUEUE,
-      { status, errorMessage, id: this._id, httpServerPort: this._httpServerPort }
-    );
   }
 }

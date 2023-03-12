@@ -1,7 +1,6 @@
 import { inject, injectable } from 'inversify';
 
 import { CONTAINER_TYPES } from '../DI/ContainerTypes';
-import { LifecycleStatusEnum } from '../Types/LifecycleStatusEnum';
 import { NewsMessageBrokerQueuesDataType, NewsScraperMessageBrokerQueuesEnum } from '../Types/NewsMessageBrokerQueues';
 import { NewsScraperInterface } from '../Types/NewsScraperInterface';
 import { ProcessingStatusEnum } from '../Types/ProcessingStatusEnum';
@@ -45,16 +44,10 @@ export class NewsScraperTaskDispatcher {
 
     this._registerTerminate();
 
-    await this._purgeQueues();
-
-    await this._sendStatusUpdate(LifecycleStatusEnum.STARTING);
-
     await this._registerMetrics();
 
     this._startRecentArticlesScrape();
     this._startMessageQueuesMonitoring();
-
-    await this._sendStatusUpdate(LifecycleStatusEnum.STARTED);
 
     await new Promise(() => {
       // Together forever and never apart ...
@@ -71,15 +64,8 @@ export class NewsScraperTaskDispatcher {
     clearInterval(this._dispatchRecentArticlesScrapeIntervalTimer);
     clearInterval(this._messageQueuesMonitoringIntervalTimer);
 
-    await this._sendStatusUpdate(
-      errorMessage ? LifecycleStatusEnum.ERRORED : LifecycleStatusEnum.CLOSING,
-      errorMessage
-    );
-
     await this._httpServerService.terminate();
     await this._newsScraperDatabase.terminate();
-
-    await this._sendStatusUpdate(LifecycleStatusEnum.CLOSED);
 
     await this._newsScraperMessageBroker.terminate();
 
@@ -153,31 +139,6 @@ export class NewsScraperTaskDispatcher {
     }, this._scrapeInterval);
   }
 
-  private _startRecentArticlesStatusUpdateQueueConsumption() {
-    this._newsScraperMessageBroker.consumeFromQueue(
-      NewsScraperMessageBrokerQueuesEnum.NEWS_SCRAPER_RECENT_ARTICLES_SCRAPE_STATUS_UPDATE_QUEUE,
-      async (data, acknowledgeMessageCallback) => {
-        const scrapeRun = data.scrapeRunId ? await this._newsScraperScrapeRunManager.getById(data.scrapeRunId) : null;
-        if (scrapeRun) {
-          scrapeRun.status = data.status;
-
-          if (data.status === ProcessingStatusEnum.PROCESSING) {
-            scrapeRun.startedAt = new Date();
-          } else if (data.status === ProcessingStatusEnum.PROCESSED) {
-            scrapeRun.completedAt = new Date();
-          } else if (data.status === ProcessingStatusEnum.FAILED) {
-            scrapeRun.failedAt = new Date();
-            scrapeRun.failedErrorMessage = data.errorMessage;
-          }
-
-          await this._newsScraperScrapeRunManager.save(scrapeRun);
-        }
-
-        acknowledgeMessageCallback();
-      }
-    );
-  }
-
   private _startMessageQueuesMonitoring() {
     this._messageQueuesMonitoringIntervalTimer = setInterval(async () => {
       const messagesCountMap = await this._newsScraperMessageBroker.getMessageCountInAllQueues();
@@ -203,15 +164,6 @@ export class NewsScraperTaskDispatcher {
       await this._httpServerService.start(this._httpServerPort, () => {
         this._prometheusService.addMetricsEndpointToExpressApp(this._httpServerService.getExpressApp());
       });
-    }
-  }
-
-  private async _purgeQueues() {
-    for (const queue of [
-      NewsScraperMessageBrokerQueuesEnum.NEWS_SCRAPER_TASK_DISPATCHER_STATUS_UPDATE_QUEUE,
-      NewsScraperMessageBrokerQueuesEnum.NEWS_SCRAPER_RECENT_ARTICLES_SCRAPE_STATUS_UPDATE_QUEUE,
-    ]) {
-      await this._newsScraperMessageBroker.purgeQueue(queue);
     }
   }
 
@@ -253,12 +205,5 @@ export class NewsScraperTaskDispatcher {
         { durable: true }
       );
     }
-  }
-
-  private async _sendStatusUpdate(status: LifecycleStatusEnum, errorMessage?: string) {
-    return this._newsScraperMessageBroker.sendToQueue(
-      NewsScraperMessageBrokerQueuesEnum.NEWS_SCRAPER_TASK_DISPATCHER_STATUS_UPDATE_QUEUE,
-      { status, errorMessage, httpServerPort: this._httpServerPort }
-    );
   }
 }
