@@ -37,13 +37,13 @@ export class ScrapeRun {
   @Column({ type: 'varchar', nullable: true })
   failedErrorMessage?: string | null;
 
-  @Column({ type: 'datetime', nullable: true })
+  @Column({ type: 'timestamp', nullable: true })
   startedAt?: Date | null;
 
-  @Column({ type: 'datetime', nullable: true })
+  @Column({ type: 'timestamp', nullable: true })
   completedAt?: Date | null;
 
-  @Column({ type: 'datetime', nullable: true })
+  @Column({ type: 'timestamp', nullable: true })
   failedAt?: Date | null;
 
   @CreateDateColumn()
