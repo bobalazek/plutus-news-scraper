@@ -2,6 +2,7 @@ import { injectable } from 'inversify';
 import { DataSource } from 'typeorm';
 
 import { NewsArticle } from '../Entitites/NewsArticle';
+import { ScrapeRun } from '../Entitites/ScrapeRun';
 import { IS_DEVELOPMENT, POSTGRESQL_URL } from '../Utils/Environment';
 
 @injectable()
@@ -13,9 +14,10 @@ export class NewsScraperDatabase {
       this._dataSource = new DataSource({
         type: 'postgres',
         url: POSTGRESQL_URL,
-        entities: [NewsArticle],
         synchronize: IS_DEVELOPMENT,
-        // TODO: add migrations files? or classes? How does it work in typescript
+        entities: [NewsArticle, ScrapeRun],
+        //entities: ['Entities/*.ts'], // TODO: not working yet. Why?
+        //migrations: ['Migrations/*.ts'], // TODO: not working yet. Why?
       });
 
       await this._dataSource.initialize();

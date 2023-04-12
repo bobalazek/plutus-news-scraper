@@ -47,10 +47,10 @@ export class NewsArticle implements NewsArticleType {
   @Column({ type: 'varchar', nullable: true })
   languageCode?: string | null;
 
-  @Column({ type: 'timestamp' })
+  @Column({ type: IS_TEST ? 'datetime' : 'timestamp' })
   publishedAt!: Date;
 
-  @Column({ type: 'timestamp' })
+  @Column({ type: IS_TEST ? 'datetime' : 'timestamp' })
   modifiedAt!: Date;
 
   @CreateDateColumn()
