@@ -1,3 +1,9 @@
+import 'dotenv/config';
+
+// TODO
+// dotenv needs to be included because of typeorm.config.ts is included as a standalone file.
+// Any better way to do this?
+
 export const APP_PREFIX = 'news_scraper_';
 export const NODE_ENV = process.env.NODE_ENV;
 export const IS_TEST = NODE_ENV === 'test';

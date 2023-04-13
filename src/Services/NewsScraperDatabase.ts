@@ -1,9 +1,7 @@
 import { injectable } from 'inversify';
 import { DataSource } from 'typeorm';
 
-import { NewsArticle } from '../Entitites/NewsArticle';
-import { ScrapeRun } from '../Entitites/ScrapeRun';
-import { IS_DEVELOPMENT, POSTGRESQL_URL } from '../Utils/Environment';
+import typeormDatasource from '../typeorm.config';
 
 @injectable()
 export class NewsScraperDatabase {
@@ -11,14 +9,7 @@ export class NewsScraperDatabase {
 
   async getDataSource() {
     if (!this._dataSource) {
-      this._dataSource = new DataSource({
-        type: 'postgres',
-        url: POSTGRESQL_URL,
-        synchronize: IS_DEVELOPMENT,
-        entities: [NewsArticle, ScrapeRun],
-        //entities: ['Entities/*.ts'], // TODO: not working yet. Why?
-        //migrations: ['Migrations/*.ts'], // TODO: not working yet. Why?
-      });
+      this._dataSource = typeormDatasource;
 
       await this._dataSource.initialize();
     }

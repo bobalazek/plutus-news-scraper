@@ -13,7 +13,10 @@
     "lint": "npx eslint .",
     "test": "npx jest",
     "build": "rimraf ./dist && npx swc ./src --out-dir ./dist",
-    "cli": "npm run build && node dist/index.js"
+    "cli": "npm run build && node dist/index.js",
+    "typeorm": "npx typeorm-ts-node-commonjs",
+    "typeorm:run-migrations": "npm run typeorm migration:run -- --dataSource src/typeorm.config.ts",
+    "typeorm:generate-migration": "npm run typeorm migration:generate -- --dataSource src/typeorm.config.ts"
   },
   "devDependencies": {
     "@swc/cli": "^0.1.62",
@@ -60,6 +63,7 @@
     "redis": "^4.6.4",
     "reflect-metadata": "^0.1.13",
     "superjson": "^1.12.2",
+    "ts-node": "^10.9.1",
     "tslib": "^2.5.0",
     "typeorm": "^0.3.14",
     "validator": "^13.9.0",

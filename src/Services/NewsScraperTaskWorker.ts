@@ -1,8 +1,8 @@
 import { inject, injectable } from 'inversify';
 
 import { CONTAINER_TYPES } from '../DI/ContainerTypes';
-import { NewsArticle } from '../Entitites/NewsArticle';
-import { ScrapeRun } from '../Entitites/ScrapeRun';
+import { NewsArticle } from '../Entities/NewsArticle';
+import { ScrapeRun } from '../Entities/ScrapeRun';
 import { NewsScraperMessageBrokerQueuesEnum } from '../Types/NewsMessageBrokerQueues';
 import { ProcessingStatusEnum } from '../Types/ProcessingStatusEnum';
 import { LOKI_PINO_BATCH_INTERVAL_SECONDS } from '../Utils/Environment';

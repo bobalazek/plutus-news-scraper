@@ -2,7 +2,7 @@ import { inject, injectable } from 'inversify';
 import { DeepPartial, Repository } from 'typeorm';
 
 import { CONTAINER_TYPES } from '../DI/ContainerTypes';
-import { ScrapeRun } from '../Entitites/ScrapeRun';
+import { ScrapeRun } from '../Entities/ScrapeRun';
 import { ProcessingStatusEnum } from '../Types/ProcessingStatusEnum';
 import { generateHash } from '../Utils/Helpers';
 import { NewsScraperDatabase } from './NewsScraperDatabase';

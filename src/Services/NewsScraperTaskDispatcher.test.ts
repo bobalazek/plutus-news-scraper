@@ -4,7 +4,7 @@ import { DataSource } from 'typeorm';
 
 import { container } from '../DI/Container';
 import { CONTAINER_TYPES } from '../DI/ContainerTypes';
-import { ScrapeRun } from '../Entitites/ScrapeRun';
+import { ScrapeRun } from '../Entities/ScrapeRun';
 import { NewsArticleMultimediaTypeEnum } from '../Types/NewsArticleMultimediaTypeEnum';
 import { NewsScraperMessageBrokerQueuesEnum } from '../Types/NewsMessageBrokerQueues';
 import { NewsScraperInterface } from '../Types/NewsScraperInterface';
