@@ -581,9 +581,9 @@ describe('Services/NewsScraperTaskDispatcher.ts', () => {
     await scrapeRunRepository.clear();
     await scrapeRunRepository.save(scrapeRuns);
 
-    const scrapers = await newsScraperTaskDispatcher._getSortedScrapers();
-    const scraperKeys = scrapers.map((scraper) => {
-      return scraper.key;
+    const scrapersAndRuns = await newsScraperTaskDispatcher._getSortedScrapersAndRuns();
+    const scraperKeys = scrapersAndRuns.map((scraperAndRun) => {
+      return scraperAndRun.scraper.key;
     });
 
     expect(scraperKeys).toStrictEqual(result);

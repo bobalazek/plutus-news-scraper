@@ -1,6 +1,7 @@
 import { inject, injectable } from 'inversify';
 
 import { CONTAINER_TYPES } from '../DI/ContainerTypes';
+import { ScrapeRun } from '../Entities/ScrapeRun';
 import { NewsMessageBrokerQueuesDataType, NewsScraperMessageBrokerQueuesEnum } from '../Types/NewsMessageBrokerQueues';
 import { NewsScraperInterface } from '../Types/NewsScraperInterface';
 import { ProcessingStatusEnum } from '../Types/ProcessingStatusEnum';
@@ -79,8 +80,8 @@ export class NewsScraperTaskDispatcher {
    * Technically this method is private, but we use them in our tests, so do NOT set them to private!
    * @param returnOnlyNonPending - If true, we will return only scrapers that are neither pending nor processing. Otherwise, if will also return the pending once
    */
-  async _getSortedScrapers(returnOnlyNonPending: boolean = false) {
-    const scrapers: NewsScraperInterface[] = [];
+  async _getSortedScrapersAndRuns(returnOnlyNonPending: boolean = false) {
+    const scrapersAndRuns: { scraper: NewsScraperInterface; scrapeRun: ScrapeRun | null }[] = [];
 
     const lastScrapeRuns = await this._newsScraperScrapeRunManager.getAllNewestGroupByHash(
       NewsScraperMessageBrokerQueuesEnum.NEWS_SCRAPER_RECENT_ARTICLES_SCRAPE_QUEUE
@@ -103,7 +104,7 @@ export class NewsScraperTaskDispatcher {
           continue;
         }
 
-        scrapers.push(newsScraper);
+        scrapersAndRuns.push({ scraper: newsScraper, scrapeRun: null });
       }
     }
 
@@ -122,10 +123,10 @@ export class NewsScraperTaskDispatcher {
         continue;
       }
 
-      scrapers.push(newsScraper);
+      scrapersAndRuns.push({ scraper: newsScraper, scrapeRun: lastScrapeRun });
     }
 
-    return scrapers;
+    return scrapersAndRuns;
   }
 
   async _getNewsScrapers() {
@@ -137,7 +138,7 @@ export class NewsScraperTaskDispatcher {
   }
 
   private _startRecentArticlesScrape() {
-    this._dispatchRecentArticlesScrape();
+    this._dispatchRecentArticlesScrape(true);
 
     this._dispatchRecentArticlesScrapeIntervalTimer = setInterval(() => {
       this._dispatchRecentArticlesScrape();
@@ -172,11 +173,17 @@ export class NewsScraperTaskDispatcher {
     }
   }
 
-  private async _dispatchRecentArticlesScrape() {
+  private async _dispatchRecentArticlesScrape(isInitialCheck: boolean = false) {
     this._logger.info(`Dispatch news article events for scrapers ...`);
 
-    const scrapers = await this._getSortedScrapers(true);
-    if (scrapers.length === 0) {
+    let scrapersAndRuns = await this._getSortedScrapersAndRuns(true);
+    if (isInitialCheck && scrapersAndRuns.length === 0) {
+      // For the initial check, we always want to dispatch events for all scrapers, even if they are pending,
+      // so they can be added to the queue and processed
+      scrapersAndRuns = await this._getSortedScrapersAndRuns(false);
+    }
+
+    if (scrapersAndRuns.length === 0) {
       this._logger.info(`No scrapers found to add to queue. Skipping ...`);
 
       return;
@@ -184,23 +191,30 @@ export class NewsScraperTaskDispatcher {
 
     const queue = NewsScraperMessageBrokerQueuesEnum.NEWS_SCRAPER_RECENT_ARTICLES_SCRAPE_QUEUE;
 
-    for (const scraper of scrapers) {
-      this._logger.debug(`Dispatching events for ${scraper.key} ...`);
+    for (const scraperAndRun of scrapersAndRuns) {
+      this._logger.debug(`Dispatching events for ${scraperAndRun.scraper.key} ...`);
 
       let args: NewsMessageBrokerQueuesDataType[typeof queue] = {
-        newsSite: scraper.key,
+        newsSite: scraperAndRun.scraper.key,
       };
 
-      const scrapeRun = await this._newsScraperScrapeRunManager.create({
-        type: queue,
-        status: ProcessingStatusEnum.PENDING,
-        arguments: args,
-      });
-      await this._newsScraperScrapeRunManager.save(scrapeRun);
+      let scrapeRunId = scraperAndRun.scrapeRun?.id ?? undefined;
+      if (!scraperAndRun.scrapeRun) {
+        // This is mostly needed for the initial check, so we can add all scrapers to the queue,
+        // without also creating a new database entry for them
+        const scrapeRun = await this._newsScraperScrapeRunManager.create({
+          type: queue,
+          status: ProcessingStatusEnum.PENDING,
+          arguments: args,
+        });
+        await this._newsScraperScrapeRunManager.save(scrapeRun);
+
+        scrapeRunId = scrapeRun.id;
+      }
 
       args = {
         ...args,
-        scrapeRunId: scrapeRun.id,
+        scrapeRunId: scrapeRunId,
       };
 
       await this._newsScraperMessageBroker.sendToQueue(
