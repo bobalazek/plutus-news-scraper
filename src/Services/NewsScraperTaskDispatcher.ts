@@ -15,6 +15,8 @@ import { NewsScraperMessageBroker } from './NewsScraperMessageBroker';
 import { NewsScraperScrapeRunManager } from './NewsScraperScrapeRunManager';
 import { PrometheusService } from './PrometheusService';
 
+const queue = NewsScraperMessageBrokerQueuesEnum.NEWS_SCRAPER_RECENT_ARTICLES_SCRAPE_QUEUE;
+
 @injectable()
 export class NewsScraperTaskDispatcher {
   private _httpServerPort?: number;
@@ -22,7 +24,7 @@ export class NewsScraperTaskDispatcher {
   private _newsScrapers: NewsScraperInterface[] = [];
   private _scrapeInterval: number = 30000;
   private _messageQueuesMonitoringInterval: number = 5000;
-  private _scrapeRecentArticlesExpirationTime: number = 30000; // After how long do we want to expire this message?
+  private _scrapeRecentArticlesExpirationTime: number = 300000; // After how long do we want to expire this message?
 
   private _dispatchRecentArticlesScrapeIntervalTimer?: ReturnType<typeof setInterval>;
   private _messageQueuesMonitoringIntervalTimer?: ReturnType<typeof setInterval>;
@@ -83,9 +85,7 @@ export class NewsScraperTaskDispatcher {
   async _getSortedScrapersAndRuns(returnOnlyNonPending: boolean = false) {
     const scrapersAndRuns: { scraper: NewsScraperInterface; scrapeRun: ScrapeRun | null }[] = [];
 
-    const lastScrapeRuns = await this._newsScraperScrapeRunManager.getAllNewestGroupByHash(
-      NewsScraperMessageBrokerQueuesEnum.NEWS_SCRAPER_RECENT_ARTICLES_SCRAPE_QUEUE
-    );
+    const lastScrapeRuns = await this._newsScraperScrapeRunManager.getAllNewestGroupByHash(queue);
 
     const scrapeRunsscraperKeys = lastScrapeRuns.map((scrapeRun) => {
       return scrapeRun.arguments?.newsSite;
@@ -138,9 +138,11 @@ export class NewsScraperTaskDispatcher {
   }
 
   private _startRecentArticlesScrape() {
+    this._checkForStuckScrapeRuns();
     this._dispatchRecentArticlesScrape(true);
 
     this._dispatchRecentArticlesScrapeIntervalTimer = setInterval(() => {
+      this._checkForStuckScrapeRuns();
       this._dispatchRecentArticlesScrape();
     }, this._scrapeInterval);
   }
@@ -189,8 +191,6 @@ export class NewsScraperTaskDispatcher {
       return;
     }
 
-    const queue = NewsScraperMessageBrokerQueuesEnum.NEWS_SCRAPER_RECENT_ARTICLES_SCRAPE_QUEUE;
-
     for (const scraperAndRun of scrapersAndRuns) {
       this._logger.debug(`Dispatching events for ${scraperAndRun.scraper.key} ...`);
 
@@ -223,6 +223,31 @@ export class NewsScraperTaskDispatcher {
         { expiration: this._scrapeRecentArticlesExpirationTime, persistent: true },
         { durable: true }
       );
+    }
+  }
+
+  private async _checkForStuckScrapeRuns() {
+    this._logger.info(`Checking for stuck scrape runs ...`);
+
+    const stuckScrapeRuns = await this._newsScraperScrapeRunManager.getAllStuck(
+      queue,
+      this._scrapeRecentArticlesExpirationTime
+    );
+    if (stuckScrapeRuns.length === 0) {
+      this._logger.info(`No stuck scrape runs at the moment. Skipping ...`);
+
+      return;
+    }
+
+    this._logger.info(`Found ${stuckScrapeRuns.length} stuck scrape runs`);
+
+    for (const stuckScrapeRun of stuckScrapeRuns) {
+      this._logger.info(`Marking scrape run ${stuckScrapeRun.id} as failed ...`);
+
+      stuckScrapeRun.status = ProcessingStatusEnum.FAILED;
+      stuckScrapeRun.failedAt = new Date();
+      stuckScrapeRun.failedErrorMessage = `Stuck for more than ${this._scrapeRecentArticlesExpirationTime}`;
+      await this._newsScraperScrapeRunManager.save(stuckScrapeRun);
     }
   }
 }

@@ -52,9 +52,6 @@ export class NewsScraperScrapeRunManager {
       return generateHash({ queue: type, newsSite, url });
     });
 
-    // TODO: also make sure we ignore scrape runs that seem stuck like if it's still ending or processing
-    // for more than an hour or so
-
     return repository
       .createQueryBuilder('scrapeRun')
       .select('scrapeRun.status')
@@ -79,6 +76,21 @@ export class NewsScraperScrapeRunManager {
         return 'scrapeRun.createdAt = ' + subQuery;
       })
       .orderBy('scrapeRun.updatedAt', 'ASC')
+      .getMany();
+  }
+
+  async getAllStuck(type: string, timeoutInSeconds: number) {
+    const repository = await this.getRepository();
+
+    return repository
+      .createQueryBuilder('scrapeRun')
+      .where('scrapeRun.type = :type', { type })
+      .andWhere('scrapeRun.status IN (:...statuses)', {
+        statuses: [ProcessingStatusEnum.PENDING, ProcessingStatusEnum.PROCESSING],
+      })
+      .andWhere('scrapeRun.updatedAt < :updatedAt', {
+        updatedAt: new Date(new Date().getTime() - 1000 * timeoutInSeconds),
+      })
       .getMany();
   }
 
