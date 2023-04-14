@@ -9,7 +9,7 @@ import { NewsScraperDatabase } from './NewsScraperDatabase';
 
 @injectable()
 export class NewsScraperScrapeRunManager {
-  private _scrapeRunRepository?: Repository<ScrapeRun>;
+  private _repositoryPromise?: Promise<Repository<ScrapeRun>>;
 
   constructor(@inject(CONTAINER_TYPES.NewsScraperDatabase) private _newsScraperDatabase: NewsScraperDatabase) {}
 
@@ -111,12 +111,14 @@ export class NewsScraperScrapeRunManager {
     return repository.save(Array.isArray(scrapeRun) ? scrapeRun : [scrapeRun]);
   }
 
-  async getRepository() {
-    if (!this._scrapeRunRepository) {
-      const dataSource = await this._newsScraperDatabase.getDataSource();
-      this._scrapeRunRepository = dataSource.getRepository(ScrapeRun);
+  async getRepository(): Promise<Repository<ScrapeRun>> {
+    if (!this._repositoryPromise) {
+      this._repositoryPromise = (async () => {
+        const dataSource = await this._newsScraperDatabase.getDataSource();
+        return dataSource.getRepository(ScrapeRun);
+      })();
     }
 
-    return this._scrapeRunRepository;
+    return this._repositoryPromise;
   }
 }
