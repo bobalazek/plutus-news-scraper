@@ -1,4 +1,4 @@
-import * as express from 'express';
+import express from 'express';
 import { Server } from 'http';
 import { inject, injectable } from 'inversify';
 
@@ -37,7 +37,7 @@ export class HTTPServerService {
     return new Promise((resolve, reject) => {
       this._status = 'TERMINATING';
 
-      this.getHttpServer().close((err) => {
+      this._httpServer?.close((err) => {
         if (err) {
           reject(err.message);
           return;

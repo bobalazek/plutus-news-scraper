@@ -1,4 +1,4 @@
-import * as express from 'express';
+import { Express } from 'express';
 import { injectable } from 'inversify';
 import * as promClient from 'prom-client';
 
@@ -32,7 +32,7 @@ export class PrometheusService {
     client.collectDefaultMetrics(config);
   }
 
-  addMetricsEndpointToExpressApp(expressApp: express.Express) {
+  addMetricsEndpointToExpressApp(expressApp: Express) {
     expressApp.get('/metrics', async (_, res) => {
       const client = this.getClient();
 

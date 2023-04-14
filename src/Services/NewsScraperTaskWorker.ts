@@ -264,7 +264,7 @@ export class NewsScraperTaskWorker {
     });
 
     process.on('uncaughtException', async (err) => {
-      await this.terminate(`UncaughtException: ${err.message}`);
+      await this.terminate(`UncaughtException: ${err.message}; Stack: ${err.stack}`);
     });
   }
 
