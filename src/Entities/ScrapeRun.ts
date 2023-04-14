@@ -22,7 +22,7 @@ export class ScrapeRun {
   status!: ProcessingStatusEnum;
 
   @Column({
-    type: IS_TEST ? 'simple-json' : 'json',
+    type: IS_TEST ? 'simple-json' : 'jsonb',
     nullable: true,
   })
   arguments?: Record<string, string | number | null> | null;
