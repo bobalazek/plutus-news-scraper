@@ -24,7 +24,7 @@ export class NewsScraperTaskDispatcher {
   private _newsScrapers: NewsScraperInterface[] = [];
   private _scrapeInterval: number = 30000;
   private _messageQueuesMonitoringInterval: number = 5000;
-  private _scrapeRecentArticlesExpirationTime: number = 300000; // After how long do we want to expire this message?
+  private _scrapeRecentArticlesExpirationTime: number = 60000; // After how long do we want to expire this message?
 
   private _dispatchRecentArticlesScrapeIntervalTimer?: ReturnType<typeof setInterval>;
   private _messageQueuesMonitoringIntervalTimer?: ReturnType<typeof setInterval>;
@@ -83,7 +83,7 @@ export class NewsScraperTaskDispatcher {
    * @param returnOnlyNonPending - If true, we will return only scrapers that are neither pending nor processing. Otherwise, if will also return the pending once
    */
   async _getSortedScrapersAndRuns(returnOnlyNonPending: boolean = false) {
-    const scrapersAndRuns: { scraper: NewsScraperInterface; scrapeRun: ScrapeRun | null }[] = [];
+    const scrapersAndRuns: { scraper: NewsScraperInterface; scrapeRun: ScrapeRun | null; isDone: boolean }[] = [];
 
     const lastScrapeRuns = await this._newsScraperScrapeRunManager.getAllNewestGroupByHash(queue);
 
@@ -104,7 +104,7 @@ export class NewsScraperTaskDispatcher {
           continue;
         }
 
-        scrapersAndRuns.push({ scraper: newsScraper, scrapeRun: null });
+        scrapersAndRuns.push({ scraper: newsScraper, scrapeRun: null, isDone: false });
       }
     }
 
@@ -123,7 +123,11 @@ export class NewsScraperTaskDispatcher {
         continue;
       }
 
-      scrapersAndRuns.push({ scraper: newsScraper, scrapeRun: lastScrapeRun });
+      scrapersAndRuns.push({
+        scraper: newsScraper,
+        scrapeRun: lastScrapeRun,
+        isDone: [ProcessingStatusEnum.FAILED, ProcessingStatusEnum.PROCESSED].includes(lastScrapeRun.status),
+      });
     }
 
     return scrapersAndRuns;
@@ -137,12 +141,12 @@ export class NewsScraperTaskDispatcher {
     return this._newsScrapers;
   }
 
-  private _startRecentArticlesScrape() {
-    this._checkForStuckScrapeRuns();
+  private async _startRecentArticlesScrape() {
+    await this._checkForStuckScrapeRuns();
     this._dispatchRecentArticlesScrape(true);
 
-    this._dispatchRecentArticlesScrapeIntervalTimer = setInterval(() => {
-      this._checkForStuckScrapeRuns();
+    this._dispatchRecentArticlesScrapeIntervalTimer = setInterval(async () => {
+      await this._checkForStuckScrapeRuns();
       this._dispatchRecentArticlesScrape();
     }, this._scrapeInterval);
   }
@@ -178,13 +182,9 @@ export class NewsScraperTaskDispatcher {
   private async _dispatchRecentArticlesScrape(isInitialCheck: boolean = false) {
     this._logger.info(`Dispatch news article events for scrapers ...`);
 
-    let scrapersAndRuns = await this._getSortedScrapersAndRuns(true);
-    if (isInitialCheck && scrapersAndRuns.length === 0) {
-      // For the initial check, we always want to dispatch events for all scrapers, even if they are pending,
-      // so they can be added to the queue and processed
-      scrapersAndRuns = await this._getSortedScrapersAndRuns(false);
-    }
-
+    // For the initial check, we always want to dispatch events for all scrapers,
+    // even if they are pending, so they can be added to the queue and processed
+    const scrapersAndRuns = await this._getSortedScrapersAndRuns(!isInitialCheck);
     if (scrapersAndRuns.length === 0) {
       this._logger.info(`No scrapers found to add to queue. Skipping ...`);
 
@@ -199,7 +199,11 @@ export class NewsScraperTaskDispatcher {
       };
 
       let scrapeRunId = scraperAndRun.scrapeRun?.id ?? undefined;
-      if (!scraperAndRun.scrapeRun) {
+      if (!scraperAndRun.scrapeRun || scraperAndRun.isDone) {
+        this._logger.debug(
+          `No pending or processing scrape run not found in database yet. Creating one (${JSON.stringify(args)}) ...`
+        );
+
         // This is mostly needed for the initial check, so we can add all scrapers to the queue,
         // without also creating a new database entry for them
         const scrapeRun = await this._newsScraperScrapeRunManager.create({
@@ -229,10 +233,10 @@ export class NewsScraperTaskDispatcher {
   private async _checkForStuckScrapeRuns() {
     this._logger.info(`Checking for stuck scrape runs ...`);
 
-    const stuckScrapeRuns = await this._newsScraperScrapeRunManager.getAllStuck(
-      queue,
-      this._scrapeRecentArticlesExpirationTime
-    );
+    // TODO: NOT WORKING YET. FIX TOMORROW!
+
+    const scrapeStuckTime = this._scrapeRecentArticlesExpirationTime * 2;
+    const stuckScrapeRuns = await this._newsScraperScrapeRunManager.getAllStuck(queue, scrapeStuckTime);
     if (stuckScrapeRuns.length === 0) {
       this._logger.info(`No stuck scrape runs at the moment. Skipping ...`);
 
@@ -246,7 +250,7 @@ export class NewsScraperTaskDispatcher {
 
       stuckScrapeRun.status = ProcessingStatusEnum.FAILED;
       stuckScrapeRun.failedAt = new Date();
-      stuckScrapeRun.failedErrorMessage = `Stuck for more than ${this._scrapeRecentArticlesExpirationTime}`;
+      stuckScrapeRun.failedErrorMessage = `Stuck for more than ${scrapeStuckTime / 1000} seconds`;
       await this._newsScraperScrapeRunManager.save(stuckScrapeRun);
     }
   }

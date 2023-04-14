@@ -79,7 +79,7 @@ export class NewsScraperScrapeRunManager {
       .getMany();
   }
 
-  async getAllStuck(type: string, timeoutInSeconds: number) {
+  async getAllStuck(type: string, timeInMilliseconds: number) {
     const repository = await this.getRepository();
 
     return repository
@@ -89,7 +89,7 @@ export class NewsScraperScrapeRunManager {
         statuses: [ProcessingStatusEnum.PENDING, ProcessingStatusEnum.PROCESSING],
       })
       .andWhere('scrapeRun.updatedAt < :updatedAt', {
-        updatedAt: new Date(new Date().getTime() - 1000 * timeoutInSeconds),
+        updatedAt: new Date(new Date().getTime() - timeInMilliseconds),
       })
       .getMany();
   }
