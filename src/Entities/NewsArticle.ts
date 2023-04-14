@@ -35,10 +35,10 @@ export class NewsArticle implements NewsArticleType {
   })
   newsSiteArticleId!: string;
 
-  @Column({ type: 'jsonb', nullable: true })
+  @Column({ type: IS_TEST ? 'simple-json' : 'jsonb', nullable: true })
   authors?: NewsArticleAuthorType[] | null;
 
-  @Column({ type: 'jsonb', nullable: true })
+  @Column({ type: IS_TEST ? 'simple-json' : 'jsonb', nullable: true })
   categories?: NewsArticleCategoryType[] | null;
 
   @Column({ type: 'varchar', nullable: true })
