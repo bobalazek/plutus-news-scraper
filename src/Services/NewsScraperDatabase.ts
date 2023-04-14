@@ -1,7 +1,7 @@
 import { injectable } from 'inversify';
 import { DataSource } from 'typeorm';
 
-import typeormDatasource from '../typeorm.config';
+import dataSource from '../Utils/TypeormDataSource';
 
 @injectable()
 export class NewsScraperDatabase {
@@ -9,7 +9,7 @@ export class NewsScraperDatabase {
 
   async getDataSource() {
     if (!this._dataSource) {
-      this._dataSource = typeormDatasource;
+      this._dataSource = dataSource;
 
       await this._dataSource.initialize();
     }

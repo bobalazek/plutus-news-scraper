@@ -18,6 +18,7 @@ This is the news component of the Plutus platform.
 
 - `yarn typeorm:run-migrations` - to run database migrations
 - `yarn typeorm:generate-migration src/Migrations/{MigrationName}` - to generate a new migration
+- `yarn typeorm:drop-schema` - to run drop the database schema
 
 ### Docker
 

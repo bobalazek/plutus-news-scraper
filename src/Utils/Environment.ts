@@ -1,7 +1,7 @@
 import 'dotenv/config';
 
 // TODO
-// dotenv needs to be included because of typeorm.config.ts is included as a standalone file.
+// dotenv needs to be included because of TypeormDataSource.ts is included as a standalone file.
 // Any better way to do this?
 
 export const APP_PREFIX = 'news_scraper_';
