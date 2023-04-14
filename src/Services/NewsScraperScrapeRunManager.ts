@@ -25,18 +25,17 @@ export class NewsScraperScrapeRunManager {
     const repository = await this.getRepository();
 
     return repository
-      .createQueryBuilder('scrape_runs')
-      .select('scrape_runs.status')
-      .addSelect('scrape_runs.arguments', 'arguments')
-      .addSelect('MAX(scrape_runs.createdAt)')
-      .addSelect('scrape_runs.updatedAt')
+      .createQueryBuilder('scrapeRun')
+      .select('scrapeRun.status')
+      .addSelect('scrapeRun.arguments')
+      .addSelect('MAX(scrapeRun.createdAt)')
       .distinct(true)
-      .where('scrape_runs.type = :type')
+      .where('scrapeRun.type = :type')
       .setParameters({
         type,
       })
-      .orderBy('scrape_runs.updatedAt', 'ASC')
-      .groupBy('scrape_runs.hash')
+      .orderBy('scrapeRun.updatedAt', 'ASC')
+      .groupBy('scrapeRun.hash')
       .getMany();
   }
 
@@ -51,20 +50,19 @@ export class NewsScraperScrapeRunManager {
     // for more than an hour or so
 
     return repository
-      .createQueryBuilder('scrape_runs')
-      .select('scrape_runs.status')
-      .addSelect('scrape_runs.arguments')
-      .addSelect('MAX(scrape_runs.createdAt)')
-      .addSelect('scrape_runs.updatedAt')
+      .createQueryBuilder('scrapeRun')
+      .select('scrapeRun.status')
+      .addSelect('scrapeRun.arguments')
+      .addSelect('MAX(scrapeRun.createdAt)')
       .distinct(true)
-      .where('scrape_runs.type = :type AND scrape_runs.status IN :statuses AND scrape_runs.hash IN :hashes')
+      .where('scrapeRun.type = :type AND scrapeRun.status IN :statuses AND scrapeRun.hash IN :hashes')
       .setParameters({
         type,
         statuses: [ProcessingStatusEnum.PENDING, ProcessingStatusEnum.PROCESSING],
         hashes,
       })
-      .orderBy('scrape_runs.updatedAt', 'ASC')
-      .groupBy('scrape_runs.hash')
+      .orderBy('scrapeRun.updatedAt', 'ASC')
+      .groupBy('scrapeRun.hash')
       .getMany();
   }
 
