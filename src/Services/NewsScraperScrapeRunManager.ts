@@ -27,7 +27,7 @@ export class NewsScraperScrapeRunManager {
     return repository
       .createQueryBuilder('scrape_runs')
       .select('scrape_runs.status')
-      .addSelect('scrape_runs.arguments::text', 'arguments')
+      .addSelect('scrape_runs.arguments', 'arguments')
       .addSelect('MAX(scrape_runs.createdAt)')
       .addSelect('scrape_runs.updatedAt')
       .distinct(true)
