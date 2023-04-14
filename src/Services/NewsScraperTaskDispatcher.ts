@@ -77,8 +77,9 @@ export class NewsScraperTaskDispatcher {
 
   /**
    * Technically this method is private, but we use them in our tests, so do NOT set them to private!
+   * @param returnOnlyNonPending - If true, we will return only scrapers that are neither pending nor processing. Otherwise, if will also return the pending once
    */
-  async _getSortedScrapers() {
+  async _getSortedScrapers(returnOnlyNonPending: boolean = false) {
     const scrapers: NewsScraperInterface[] = [];
 
     const lastScrapeRuns = await this._newsScraperScrapeRunManager.getAllNewestGroupByHash(
@@ -108,6 +109,10 @@ export class NewsScraperTaskDispatcher {
 
     for (const lastScrapeRun of lastScrapeRuns) {
       if (lastScrapeRun.status === ProcessingStatusEnum.PROCESSING) {
+        continue;
+      }
+
+      if (returnOnlyNonPending && lastScrapeRun.status === ProcessingStatusEnum.PENDING) {
         continue;
       }
 
@@ -170,9 +175,9 @@ export class NewsScraperTaskDispatcher {
   private async _dispatchRecentArticlesScrape() {
     this._logger.info(`Dispatch news article events for scrapers ...`);
 
-    const scrapers = await this._getSortedScrapers();
+    const scrapers = await this._getSortedScrapers(true);
     if (scrapers.length === 0) {
-      this._logger.info(`Scrapers not found. Skipping ...`);
+      this._logger.info(`No scrapers found to add to queue. Skipping ...`);
 
       return;
     }

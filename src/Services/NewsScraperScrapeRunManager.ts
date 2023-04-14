@@ -28,14 +28,20 @@ export class NewsScraperScrapeRunManager {
       .createQueryBuilder('scrapeRun')
       .select('scrapeRun.status')
       .addSelect('scrapeRun.arguments')
-      .addSelect('MAX(scrapeRun.createdAt)')
-      .distinct(true)
-      .where('scrapeRun.type = :type')
-      .setParameters({
-        type,
+      .addSelect('scrapeRun.createdAt')
+      .addSelect('scrapeRun.updatedAt')
+      .where('scrapeRun.type = :type', { type })
+      .andWhere((qb) => {
+        const subQuery = qb
+          .subQuery()
+          .select('MAX(innerScrapeRun.createdAt)')
+          .from('scrape_runs', 'innerScrapeRun')
+          .where('innerScrapeRun.hash = scrapeRun.hash')
+          .andWhere('innerScrapeRun.type = :type')
+          .getQuery();
+        return 'scrapeRun.createdAt = ' + subQuery;
       })
       .orderBy('scrapeRun.updatedAt', 'ASC')
-      .groupBy('scrapeRun.hash')
       .getMany();
   }
 
@@ -53,16 +59,26 @@ export class NewsScraperScrapeRunManager {
       .createQueryBuilder('scrapeRun')
       .select('scrapeRun.status')
       .addSelect('scrapeRun.arguments')
-      .addSelect('MAX(scrapeRun.createdAt)')
-      .distinct(true)
-      .where('scrapeRun.type = :type AND scrapeRun.status IN :statuses AND scrapeRun.hash IN :hashes')
-      .setParameters({
-        type,
+      .addSelect('scrapeRun.createdAt')
+      .addSelect('scrapeRun.updatedAt')
+      .where('scrapeRun.type = :type', { type })
+      .andWhere('scrapeRun.status IN (:...statuses)', {
         statuses: [ProcessingStatusEnum.PENDING, ProcessingStatusEnum.PROCESSING],
-        hashes,
+      })
+      .andWhere('scrapeRun.hash IN (:...hashes)', { hashes })
+      .andWhere((qb) => {
+        const subQuery = qb
+          .subQuery()
+          .select('MAX(innerScrapeRun.createdAt)')
+          .from('scrape_runs', 'innerScrapeRun')
+          .where('innerScrapeRun.hash = scrapeRun.hash')
+          .andWhere('innerScrapeRun.type = :type')
+          .andWhere('innerScrapeRun.status IN (:...statuses)')
+          .andWhere('innerScrapeRun.hash IN (:...hashes)')
+          .getQuery();
+        return 'scrapeRun.createdAt = ' + subQuery;
       })
       .orderBy('scrapeRun.updatedAt', 'ASC')
-      .groupBy('scrapeRun.hash')
       .getMany();
   }
 
