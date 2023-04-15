@@ -1,11 +1,12 @@
 import { convert } from 'html-to-text';
+import { NewsArticle, WithContext } from 'schema-dts';
 
 import { NewsArticleDataNotFoundError } from '../Errors/NewsArticleDataNotFoundError';
 import { NewsArticleType } from '../Schemas/NewsArticleSchema';
 import { NewsBasicArticleType } from '../Schemas/NewsBasicArticleSchema';
 import { NewsArticleMultimediaTypeEnum } from '../Types/NewsArticleMultimediaTypeEnum';
 import { NewsScraperInterface } from '../Types/NewsScraperInterface';
-import { getUniqueArray, sleep } from '../Utils/Helpers';
+import { getNewsArticleLinkedData, getUniqueArray, sleep } from '../Utils/Helpers';
 import { AbstractNewsScraper } from './AbstractNewsScraper';
 
 export default class TheWallStreetJournalNewsScraper extends AbstractNewsScraper implements NewsScraperInterface {
@@ -114,7 +115,9 @@ export default class TheWallStreetJournalNewsScraper extends AbstractNewsScraper
       throw new NewsArticleDataNotFoundError(`Linked data not found for URL ${url}`);
     }
 
-    const linkedData = JSON.parse(linkedDataText)[0];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const rawLinkedData = JSON.parse(linkedDataText) as any;
+    const linkedData = rawLinkedData[0] as WithContext<NewsArticle>;
 
     // Content
     const content = await this.evaluateInDocument((document) => {
@@ -126,24 +129,14 @@ export default class TheWallStreetJournalNewsScraper extends AbstractNewsScraper
     });
 
     const article: NewsArticleType = {
+      ...getNewsArticleLinkedData(linkedData),
       url: url,
-      title: linkedData.headline,
+      newsSiteArticleId: newsSiteArticleId,
       multimediaType: NewsArticleMultimediaTypeEnum.TEXT,
       content: convert(content, {
         wordwrap: false,
       }),
-      newsSiteArticleId: newsSiteArticleId,
-      publishedAt: new Date(linkedData.datePublished),
-      modifiedAt: new Date(linkedData.dateModified),
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      authors: linkedData.author.map((author: any) => {
-        return {
-          ...author,
-          url: author.url ? author.url : author.sameAs,
-        };
-      }),
       categories: categories,
-      imageUrl: linkedData.image[0],
       languageCode: languageCode,
     };
 

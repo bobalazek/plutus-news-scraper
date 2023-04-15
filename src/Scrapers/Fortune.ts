@@ -1,11 +1,12 @@
 import { convert } from 'html-to-text';
+import { NewsArticle, WithContext } from 'schema-dts';
 
 import { NewsArticleDataNotFoundError } from '../Errors/NewsArticleDataNotFoundError';
 import { NewsArticleType } from '../Schemas/NewsArticleSchema';
 import { NewsBasicArticleType } from '../Schemas/NewsBasicArticleSchema';
 import { NewsArticleMultimediaTypeEnum } from '../Types/NewsArticleMultimediaTypeEnum';
 import { NewsScraperInterface } from '../Types/NewsScraperInterface';
-import { getUniqueArray, sleep } from '../Utils/Helpers';
+import { getNewsArticleLinkedData, getUniqueArray, sleep } from '../Utils/Helpers';
 import { AbstractNewsScraper } from './AbstractNewsScraper';
 
 export default class FortuneNewsScraper extends AbstractNewsScraper implements NewsScraperInterface {
@@ -93,18 +94,7 @@ export default class FortuneNewsScraper extends AbstractNewsScraper implements N
       throw new NewsArticleDataNotFoundError(`Linked data not found for URL ${url}`);
     }
 
-    const linkedData = JSON.parse(linkedDataText);
-
-    const newsSiteArticleId = linkedData.identifier + ''; // .identifier in this case is a number, so we convert it into a string
-
-    const nextDataText = await this.evaluateInDocument((document) => {
-      return document.querySelector('body script#__NEXT_DATA__')?.innerHTML ?? '';
-    });
-    if (!nextDataText) {
-      throw new NewsArticleDataNotFoundError(`Next data not found for URL ${url}`);
-    }
-
-    const nextData = JSON.parse(nextDataText);
+    const linkedData = JSON.parse(linkedDataText) as WithContext<NewsArticle>;
 
     // Content
     const content = await this.evaluateInDocument((document) => {
@@ -115,24 +105,15 @@ export default class FortuneNewsScraper extends AbstractNewsScraper implements N
         .join('');
     });
 
+    const linkedDataArticle = getNewsArticleLinkedData(linkedData);
     const article: NewsArticleType = {
+      ...linkedDataArticle,
       url: url,
-      title: linkedData.headline,
+      newsSiteArticleId: linkedDataArticle.newsSiteArticleId ?? url,
       multimediaType: NewsArticleMultimediaTypeEnum.TEXT,
       content: convert(content, {
         wordwrap: false,
       }),
-      newsSiteArticleId: newsSiteArticleId,
-      publishedAt: new Date(linkedData.datePublished),
-      modifiedAt: new Date(linkedData.dateModified),
-      authors: linkedData.author,
-      categories: [
-        {
-          name: nextData.props.pageProps.article.primarySection.name,
-          url: nextData.props.pageProps.article.primarySection.link,
-        },
-      ],
-      imageUrl: linkedData.image,
       languageCode: languageCode,
     };
 

@@ -90,7 +90,15 @@ export default class ArsTechnicaNewsScraper extends AbstractNewsScraper implemen
       throw new NewsArticleDataNotFoundError(`Parsely page not found for URL ${url}`);
     }
 
-    const parsleyPage = JSON.parse(parsleyPageText);
+    const parsleyPage = JSON.parse(parsleyPageText) as {
+      title: string;
+      post_date: string;
+      post_id: number;
+      pub_date: string;
+      author: string;
+      section: string;
+      image_url: string;
+    };
 
     // Content
     const content = await this.evaluateInDocument((document) => {

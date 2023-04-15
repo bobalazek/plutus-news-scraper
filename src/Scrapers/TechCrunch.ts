@@ -1,11 +1,12 @@
 import { convert } from 'html-to-text';
+import { NewsArticle, WithContext } from 'schema-dts';
 
 import { NewsArticleDataNotFoundError } from '../Errors/NewsArticleDataNotFoundError';
 import { NewsArticleType } from '../Schemas/NewsArticleSchema';
 import { NewsBasicArticleType } from '../Schemas/NewsBasicArticleSchema';
 import { NewsArticleMultimediaTypeEnum } from '../Types/NewsArticleMultimediaTypeEnum';
 import { NewsScraperInterface } from '../Types/NewsScraperInterface';
-import { getUniqueArray, sleep } from '../Utils/Helpers';
+import { getNewsArticleLinkedData, getUniqueArray, sleep } from '../Utils/Helpers';
 import { AbstractNewsScraper } from './AbstractNewsScraper';
 
 export default class TechCrunchNewsScraper extends AbstractNewsScraper implements NewsScraperInterface {
@@ -114,8 +115,9 @@ export default class TechCrunchNewsScraper extends AbstractNewsScraper implement
       throw new NewsArticleDataNotFoundError(`Linked data not found for URL ${url}`);
     }
 
-    const rawLinkedData = JSON.parse(linkedDataText);
-    const linkedData = rawLinkedData['@graph'][0];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const rawLinkedData = JSON.parse(linkedDataText) as any;
+    const linkedData = rawLinkedData['@graph'][0] as WithContext<NewsArticle>;
     const authorLinkedData = rawLinkedData['@graph'][5];
 
     // Content
@@ -129,24 +131,14 @@ export default class TechCrunchNewsScraper extends AbstractNewsScraper implement
     });
 
     const article: NewsArticleType = {
+      ...getNewsArticleLinkedData(linkedData),
       url: url,
-      title: linkedData.headline,
       multimediaType: NewsArticleMultimediaTypeEnum.TEXT,
       content: convert(content, {
         wordwrap: false,
       }),
       newsSiteArticleId: newsSiteArticleId,
-      publishedAt: new Date(linkedData.datePublished),
-      modifiedAt: new Date(linkedData.dateModified),
       authors: [authorLinkedData],
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      categories: linkedData.articleSection.map((articleSection: any) => {
-        return {
-          name: articleSection,
-        };
-      }),
-      imageUrl: linkedData.image.url,
-      languageCode: linkedData.inLanguage,
     };
 
     return Promise.resolve(article);

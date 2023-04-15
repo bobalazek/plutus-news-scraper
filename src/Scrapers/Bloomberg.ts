@@ -1,12 +1,13 @@
 //TODO - This scraper doesn't work - Press and hold button when you come to the site
 import { convert } from 'html-to-text';
+import { NewsArticle, WithContext } from 'schema-dts';
 
 import { NewsArticleDataNotFoundError } from '../Errors/NewsArticleDataNotFoundError';
 import { NewsArticleType } from '../Schemas/NewsArticleSchema';
 import { NewsBasicArticleType } from '../Schemas/NewsBasicArticleSchema';
 import { NewsArticleMultimediaTypeEnum } from '../Types/NewsArticleMultimediaTypeEnum';
 import { NewsScraperInterface } from '../Types/NewsScraperInterface';
-import { getUniqueArray, sleep } from '../Utils/Helpers';
+import { getNewsArticleLinkedData, getUniqueArray, sleep } from '../Utils/Helpers';
 import { AbstractNewsScraper } from './AbstractNewsScraper';
 
 export default class BloombergNewsScraper extends AbstractNewsScraper implements NewsScraperInterface {
@@ -108,7 +109,7 @@ export default class BloombergNewsScraper extends AbstractNewsScraper implements
       throw new NewsArticleDataNotFoundError(`Linked data not found for URL ${url}`);
     }
 
-    const linkedData = JSON.parse(linkedDataText);
+    const linkedData = JSON.parse(linkedDataText) as WithContext<NewsArticle>;
 
     // Content
     const content = await this.evaluateInDocument((document) => {
@@ -120,18 +121,13 @@ export default class BloombergNewsScraper extends AbstractNewsScraper implements
     });
 
     const article: NewsArticleType = {
+      ...getNewsArticleLinkedData(linkedData),
       url: url,
-      title: linkedData.headline,
       multimediaType: NewsArticleMultimediaTypeEnum.TEXT,
       content: convert(content, {
         wordwrap: false,
       }),
       newsSiteArticleId: newsSiteArticleId,
-      publishedAt: new Date(linkedData.datePublished),
-      modifiedAt: new Date(linkedData.dateModified),
-      authors: linkedData.author,
-      categories: linkedData.mentions,
-      imageUrl: linkedData.image[0],
       languageCode: languageCode,
     };
 

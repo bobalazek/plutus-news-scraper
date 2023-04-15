@@ -1,9 +1,11 @@
+import { NewsArticle, WithContext } from 'schema-dts';
+
 import { NewsArticleDataNotFoundError } from '../Errors/NewsArticleDataNotFoundError';
 import { NewsArticleType } from '../Schemas/NewsArticleSchema';
 import { NewsBasicArticleType } from '../Schemas/NewsBasicArticleSchema';
 import { NewsArticleMultimediaTypeEnum } from '../Types/NewsArticleMultimediaTypeEnum';
 import { NewsScraperInterface } from '../Types/NewsScraperInterface';
-import { getUniqueArray, sleep } from '../Utils/Helpers';
+import { getNewsArticleLinkedData, getUniqueArray, sleep } from '../Utils/Helpers';
 import { AbstractNewsScraper } from './AbstractNewsScraper';
 
 export default class BusinessInsiderNewsScraper extends AbstractNewsScraper implements NewsScraperInterface {
@@ -105,24 +107,15 @@ export default class BusinessInsiderNewsScraper extends AbstractNewsScraper impl
       throw new NewsArticleDataNotFoundError(`Linked data not found for URL ${url}`);
     }
 
-    const linkedData = JSON.parse(linkedDataText);
+    const linkedData = JSON.parse(linkedDataText) as WithContext<NewsArticle>;
 
     const article: NewsArticleType = {
+      ...getNewsArticleLinkedData(linkedData),
       url: url,
-      title: linkedData.headline,
       multimediaType: NewsArticleMultimediaTypeEnum.TEXT,
-      content: linkedData.articleBody,
+      content: linkedData.articleBody as string,
       newsSiteArticleId: newsSiteArticleId,
-      publishedAt: new Date(linkedData.datePublished),
-      modifiedAt: new Date(linkedData.dateModified),
-      authors: [linkedData.author].map((author) => {
-        return {
-          ...author,
-          url: author.url ? author.url : author.sameAs,
-        };
-      }),
       categories: categories,
-      imageUrl: linkedData.image.url,
       languageCode: languageCode,
     };
 

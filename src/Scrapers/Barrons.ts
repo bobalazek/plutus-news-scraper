@@ -1,12 +1,13 @@
 import { convert } from 'html-to-text';
 import { DateTime, Interval } from 'luxon';
+import { NewsArticle, WithContext } from 'schema-dts';
 
 import { NewsArticleDataNotFoundError } from '../Errors/NewsArticleDataNotFoundError';
 import { NewsArticleType } from '../Schemas/NewsArticleSchema';
 import { NewsBasicArticleType } from '../Schemas/NewsBasicArticleSchema';
 import { NewsArticleMultimediaTypeEnum } from '../Types/NewsArticleMultimediaTypeEnum';
 import { NewsScraperGetArchivedArticlesOptionsInterface, NewsScraperInterface } from '../Types/NewsScraperInterface';
-import { getUniqueArray, sleep } from '../Utils/Helpers';
+import { getNewsArticleLinkedData, getUniqueArray, sleep } from '../Utils/Helpers';
 import { AbstractNewsScraper } from './AbstractNewsScraper';
 
 export default class BarronsNewsScraper extends AbstractNewsScraper implements NewsScraperInterface {
@@ -167,9 +168,17 @@ export default class BarronsNewsScraper extends AbstractNewsScraper implements N
     const dayIntervals = interval.splitBy({ days: 1 });
 
     for (const dayInterval of dayIntervals) {
+      if (!dayInterval.start || !dayInterval.end) {
+        continue;
+      }
+
       const year = dayInterval.start.toFormat('yyyy');
       const month = dayInterval.start.toFormat('MM');
       const day = dayInterval.start.toFormat('dd');
+
+      if (options.from && dayInterval.start.toString() < options.from && dayInterval.end.toString() > options.from) {
+        continue;
+      }
 
       dateUrls.push(`https://www.barrons.com/archive/${year}/${month}/${day}`);
     }
@@ -234,7 +243,9 @@ export default class BarronsNewsScraper extends AbstractNewsScraper implements N
       throw new NewsArticleDataNotFoundError(`Linked data not found for URL ${url}`);
     }
 
-    const linkedData = JSON.parse(linkedDataText)[0];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const rawLinkedData = JSON.parse(linkedDataText) as any;
+    const linkedData = rawLinkedData[0] as WithContext<NewsArticle>;
 
     // Content
     const content = await this.evaluateInDocument((document) => {
@@ -246,17 +257,13 @@ export default class BarronsNewsScraper extends AbstractNewsScraper implements N
     });
 
     const article: NewsArticleType = {
+      ...getNewsArticleLinkedData(linkedData),
       url: url,
-      title: linkedData.headline,
       multimediaType: NewsArticleMultimediaTypeEnum.TEXT,
       content: convert(content, {
         wordwrap: false,
       }),
       newsSiteArticleId: newsSiteArticleId,
-      publishedAt: new Date(linkedData.datePublished),
-      modifiedAt: new Date(linkedData.dateModified),
-      authors: linkedData.author,
-      imageUrl: linkedData.image[0],
       languageCode: languageCode,
     };
 

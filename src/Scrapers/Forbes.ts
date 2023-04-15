@@ -1,11 +1,12 @@
 import { convert } from 'html-to-text';
+import { NewsArticle, WithContext } from 'schema-dts';
 
 import { NewsArticleDataNotFoundError } from '../Errors/NewsArticleDataNotFoundError';
 import { NewsArticleType } from '../Schemas/NewsArticleSchema';
 import { NewsBasicArticleType } from '../Schemas/NewsBasicArticleSchema';
 import { NewsArticleMultimediaTypeEnum } from '../Types/NewsArticleMultimediaTypeEnum';
 import { NewsScraperInterface } from '../Types/NewsScraperInterface';
-import { getUniqueArray, sleep } from '../Utils/Helpers';
+import { getNewsArticleLinkedData, getUniqueArray, sleep } from '../Utils/Helpers';
 import { AbstractNewsScraper } from './AbstractNewsScraper';
 
 export default class ForbesNewsScraper extends AbstractNewsScraper implements NewsScraperInterface {
@@ -85,10 +86,6 @@ export default class ForbesNewsScraper extends AbstractNewsScraper implements Ne
       return articleIdSplit[articleIdSplit.length - 1];
     });
 
-    const categoryUrl = await this.evaluateInDocument((document) => {
-      return document.querySelector('head meta[property="article:section_url"]')?.getAttribute('content') ?? '';
-    });
-
     const languageCode = await this.evaluateInDocument((document) => {
       return document.querySelector('html')?.getAttribute('lang') ?? '';
     });
@@ -100,7 +97,7 @@ export default class ForbesNewsScraper extends AbstractNewsScraper implements Ne
       throw new NewsArticleDataNotFoundError(`Linked data not found for URL ${url}`);
     }
 
-    const linkedData = JSON.parse(linkedDataText);
+    const linkedData = JSON.parse(linkedDataText) as WithContext<NewsArticle>;
 
     // Content
     const content = await this.evaluateInDocument((document) => {
@@ -112,18 +109,13 @@ export default class ForbesNewsScraper extends AbstractNewsScraper implements Ne
     });
 
     const article: NewsArticleType = {
+      ...getNewsArticleLinkedData(linkedData),
       url: url,
-      title: linkedData.headline,
       multimediaType: NewsArticleMultimediaTypeEnum.TEXT,
       content: convert(content, {
         wordwrap: false,
       }),
       newsSiteArticleId: newsSiteArticleId,
-      publishedAt: new Date(linkedData.datePublished),
-      modifiedAt: new Date(linkedData.dateModified),
-      authors: [linkedData.author],
-      categories: [{ name: linkedData.articleSection, url: categoryUrl }],
-      imageUrl: linkedData.image.url,
       languageCode: languageCode,
     };
 

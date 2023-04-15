@@ -1,9 +1,11 @@
+import { NewsArticle, WithContext } from 'schema-dts';
+
 import { NewsArticleDataNotFoundError } from '../Errors/NewsArticleDataNotFoundError';
 import { NewsArticleType } from '../Schemas/NewsArticleSchema';
 import { NewsBasicArticleType } from '../Schemas/NewsBasicArticleSchema';
 import { NewsArticleMultimediaTypeEnum } from '../Types/NewsArticleMultimediaTypeEnum';
 import { NewsScraperInterface } from '../Types/NewsScraperInterface';
-import { getUniqueArray, sleep } from '../Utils/Helpers';
+import { getNewsArticleLinkedData, getUniqueArray, sleep } from '../Utils/Helpers';
 import { AbstractNewsScraper } from './AbstractNewsScraper';
 
 export default class CNNNewsScraper extends AbstractNewsScraper implements NewsScraperInterface {
@@ -85,19 +87,16 @@ export default class CNNNewsScraper extends AbstractNewsScraper implements NewsS
       throw new NewsArticleDataNotFoundError(`Linked data not found for URL ${url}`);
     }
 
-    const linkedData = JSON.parse(linkedDataText);
+    const linkedData = JSON.parse(linkedDataText) as WithContext<NewsArticle>;
 
+    const linkedDataArticle = getNewsArticleLinkedData(linkedData);
     const article: NewsArticleType = {
+      ...linkedDataArticle,
       url: url,
-      title: linkedData.headline,
+      newsSiteArticleId: linkedDataArticle.newsSiteArticleId ?? url,
       multimediaType: NewsArticleMultimediaTypeEnum.TEXT,
-      content: linkedData.articleBody,
-      newsSiteArticleId: linkedData.identifier[0].value,
-      publishedAt: new Date(linkedData.datePublished),
-      modifiedAt: new Date(linkedData.dateModified),
-      authors: linkedData.author,
-      imageUrl: linkedData.image.url,
-      languageCode: linkedData.inLanguage,
+      content: linkedData.articleBody as string,
+      languageCode: linkedData.inLanguage as string,
     };
 
     return Promise.resolve(article);

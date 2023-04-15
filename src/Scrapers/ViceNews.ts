@@ -1,11 +1,12 @@
 import { convert } from 'html-to-text';
+import { NewsArticle, WithContext } from 'schema-dts';
 
 import { NewsArticleDataNotFoundError } from '../Errors/NewsArticleDataNotFoundError';
 import { NewsArticleType } from '../Schemas/NewsArticleSchema';
 import { NewsBasicArticleType } from '../Schemas/NewsBasicArticleSchema';
 import { NewsArticleMultimediaTypeEnum } from '../Types/NewsArticleMultimediaTypeEnum';
 import { NewsScraperInterface } from '../Types/NewsScraperInterface';
-import { getUniqueArray, sleep } from '../Utils/Helpers';
+import { getNewsArticleLinkedData, getUniqueArray, sleep } from '../Utils/Helpers';
 import { AbstractNewsScraper } from './AbstractNewsScraper';
 
 export default class ViceNewsNewsScraper extends AbstractNewsScraper implements NewsScraperInterface {
@@ -99,9 +100,9 @@ export default class ViceNewsNewsScraper extends AbstractNewsScraper implements 
       throw new NewsArticleDataNotFoundError(`Linked data not found for URL ${url}`);
     }
 
-    const rawLinkedData = JSON.parse(linkedDataText);
-    const linkedData = rawLinkedData['@graph'][1];
-    const categoryLinkedData = rawLinkedData['@graph'][0];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const rawLinkedData = JSON.parse(linkedDataText) as any;
+    const linkedData = rawLinkedData['@graph'][1] as WithContext<NewsArticle>;
 
     // Content
     const content = await this.evaluateInDocument((document) => {
@@ -113,18 +114,13 @@ export default class ViceNewsNewsScraper extends AbstractNewsScraper implements 
     });
 
     const article: NewsArticleType = {
+      ...getNewsArticleLinkedData(linkedData),
       url: url,
-      title: linkedData.headline,
       multimediaType: NewsArticleMultimediaTypeEnum.TEXT,
       content: convert(content, {
         wordwrap: false,
       }),
       newsSiteArticleId: newsSiteArticleId,
-      publishedAt: new Date(linkedData.datePublished),
-      modifiedAt: new Date(linkedData.dateModified),
-      authors: [linkedData.author],
-      categories: [categoryLinkedData.itemListElement[1]],
-      imageUrl: linkedData.image[0],
       languageCode: languageCode,
     };
 
