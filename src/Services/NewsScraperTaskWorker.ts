@@ -176,7 +176,7 @@ export class NewsScraperTaskWorker {
             this._saveScrapeRun(scrapeRun, ProcessingStatusEnum.PROCESSED);
           }
         } catch (err) {
-          this._logger.error(`[Worker ${this._id}][Recent Articles Queue] Error: ${err.message}`);
+          this._logger.error(`[Worker ${this._id}][Recent Articles Queue] Error: ${err.message}. Stack: ${err.stack}`);
 
           negativeAcknowledgeMessageCallback();
 

@@ -233,7 +233,7 @@ export class NewsScraperTaskDispatcher {
   private async _checkForStuckScrapeRuns() {
     this._logger.info(`Checking for stuck scrape runs ...`);
 
-    const scrapeStuckTime = this._scrapeRecentArticlesExpirationTime;
+    const scrapeStuckTime = this._scrapeRecentArticlesExpirationTime * 2;
     const stuckScrapeRuns = await this._newsScraperScrapeRunManager.getAllStuck(queue, scrapeStuckTime);
     if (stuckScrapeRuns.length === 0) {
       this._logger.info(`No stuck scrape runs at the moment. Skipping ...`);

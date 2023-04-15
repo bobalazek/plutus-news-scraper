@@ -12,12 +12,14 @@ import { NewsScraperInterface } from '../Types/NewsScraperInterface';
 import { ROOT_DIRECTORY } from '../Utils/Paths';
 import { Logger } from './Logger';
 
+type CombinedNewsScaperType = NewsScraperInterface & AbstractNewsScraper;
+
 @injectable()
 export class NewsScraperManager {
-  private _scrapers: Record<string, NewsScraperInterface> = {};
+  private _scrapers: Record<string, CombinedNewsScaperType> = {};
   private _scrapersDomainMap: Record<string, string> = {};
   private _initialized: boolean = false;
-  private _currentScraper: AbstractNewsScraper | null = null;
+  private _currentScraper: CombinedNewsScaperType | null = null;
   private _headful: boolean = false;
   private _preventClose: boolean = false;
 
@@ -190,7 +192,7 @@ export class NewsScraperManager {
           );
         }
 
-        this._scrapers[scraperModule.key] = scraperModule;
+        this._scrapers[scraperModule.key] = this._prepareScraper(scraperModule);
 
         this._scrapersDomainMap[scraperModule.domain] = scraperModule.key;
 
@@ -217,7 +219,7 @@ export class NewsScraperManager {
     this._headful = headful ?? false;
     this._preventClose = preventClose ?? false;
 
-    const newsScraper = scraper as unknown as AbstractNewsScraper;
+    const newsScraper = scraper as unknown as CombinedNewsScaperType;
     newsScraper.setLogger(this._logger);
     newsScraper.setPuppeteerHeadful(this._headful);
     newsScraper.setPuppeteerPreventClose(this._preventClose);
