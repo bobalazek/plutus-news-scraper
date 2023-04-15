@@ -47,15 +47,15 @@ export class NewsArticle implements NewsArticleType {
   @Column({ type: 'varchar', nullable: true })
   languageCode?: string | null;
 
-  @Column({ type: IS_TEST ? 'datetime' : 'timestamp' })
+  @Column({ type: IS_TEST ? 'datetime' : 'timestamp with time zone' })
   publishedAt!: Date;
 
-  @Column({ type: IS_TEST ? 'datetime' : 'timestamp' })
+  @Column({ type: IS_TEST ? 'datetime' : 'timestamp with time zone' })
   modifiedAt!: Date;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ type: IS_TEST ? 'datetime' : 'timestamp with time zone' })
   createdAt!: Date;
 
-  @UpdateDateColumn()
+  @UpdateDateColumn({ type: IS_TEST ? 'datetime' : 'timestamp with time zone' })
   updatedAt!: Date;
 }

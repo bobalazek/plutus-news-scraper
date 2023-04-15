@@ -22,9 +22,9 @@ export class NewsScraperTaskDispatcher {
   private _httpServerPort?: number;
 
   private _newsScrapers: NewsScraperInterface[] = [];
-  private _scrapeInterval: number = 30000;
-  private _messageQueuesMonitoringInterval: number = 5000;
-  private _scrapeRecentArticlesExpirationTime: number = 60000; // After how long do we want to expire this message?
+  private _scrapeInterval: number = 30 * 1000;
+  private _messageQueuesMonitoringInterval: number = 5 * 1000;
+  private _scrapeRecentArticlesExpirationTime: number = 180 * 1000; // After how long do we want to expire this message?
 
   private _dispatchRecentArticlesScrapeIntervalTimer?: ReturnType<typeof setInterval>;
   private _messageQueuesMonitoringIntervalTimer?: ReturnType<typeof setInterval>;
@@ -233,9 +233,7 @@ export class NewsScraperTaskDispatcher {
   private async _checkForStuckScrapeRuns() {
     this._logger.info(`Checking for stuck scrape runs ...`);
 
-    // TODO: NOT WORKING YET. FIX TOMORROW!
-
-    const scrapeStuckTime = this._scrapeRecentArticlesExpirationTime * 2;
+    const scrapeStuckTime = this._scrapeRecentArticlesExpirationTime;
     const stuckScrapeRuns = await this._newsScraperScrapeRunManager.getAllStuck(queue, scrapeStuckTime);
     if (stuckScrapeRuns.length === 0) {
       this._logger.info(`No stuck scrape runs at the moment. Skipping ...`);

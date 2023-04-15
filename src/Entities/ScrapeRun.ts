@@ -37,18 +37,18 @@ export class ScrapeRun {
   @Column({ type: 'varchar', nullable: true })
   failedErrorMessage?: string | null;
 
-  @Column({ type: IS_TEST ? 'datetime' : 'timestamp', nullable: true })
+  @Column({ type: IS_TEST ? 'datetime' : 'timestamp with time zone', nullable: true })
   startedAt?: Date | null;
 
-  @Column({ type: IS_TEST ? 'datetime' : 'timestamp', nullable: true })
+  @Column({ type: IS_TEST ? 'datetime' : 'timestamp with time zone', nullable: true })
   completedAt?: Date | null;
 
-  @Column({ type: IS_TEST ? 'datetime' : 'timestamp', nullable: true })
+  @Column({ type: IS_TEST ? 'datetime' : 'timestamp with time zone', nullable: true })
   failedAt?: Date | null;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ type: IS_TEST ? 'datetime' : 'timestamp with time zone' })
   createdAt!: Date;
 
-  @UpdateDateColumn()
+  @UpdateDateColumn({ type: IS_TEST ? 'datetime' : 'timestamp with time zone' })
   updatedAt!: Date;
 }
