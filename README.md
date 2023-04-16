@@ -12,7 +12,7 @@ This is the news component of the Plutus platform.
 - `yarn cli news-scraper:recent-articles:scrape --news-site <news-site> [-u,--url <url>][-h,--headful][-p,--prevent-close]` - to scrape the recent articles
 - `yarn cli news-scraper:archived-articles:scrape --news-site <news-site> [-h,--headful][-p,--prevent-close]` - to scrape the archived articles
 - `yarn cli news-scraper:task-dispatcher:start` - to start the task dispatcher
-- `yarn cli news-scraper:task-worker:start [-i,--id <id>]` - to start the task worker
+- `yarn cli news-scraper:task-worker:start [-i,--id <id>][--consumed-queues <queues>]` - to start the task worker
 
 ### Database
 

@@ -86,6 +86,7 @@ export abstract class AbstractNewsScraper {
     const dom = await JSDOM.fromURL(url, {
       userAgent: this._jsdomUserAgent,
       runScripts: 'dangerously',
+      resources: 'usable',
       virtualConsole,
     });
 

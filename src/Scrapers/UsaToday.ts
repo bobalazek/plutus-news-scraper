@@ -38,21 +38,23 @@ export default class UsaTodayNewsScraper extends AbstractNewsScraper implements 
       });
 
       const articleUrls = getUniqueArray(
-        await this.evaluateInDocument((document) => {
-          // Get all the possible (anchor) elements that have the links to articles
-          const querySelector = ['#header #heroStoryContainer a', '.page-main-content-container a'].join(', ');
+        (
+          await this.evaluateInDocument((document) => {
+            // Get all the possible (anchor) elements that have the links to articles
+            const querySelector = ['#header #heroStoryContainer a', '.page-main-content-container a'].join(', ');
 
-          // Fetch those with the .querySelectoAll() and convert it to an array
-          const $elements = Array.from(document.querySelectorAll(querySelector));
+            // Fetch those with the .querySelectoAll() and convert it to an array
+            const $elements = Array.from(document.querySelectorAll(querySelector));
 
-          // Loop/map through those elements and get the href artibute
-          return $elements.map(($el) => {
-            return $el.getAttribute('href') ?? ''; // Needs to have a '' (empty string) as a fallback, because otherwise it could be null, which we don't want
-          });
+            // Loop/map through those elements and get the href artibute
+            return $elements.map(($el) => {
+              return $el.getAttribute('href') ?? ''; // Needs to have a '' (empty string) as a fallback, because otherwise it could be null, which we don't want
+            });
+          })
+        ).map((uri) => {
+          return uri.startsWith('/') ? `https://eu.usatoday.com${uri}` : '';
         })
-      ).map((uri) => {
-        return `https://eu.usatoday.com${uri}`;
-      });
+      );
 
       this._logger.info(`Found ${articleUrls.length} articles on this page`);
 
