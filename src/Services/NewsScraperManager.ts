@@ -93,7 +93,7 @@ export class NewsScraperManager {
 
   async scrapeArchivedArticles(
     newsSiteKey: string,
-    options: Record<string, string>,
+    options?: Record<string, string>,
     headful?: boolean,
     preventClose?: boolean
   ): Promise<NewsBasicArticleExtendedType[]> {

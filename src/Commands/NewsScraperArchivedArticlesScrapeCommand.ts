@@ -19,7 +19,7 @@ export const addNewsScraperArchivedArticlesScrapeCommand = (program: Command) =>
       const headful = options.headful;
       const preventClose = options.preventClose;
 
-      const parsedOptions = optionsString ? JSON.parse(optionsString) : undefined;
+      const parsedOptions = optionsString ? (JSON.parse(optionsString) as Record<string, string>) : undefined;
 
       const logger = container.get<Logger>(CONTAINER_TYPES.Logger);
       const newsScraperManager = container.get<NewsScraperManager>(CONTAINER_TYPES.NewsScraperManager);
