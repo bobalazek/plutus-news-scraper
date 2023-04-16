@@ -11,6 +11,7 @@ import { AbstractNewsScraper } from './AbstractNewsScraper';
 export default class CNNNewsScraper extends AbstractNewsScraper implements NewsScraperInterface {
   key: string = 'cnn';
   domain: string = 'edition.cnn.com';
+  domainAliases?: string[] = ['www.edition.cnn.com'];
   recentArticleListUrls: string[] = [
     'https://edition.cnn.com/business/tech',
     'https://edition.cnn.com/business/media',
