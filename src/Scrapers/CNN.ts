@@ -49,7 +49,7 @@ export default class CNNNewsScraper extends AbstractNewsScraper implements NewsS
           });
         })
       ).map((uri) => {
-        return `https://www.edition.cnn.com/business${uri}`;
+        return `https://edition.cnn.com${uri}`;
       });
 
       this._logger.info(`Found ${articleUrls.length} articles on this page`);
